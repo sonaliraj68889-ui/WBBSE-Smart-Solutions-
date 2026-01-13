@@ -1,0 +1,8 @@
+{
+  "name": "WBBSE Smart Solutions",
+  "description": "An intelligent study companion for West Bengal Board (WBBSE) students, providing chapter-wise solutions, AI-powered tutoring, and comprehensive explanations for Classes 5-10.",
+  "requestFramePermissions": [
+    "camera",
+    "microphone"
+  ]
+}
