@@ -38,6 +38,7 @@ const ChapterViewer: React.FC<ChapterViewerProps> = ({ subject, classLabel, onBa
   const [loading, setLoading] = useState(false);
   const [generatingQuestions, setGeneratingQuestions] = useState(false);
   const [visibleAnswers, setVisibleAnswers] = useState<Record<number, boolean>>({});
+  const [showCopied, setShowCopied] = useState(false);
 
   const getLocalizedSubjectName = () => {
     return t.subjects[subject.id as keyof typeof t.subjects] || subject.name;
@@ -71,6 +72,27 @@ const ChapterViewer: React.FC<ChapterViewerProps> = ({ subject, classLabel, onBa
   const handlePrevious = () => {
     if (hasPrevious && !loading) {
       fetchSummary(subject.chapters[currentIndex - 1], summaryLength);
+    }
+  };
+
+  const handleShare = async () => {
+    if (!selectedChapter || !summary) return;
+    const shareData = {
+      title: `${selectedChapter.title} - WBBSE Smart Solutions`,
+      text: `Check out these study notes for ${selectedChapter.title} (${getLocalizedSubjectName()}, Class ${classLabel}).`,
+      url: window.location.href,
+    };
+
+    if (navigator.share) {
+      try {
+        await navigator.share(shareData);
+      } catch (err) {
+        console.error("Error sharing:", err);
+      }
+    } else {
+      navigator.clipboard.writeText(window.location.href);
+      setShowCopied(true);
+      setTimeout(() => setShowCopied(false), 2000);
     }
   };
 
@@ -183,15 +205,21 @@ const ChapterViewer: React.FC<ChapterViewerProps> = ({ subject, classLabel, onBa
           </div>
         </div>
 
-        <button 
-          onClick={onHome}
-          className={`px-4 py-2 rounded-xl flex items-center space-x-2 font-black text-xs uppercase tracking-widest transition-all shadow-md ${
-            darkMode ? 'bg-slate-800 text-slate-200 hover:bg-slate-700' : 'bg-white text-gray-700 hover:bg-gray-50 border border-gray-100'
-          }`}
-        >
-          <i className="fa-solid fa-house"></i>
-          <span>{t.mainMenu}</span>
-        </button>
+        <div className="flex items-center space-x-3">
+          {showCopied && (
+            <span className="text-[10px] font-bold text-emerald-500 animate-fadeIn">{t.copied}</span>
+          )}
+          
+          <button 
+            onClick={onHome}
+            className={`px-4 py-2 rounded-xl flex items-center space-x-2 font-black text-xs uppercase tracking-widest transition-all shadow-md ${
+              darkMode ? 'bg-slate-800 text-slate-200 hover:bg-slate-700' : 'bg-white text-gray-700 hover:bg-gray-50 border border-gray-100'
+            }`}
+          >
+            <i className="fa-solid fa-house"></i>
+            <span>{t.mainMenu}</span>
+          </button>
+        </div>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
@@ -295,6 +323,14 @@ const ChapterViewer: React.FC<ChapterViewerProps> = ({ subject, classLabel, onBa
                        ))}
                     </div>
                     
+                    <button 
+                      onClick={handleShare}
+                      className="w-10 h-10 rounded-xl bg-white/20 flex items-center justify-center hover:bg-white/30 transition-colors shadow-sm"
+                      title={t.share}
+                    >
+                      <i className="fa-solid fa-share-nodes"></i>
+                    </button>
+
                     <button 
                       onClick={() => window.print()}
                       className="w-10 h-10 rounded-xl bg-white/20 flex items-center justify-center hover:bg-white/30 transition-colors shadow-sm"

@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { SamplePaper } from '../types';
 import { translations } from '../translations';
@@ -12,9 +13,30 @@ interface SamplePaperViewerProps {
 const SamplePaperViewer: React.FC<SamplePaperViewerProps> = ({ paper, darkMode, lang, onBack }) => {
   const t = translations[lang];
   const [showAnswers, setShowAnswers] = useState(false);
+  const [showCopied, setShowCopied] = useState(false);
 
   const handleDownloadPDF = () => {
     window.print();
+  };
+
+  const handleShare = async () => {
+    const shareData = {
+      title: paper.title,
+      text: `WBBSE Board Sample Paper: ${paper.title} (${paper.subject}, Class ${paper.classLabel}). Prepared by WBBSE Smart Solutions.`,
+      url: window.location.href,
+    };
+
+    if (navigator.share) {
+      try {
+        await navigator.share(shareData);
+      } catch (err) {
+        console.error("Error sharing:", err);
+      }
+    } else {
+      navigator.clipboard.writeText(window.location.href);
+      setShowCopied(true);
+      setTimeout(() => setShowCopied(false), 2000);
+    }
   };
 
   return (
@@ -34,6 +56,20 @@ const SamplePaperViewer: React.FC<SamplePaperViewerProps> = ({ paper, darkMode, 
         </div>
         
         <div className="flex flex-wrap items-center gap-3">
+          {showCopied && (
+            <span className="text-[10px] font-bold text-emerald-500 animate-fadeIn">{t.copied}</span>
+          )}
+          
+          <button 
+            onClick={handleShare}
+            className={`px-5 py-2.5 rounded-2xl flex items-center space-x-2 font-black text-xs uppercase tracking-widest transition-all shadow-lg ${
+              darkMode ? 'bg-slate-800 text-blue-400 border border-blue-500/20' : 'bg-blue-50 text-blue-700 border border-blue-100 hover:bg-blue-100'
+            }`}
+          >
+            <i className="fa-solid fa-share-nodes"></i>
+            <span>{t.share}</span>
+          </button>
+
           <button 
             onClick={() => setShowAnswers(!showAnswers)}
             className={`px-5 py-2.5 rounded-2xl flex items-center space-x-2 font-black text-xs uppercase tracking-widest transition-all shadow-lg ${

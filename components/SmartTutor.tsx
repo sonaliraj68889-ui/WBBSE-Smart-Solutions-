@@ -1,3 +1,4 @@
+
 import React, { useState, useRef, useEffect } from 'react';
 import { GoogleGenAI, LiveServerMessage, Modality, Blob } from '@google/genai';
 import { solveProblem, generateDiagram, fetchExamQuestions, generateSpeech, summarizeChapter, translateContent } from '../services/geminiService';
@@ -77,6 +78,7 @@ const SmartTutor: React.FC<SmartTutorProps> = ({ darkMode, lang, initialQuery, i
   const [isLiveSession, setIsLiveSession] = useState(false);
   const [isGeneratingDiagram, setIsGeneratingDiagram] = useState(false);
   const [uploadedFile, setUploadedFile] = useState<{ data: string, name: string, mimeType: string } | null>(null);
+  const [showCopiedId, setShowCopiedId] = useState<string | null>(null);
 
   const [isAnyVoiceLoading, setIsAnyVoiceLoading] = useState<string | null>(null);
 
@@ -273,6 +275,27 @@ const SmartTutor: React.FC<SmartTutorProps> = ({ darkMode, lang, initialQuery, i
     setIsLiveSession(false);
   };
 
+  const handleShareMessage = async (msg: Message) => {
+    const textToShare = msg.showTranslated && msg.translatedText ? msg.translatedText : msg.text;
+    const shareData = {
+      title: "WBBSE Smart Solutions",
+      text: `Question: ${messages.find(m => m.timestamp < msg.timestamp && m.role === 'user')?.text || 'WBBSE Query'}\n\nAI Solution: ${textToShare}`,
+      url: window.location.href,
+    };
+
+    if (navigator.share) {
+      try {
+        await navigator.share(shareData);
+      } catch (err) {
+        console.error("Error sharing:", err);
+      }
+    } else {
+      navigator.clipboard.writeText(textToShare);
+      setShowCopiedId(msg.id);
+      setTimeout(() => setShowCopiedId(null), 2000);
+    }
+  };
+
   const startExam = async (subjectName: string, level: string) => {
     setIsExamLoading(true);
     setSelectedSubjectName(subjectName);
@@ -448,7 +471,6 @@ const SmartTutor: React.FC<SmartTutorProps> = ({ darkMode, lang, initialQuery, i
     setMessages(prev => prev.map(m => m.id === msgId ? { ...m, isTranslating: true } : m));
     try {
       // If it looks like Hindi, translate to English. Otherwise, translate to Hindi.
-      // Basic detection: if contains many non-ASCII chars, target English.
       const hasHindi = /[\u0900-\u097F]/.test(msg.text);
       const targetLang = hasHindi ? 'English' : 'Hindi';
       
@@ -477,7 +499,6 @@ const SmartTutor: React.FC<SmartTutorProps> = ({ darkMode, lang, initialQuery, i
     setIsAnyVoiceLoading(msg.id);
     
     try {
-      // Determine voice based on language of text
       const hasHindi = /[\u0900-\u097F]/.test(textToSpeak);
       const voiceName = hasHindi ? 'Kore' : 'Zephyr';
       
@@ -622,7 +643,6 @@ const SmartTutor: React.FC<SmartTutorProps> = ({ darkMode, lang, initialQuery, i
 
         {isExamMode ? (
           <div className="max-w-4xl mx-auto w-full h-full">
-            {/* Exam UI Remains same as previous version */}
             {isExamLoading ? (
               <div className="flex flex-col items-center justify-center h-full space-y-4">
                 <div className="w-16 h-16 border-4 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
@@ -773,6 +793,10 @@ const SmartTutor: React.FC<SmartTutorProps> = ({ darkMode, lang, initialQuery, i
                 <div className={`max-w-[85%] rounded-2xl p-4 shadow-sm relative group/msg ${msg.role === 'user' ? (darkMode ? 'bg-blue-700 text-white' : 'bg-blue-600 text-white shadow-md') + ' rounded-tr-none' : (darkMode ? 'bg-slate-800 text-slate-100 border-slate-700' : 'bg-white text-gray-800 border-gray-100 shadow-sm') + ' rounded-tl-none border'}`}>
                   {msg.role === 'model' && (
                     <div className="absolute -right-12 top-0 flex flex-col space-y-2">
+                      {showCopiedId === msg.id && (
+                        <div className="absolute -top-6 right-0 text-[8px] font-black text-emerald-500 animate-fadeIn whitespace-nowrap">{t.copied}</div>
+                      )}
+                      
                       <button 
                         onClick={() => handlePlayVoice(msg)}
                         className={`w-8 h-8 rounded-full flex items-center justify-center transition-all hover:scale-110 active:scale-90 ${
@@ -787,6 +811,16 @@ const SmartTutor: React.FC<SmartTutorProps> = ({ darkMode, lang, initialQuery, i
                         ) : (
                           <i className={`fa-solid ${msg.isSpeaking ? 'fa-stop' : 'fa-volume-up'} text-xs`}></i>
                         )}
+                      </button>
+
+                      <button 
+                        onClick={() => handleShareMessage(msg)}
+                        className={`w-8 h-8 rounded-full flex items-center justify-center transition-all hover:scale-110 active:scale-90 ${
+                          darkMode ? 'bg-slate-800 text-blue-400 hover:bg-slate-700 border border-slate-700' : 'bg-white text-blue-600 shadow-md border border-gray-100'
+                        }`}
+                        title={t.share}
+                      >
+                        <i className="fa-solid fa-share-nodes text-xs"></i>
                       </button>
                       
                       <button 
@@ -855,81 +889,6 @@ const SmartTutor: React.FC<SmartTutorProps> = ({ darkMode, lang, initialQuery, i
           </>
         )}
       </div>
-
-      {/* Curriculum Summary Modal Overlay */}
-      {isSummaryMenuOpen && (
-        <div className="absolute inset-x-0 bottom-[140px] z-50 p-4 animate-fadeIn">
-          <div className={`max-w-2xl mx-auto rounded-3xl border-2 shadow-2xl p-6 relative ${darkMode ? 'bg-slate-900 border-blue-500/30' : 'bg-white border-blue-100'}`}>
-            <button onClick={() => setIsSummaryMenuOpen(false)} className="absolute top-4 right-4 text-gray-400 hover:text-red-500 transition-colors"><i className="fa-solid fa-circle-xmark text-xl"></i></button>
-            
-            <div className="flex items-center space-x-4 mb-6">
-               <div className="w-10 h-10 rounded-xl bg-blue-500 text-white flex items-center justify-center shadow-lg"><i className="fa-solid fa-book-bookmark"></i></div>
-               <h3 className="font-black text-lg uppercase tracking-tight">{lang === 'hi' ? 'अध्याय सारांश' : 'Chapter Summary'}</h3>
-            </div>
-
-            <div className="space-y-6">
-              {summaryStep === 'class' && (
-                <div className="space-y-4">
-                  <p className="text-xs font-black uppercase tracking-widest opacity-50">{t.selectClass}</p>
-                  <div className="grid grid-cols-3 gap-2">
-                    {CLASSES.map(c => (
-                      <button key={c.id} onClick={() => { setSelClassId(c.id); setSummaryStep('subject'); }} className={`p-3 rounded-2xl text-xs font-black border transition-all ${darkMode ? 'bg-slate-800 border-slate-700 text-slate-300 hover:border-blue-500' : 'bg-gray-50 border-gray-200 text-gray-700 hover:border-blue-500'}`}>{c.label.split(' ')[1] || c.label}</button>
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              {summaryStep === 'subject' && (
-                <div className="space-y-4">
-                  <div className="flex items-center justify-between">
-                    <p className="text-xs font-black uppercase tracking-widest opacity-50">{t.examSubject}</p>
-                    <button onClick={() => setSummaryStep('class')} className="text-[10px] font-black uppercase text-blue-500">{t.back}</button>
-                  </div>
-                  <div className="grid grid-cols-2 gap-2">
-                    {summaryClass?.subjects.map(sub => (
-                      <button key={sub.id} onClick={() => { setSelSubId(sub.id); setSummaryStep('chapter'); }} className={`flex items-center space-x-3 p-3 rounded-2xl text-xs font-black border transition-all ${darkMode ? 'bg-slate-800 border-slate-700 text-slate-300 hover:border-blue-500' : 'bg-gray-50 border-gray-200 text-gray-700 hover:border-blue-500'}`}>
-                        <div className={`w-8 h-8 rounded-lg ${sub.color} text-white flex items-center justify-center`}><i className={`fa-solid ${sub.icon}`}></i></div>
-                        <span>{getLocalizedSubjectName(sub.id, sub.name)}</span>
-                      </button>
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              {summaryStep === 'chapter' && (
-                <div className="space-y-4">
-                  <div className="flex items-center justify-between">
-                    <p className="text-xs font-black uppercase tracking-widest opacity-50">{lang === 'hi' ? 'अध्याय चुनें' : 'Select Chapter'}</p>
-                    <button onClick={() => setSummaryStep('subject')} className="text-[10px] font-black uppercase text-blue-500">{t.back}</button>
-                  </div>
-                  <div className="max-h-48 overflow-y-auto no-scrollbar grid grid-cols-1 gap-2">
-                    {summarySubject?.chapters.map(chap => (
-                      <button key={chap.id} onClick={() => { setSelChap(chap); setSummaryStep('length'); }} className={`p-4 rounded-2xl text-left text-xs font-bold border transition-all ${darkMode ? 'bg-slate-800 border-slate-700 text-slate-300 hover:border-blue-500' : 'bg-gray-50 border-gray-200 text-gray-700 hover:border-blue-500'}`}>{chap.title}</button>
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              {summaryStep === 'length' && (
-                <div className="space-y-4">
-                  <div className="flex items-center justify-between">
-                    <p className="text-xs font-black uppercase tracking-widest opacity-50">{t.summaryLength}</p>
-                    <button onClick={() => setSummaryStep('chapter')} className="text-[10px] font-black uppercase text-blue-500">{t.back}</button>
-                  </div>
-                  <div className="grid grid-cols-3 gap-3">
-                    {(['short', 'medium', 'long'] as const).map(len => (
-                      <button key={len} onClick={() => handleGenerateChapterSummary(len)} className={`flex flex-col items-center justify-center p-4 rounded-3xl border-2 transition-all group ${darkMode ? 'bg-slate-800 border-slate-700 hover:border-blue-500' : 'bg-gray-50 border-gray-100 hover:border-blue-500'}`}>
-                        <div className="w-10 h-10 rounded-full bg-blue-500/10 text-blue-500 flex items-center justify-center mb-2 group-hover:scale-110 transition-transform"><i className={`fa-solid ${len === 'short' ? 'fa-bolt-lightning' : (len === 'medium' ? 'fa-bars-staggered' : 'fa-list-check')}`}></i></div>
-                        <span className="font-black text-[10px] uppercase tracking-wider">{t[len]}</span>
-                      </button>
-                    ))}
-                  </div>
-                </div>
-              )}
-            </div>
-          </div>
-        </div>
-      )}
 
       <div className={`p-4 border-t ${darkMode ? 'bg-slate-900 border-slate-800' : 'bg-white border-gray-100'}`}>
         {!isExamMode ? (

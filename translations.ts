@@ -96,6 +96,8 @@ export const translations = {
     translating: "Translating...",
     generateQA: "Generate Chapter Q&A",
     regenerateQA: "Regenerate Q&A",
+    share: "Share",
+    copied: "Link copied to clipboard!",
     subjects: {
       'hindi': 'Hindi',
       'english': 'English',
@@ -133,7 +135,7 @@ export const translations = {
     mainMenu: "मुख्य मेनू",
     selectChapter: "पूर्ण समाधान के लिए एक अध्याय चुनें",
     generateNotes: "बुद्धिमान समाधान और नोट्स बना रहे हैं...",
-    previous: "पिछला",
+    previous: "अगला",
     next: "अगला",
     uploadTitle: "अध्ययन सामग्री अपलोड",
     uploadDesc: "अपने हिंदी माध्यम के नोट्स अपलोड करें (केवल PDF या DOCX)",
@@ -204,6 +206,8 @@ export const translations = {
     translating: "अनुवाद हो रहा है...",
     generateQA: "अध्याय के प्रश्न-उत्तर उत्पन्न करें",
     regenerateQA: "फिर से उत्पन्न करें",
+    share: "साझा करें",
+    copied: "लिंक क्लिपबोर्ड पर कॉपी किया गया!",
     subjects: {
       'hindi': 'हिंदी',
       'english': 'अंग्रेजी',
