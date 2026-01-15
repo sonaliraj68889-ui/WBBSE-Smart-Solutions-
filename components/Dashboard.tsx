@@ -241,6 +241,13 @@ const Dashboard: React.FC<DashboardProps> = ({
           {t.viewRoutine}
         </button>
       </section>
+      
+      {/* Footer developed by mention */}
+      <footer className="pt-8 pb-4 text-center border-t border-inherit/10 opacity-40">
+        <p className="text-[10px] font-black uppercase tracking-[0.2em]">
+          {t.developedBy} <span className="text-blue-500">{t.authorName}</span>
+        </p>
+      </footer>
     </div>
   );
 };

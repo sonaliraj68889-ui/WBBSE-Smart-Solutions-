@@ -28,13 +28,13 @@ const Layout: React.FC<LayoutProps> = ({ children, activeTab, setActiveTab, dark
   ];
 
   return (
-    <div className={`min-h-screen transition-colors duration-300 flex flex-col md:flex-row ${darkMode ? 'bg-slate-950 text-slate-100' : 'bg-gray-50 text-gray-900'}`}>
+    <div className={`min-h-screen transition-colors duration-500 flex flex-col md:flex-row ${darkMode ? 'bg-slate-950 text-slate-100' : 'bg-gray-50 text-gray-900'}`}>
       {/* Mobile Header */}
       <header className={`md:hidden p-4 flex flex-col sticky top-0 z-50 transition-all duration-300 ${darkMode ? 'bg-slate-900 border-b border-slate-800' : 'bg-blue-700 text-white shadow-md'}`}>
         <div className="flex justify-between items-center w-full">
           <div className="flex items-center space-x-2">
             <i className="fa-solid fa-graduation-cap text-2xl"></i>
-            <span className="font-bold text-xl tracking-tight">WBBSE Hindi</span>
+            <span className="font-bold text-xl tracking-tight">WBBSE Smart Solutions</span>
           </div>
           <div className="flex items-center space-x-3">
             <button 
@@ -123,6 +123,7 @@ const Layout: React.FC<LayoutProps> = ({ children, activeTab, setActiveTab, dark
                   darkMode ? 'bg-slate-800 border-slate-700 text-yellow-400' : 'bg-blue-900/50 border-blue-700 text-blue-200'
                 }`}
               >
+                {/* Fixed syntax error: removed extra braces and colons */}
                 <i className={`fa-solid ${darkMode ? 'fa-sun' : 'fa-moon'} w-6 text-center`}></i>
                 <span className="font-medium">{darkMode ? t.lightMode : t.darkMode}</span>
               </button>
@@ -150,13 +151,35 @@ const Layout: React.FC<LayoutProps> = ({ children, activeTab, setActiveTab, dark
       {/* Main Content Area */}
       <main className="flex-1 h-screen overflow-y-auto relative custom-scrollbar">
         <div className="max-w-6xl mx-auto p-4 md:p-8">
-          {/* Desktop Search Bar */}
-          <div className="hidden md:block mb-8 max-w-2xl">
-            <SearchBar 
-              darkMode={darkMode} 
-              lang={lang} 
-              onResultClick={onSearchSelect} 
-            />
+          {/* Desktop Top Header Bar */}
+          <div className="hidden md:flex items-center justify-between mb-8 gap-6">
+            <div className="flex-1 max-w-2xl">
+              <SearchBar 
+                darkMode={darkMode} 
+                lang={lang} 
+                onResultClick={onSearchSelect} 
+              />
+            </div>
+            <div className="flex items-center space-x-3">
+              <button 
+                onClick={() => setLang(lang === 'en' ? 'hi' : 'en')}
+                className={`p-3.5 rounded-2xl border transition-all hover:scale-105 active:scale-95 ${
+                  darkMode ? 'bg-slate-800 border-slate-700 text-blue-400' : 'bg-white border-gray-100 text-blue-600 shadow-sm'
+                }`}
+                title={t.language}
+              >
+                <i className="fa-solid fa-language text-lg"></i>
+              </button>
+              <button 
+                onClick={() => setDarkMode(!darkMode)}
+                className={`p-3.5 rounded-2xl border transition-all hover:scale-105 active:scale-95 ${
+                  darkMode ? 'bg-slate-800 border-slate-700 text-yellow-400' : 'bg-white border-gray-100 text-indigo-600 shadow-sm'
+                }`}
+                title={darkMode ? t.lightMode : t.darkMode}
+              >
+                <i className={`fa-solid ${darkMode ? 'fa-sun' : 'fa-moon'} text-lg`}></i>
+              </button>
+            </div>
           </div>
           {children}
         </div>

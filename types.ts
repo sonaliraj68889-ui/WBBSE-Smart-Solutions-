@@ -1,3 +1,4 @@
+
 export interface Chapter {
   id: string;
   title: string;
@@ -29,12 +30,6 @@ export interface Message {
   translatedText?: string;
   showTranslated?: boolean;
   isTranslating?: boolean;
-}
-
-export interface SearchResult {
-  title: string;
-  snippet: string;
-  url: string;
 }
 
 export interface SearchHistoryItem {
@@ -76,6 +71,11 @@ export interface UploadedFile {
 
 export type ExamTerm = 'Summative 1' | 'Summative 2' | 'Summative 3' | 'Madhyamik Selection';
 
+export interface GroundingSource {
+  title?: string;
+  uri: string;
+}
+
 export interface SamplePaper {
   title: string;
   subject: string;
@@ -83,6 +83,7 @@ export interface SamplePaper {
   term: ExamTerm;
   fullMarks: number;
   timeAllowed: string;
+  sources?: GroundingSource[];
   sections: {
     title: string;
     instructions: string;
