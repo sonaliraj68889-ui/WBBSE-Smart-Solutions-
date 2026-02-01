@@ -1,0 +1,9 @@
+
+[build]
+  command = "sed -i \"s|REPLACE_WITH_API_KEY|${API_KEY}|g\" index.html"
+  publish = "."
+
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200

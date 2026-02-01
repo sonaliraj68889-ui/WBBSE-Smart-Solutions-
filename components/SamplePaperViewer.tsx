@@ -1,7 +1,7 @@
 
 import React, { useState } from 'react';
-import { SamplePaper } from '../types';
-import { translations } from '../translations';
+import { SamplePaper } from '../types.ts';
+import { translations } from '../translations.ts';
 
 interface SamplePaperViewerProps {
   paper: SamplePaper;
@@ -18,13 +18,28 @@ const SamplePaperViewer: React.FC<SamplePaperViewerProps> = ({ paper, darkMode, 
   const handleDownloadPDF = () => window.print();
 
   const handleShare = async () => {
-    const shareData = {
+    const shareData: ShareData = {
       title: paper.title,
       text: `WBBSE Board Sample Paper: ${paper.title}. Prepared by WBBSE Smart Solutions.`,
-      url: window.location.href,
     };
+
+    // Conditionally add the URL if it's a valid web protocol (http or https)
+    if (window.location.protocol === 'http:' || window.location.protocol === 'https:') {
+      shareData.url = window.location.href;
+    }
+
     if (navigator.share) {
-      try { await navigator.share(shareData); } catch (err) {}
+      try { 
+        await navigator.share(shareData); 
+      } catch (err: any) {
+        console.error("Error sharing:", err);
+        // Fallback to clipboard copy if sharing fails, especially for 'Invalid URL' errors
+        if (err instanceof DOMException && (err.name === 'NotAllowedError' || err.message.includes('Invalid URL') || err.message.includes('permission denied'))) {
+          navigator.clipboard.writeText(window.location.href);
+          setShowCopied(true);
+          setTimeout(() => setShowCopied(false), 2000);
+        }
+      }
     } else {
       navigator.clipboard.writeText(window.location.href);
       setShowCopied(true);
@@ -114,7 +129,6 @@ const SamplePaperViewer: React.FC<SamplePaperViewerProps> = ({ paper, darkMode, 
           ))}
         </div>
 
-        {/* Source Grounding Listing */}
         {paper.sources && paper.sources.length > 0 && (
           <div className="mt-20 pt-8 border-t-2 border-current border-dashed no-print">
             <h4 className="text-xs font-black uppercase tracking-widest opacity-40 mb-4">{t.sources}</h4>

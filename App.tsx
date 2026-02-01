@@ -1,29 +1,19 @@
 
-import React, { useState, useEffect, useRef } from 'react';
-import Layout from './components/Layout';
-import Dashboard from './components/Dashboard';
-import SmartTutor from './components/SmartTutor';
-import ChapterViewer from './components/ChapterViewer';
-import SamplePaperViewer from './components/SamplePaperViewer';
-import { Subject, SearchHistoryItem, UploadedFile, SamplePaper, ExamTerm } from './types';
-import { translations } from './translations';
-import { generateSamplePaper } from './services/geminiService';
+import React, { useState, useEffect } from 'react';
+import Layout from './components/Layout.tsx';
+import Dashboard from './components/Dashboard.tsx';
+import SmartTutor from './components/SmartTutor.tsx';
+import ChapterViewer from './components/ChapterViewer.tsx';
+import SamplePaperViewer from './components/SamplePaperViewer.tsx';
+import { Subject, SearchHistoryItem, SamplePaper, ExamTerm } from './types.ts';
+import { translations } from './translations.ts';
+import { generateSamplePaper, ApiError } from './services/geminiService.ts';
 
 const App: React.FC = () => {
   const [activeTab, setActiveTab] = useState('dashboard');
-  const [lang, setLang] = useState<'en' | 'hi'>(() => {
-    const saved = localStorage.getItem('lang');
-    return (saved === 'en' || saved === 'hi') ? saved : 'en';
-  });
-  const [darkMode, setDarkMode] = useState(() => {
-    const saved = localStorage.getItem('darkMode');
-    return saved ? JSON.parse(saved) : false;
-  });
-  const [selectedSubject, setSelectedSubject] = useState<{ subject: Subject, classLabel: string, initialChapterId?: string } | null>(null);
-  const [uploadedFiles, setUploadedFiles] = useState<UploadedFile[]>(() => {
-    const saved = localStorage.getItem('uploadedFiles');
-    return saved ? JSON.parse(saved).map((f: any) => ({ ...f, timestamp: new Date(f.timestamp) })) : [];
-  });
+  const [lang, setLang] = useState<'en' | 'hi'>(() => (localStorage.getItem('lang') as any) || 'en');
+  const [darkMode, setDarkMode] = useState(() => JSON.parse(localStorage.getItem('darkMode') || 'false'));
+  const [selectedSubject, setSelectedSubject] = useState<{ subject: Subject, classId: string, initialChapterId?: string } | null>(null);
   const [searchHistory, setSearchHistory] = useState<SearchHistoryItem[]>(() => {
     const saved = localStorage.getItem('searchHistory');
     return saved ? JSON.parse(saved).map((h: any) => ({ ...h, timestamp: new Date(h.timestamp) })) : [];
@@ -33,10 +23,12 @@ const App: React.FC = () => {
   const [isGeneratingPaper, setIsGeneratingPaper] = useState(false);
   const [paperGenerationError, setPaperGenerationError] = useState<any>(null);
   const [paperGenerationStatus, setPaperGenerationStatus] = useState(0);
+
+  const [showGlobalApiKeyPrompt, setShowGlobalApiKeyPrompt] = useState(false);
   
   const [pendingQuery, setPendingQuery] = useState<string | undefined>(undefined);
   const [pendingFile, setPendingFile] = useState<{ data: string, name: string, mimeType: string } | undefined>(undefined);
-  
+
   const t = translations[lang];
 
   useEffect(() => {
@@ -60,36 +52,63 @@ const App: React.FC = () => {
   useEffect(() => {
     let interval: any;
     if (isGeneratingPaper) {
-      // Very fast UI feedback (0.8s) to emphasize speed
       interval = setInterval(() => setPaperGenerationStatus(prev => (prev + 1) % generationMessages.length), 800);
     }
     return () => clearInterval(interval);
   }, [isGeneratingPaper, lang]);
 
-  const handleSelectSamplePaper = async (subject: string, classLabel: string, term: ExamTerm) => {
+  const handleQuotaExceeded = () => {
+    setShowGlobalApiKeyPrompt(true);
+  };
+
+  const handleSelectPaidApiKey = async () => {
+    // Assuming window.aistudio and its methods are globally available as per coding guidelines.
+    if (window.aistudio && window.aistudio.openSelectKey) {
+      try {
+        await window.aistudio.openSelectKey();
+        setShowGlobalApiKeyPrompt(false); // Assume success as per guideline
+        // The user can now manually retry the operation that failed.
+      } catch (error) {
+        console.error("Error opening API key selection dialog:", error);
+        // Optionally, show an error that the dialog couldn't be opened.
+      }
+    } else {
+      alert("API key selection is not available in this environment.");
+      setShowGlobalApiKeyPrompt(false);
+    }
+  };
+
+  const handleSelectSamplePaper = async (subject: string, classId: string, term: ExamTerm) => {
     setActiveTab('papers');
     setIsGeneratingPaper(true);
     setPaperGenerationError(null);
     setPaperGenerationStatus(0);
     try {
-      // Gemini 3 Flash is ultra-fast, so we trigger immediately
+      const classLabel = (t.classLabels as any)[classId] || classId;
       const paper = await generateSamplePaper(subject, classLabel, term);
       setSelectedSamplePaper(paper);
     } catch (err: any) {
-      setPaperGenerationError({ 
-        subject, 
-        classLabel, 
-        term, 
-        msg: lang === 'hi' ? "विफल। कृपया पुनः प्रयास करें।" : "Failed. Please try again." 
-      });
+      if (err instanceof ApiError && err.code === 'QUOTA_EXCEEDED') {
+        handleQuotaExceeded();
+        setPaperGenerationError(null); // Clear local error if global prompt takes over
+      } else {
+        let friendlyMsg = t.errorGeneric;
+        if (err instanceof ApiError) {
+          switch (err.code) {
+            case 'SAFETY_BLOCKED': friendlyMsg = t.errorSafety; break;
+            case 'SERVER_ERROR': friendlyMsg = t.errorServer; break;
+          }
+        }
+        setPaperGenerationError({ 
+          subject, 
+          classId, 
+          term, 
+          msg: friendlyMsg, 
+          details: err?.message 
+        });
+      }
     } finally {
       setIsGeneratingPaper(false);
-    }
-  };
-
-  const handleRetryPaper = () => {
-    if (paperGenerationError) {
-      handleSelectSamplePaper(paperGenerationError.subject, paperGenerationError.classLabel, paperGenerationError.term);
     }
   };
 
@@ -100,18 +119,54 @@ const App: React.FC = () => {
     setActiveTab('dashboard');
   };
 
+  const handleSearchSelect = (s: Subject, clId: string, ch?: string) => {
+    setSelectedSubject({ subject: s, classId: clId, initialChapterId: ch });
+    setActiveTab('curriculum');
+  };
+
   const renderContent = () => {
     switch (activeTab) {
       case 'dashboard':
-        return <Dashboard onSelectSubject={(s, cl) => { setSelectedSubject({ subject: s, classLabel: cl }); setActiveTab('curriculum'); }} onSearchHistoryClick={q => { setPendingQuery(q); setActiveTab('tutor'); }} onClearHistory={() => setSearchHistory([])} onSelectSamplePaper={handleSelectSamplePaper} searchHistory={searchHistory} darkMode={darkMode} lang={lang} />;
+        return (
+          <Dashboard 
+            onSelectSubject={handleSearchSelect} 
+            onSearchHistoryClick={q => { setPendingQuery(q); setActiveTab('tutor'); }} 
+            onClearHistory={() => setSearchHistory([])} 
+            onSelectSamplePaper={handleSelectSamplePaper} 
+            searchHistory={searchHistory} 
+            darkMode={darkMode} 
+            lang={lang} 
+          />
+        );
       case 'tutor':
-        return <SmartTutor darkMode={darkMode} lang={lang} initialQuery={pendingQuery} initialFile={pendingFile} onSaveSearch={q => setSearchHistory(prev => [{ id: Math.random().toString(36).substr(2,9), query: q, timestamp: new Date() }, ...prev.filter(h => h.query !== q)].slice(0, 10))} />;
+        return (
+          <SmartTutor 
+            darkMode={darkMode} 
+            lang={lang} 
+            initialQuery={pendingQuery} 
+            initialFile={pendingFile} 
+            onSaveSearch={q => setSearchHistory(prev => [{ id: Math.random().toString(36).substr(2,9), query: q, timestamp: new Date() }, ...prev.filter(h => h.query !== q)].slice(0, 10))} 
+            onHome={handleGoHome}
+            onQuotaExceeded={handleQuotaExceeded}
+          />
+        );
       case 'curriculum':
-        return selectedSubject ? <ChapterViewer subject={selectedSubject.subject} classLabel={selectedSubject.classLabel} initialChapterId={selectedSubject.initialChapterId} onBack={() => setSelectedSubject(null)} onHome={handleGoHome} darkMode={darkMode} lang={lang} /> : null;
+        return selectedSubject ? (
+          <ChapterViewer 
+            subject={selectedSubject.subject} 
+            classId={selectedSubject.classId} 
+            initialChapterId={selectedSubject.initialChapterId} 
+            onBack={() => setSelectedSubject(null)} 
+            onHome={handleGoHome} 
+            darkMode={darkMode} 
+            lang={lang} 
+            onQuotaExceeded={handleQuotaExceeded}
+          />
+        ) : null;
       case 'papers':
         if (isGeneratingPaper) {
           return (
-            <div className="flex flex-col items-center justify-center h-[70vh] space-y-8 max-w-lg mx-auto text-center px-6">
+            <div className="flex flex-col items-center justify-center h-[70vh] space-y-8 max-w-lg mx-auto text-center px-6 animate-fadeIn">
               <div className="relative">
                 <div className="w-20 h-20 border-8 border-blue-600/10 border-t-blue-500 rounded-full animate-spin"></div>
                 <div className="absolute inset-0 flex items-center justify-center">
@@ -119,9 +174,9 @@ const App: React.FC = () => {
                 </div>
               </div>
               <div className="space-y-3">
-                <h3 className="text-3xl font-black italic tracking-tighter text-blue-600">FLASH MODE</h3>
+                <h3 className="text-3xl font-black italic tracking-tighter text-blue-600 uppercase">Flash Mode</h3>
                 <h4 className="text-xl font-bold">{generationMessages[paperGenerationStatus]}</h4>
-                <p className="opacity-50 text-xs font-black uppercase tracking-widest">{lang === 'hi' ? "शक्तिशाली एआई द्वारा संचालित" : "Powered by Ultra-Fast Gemini 3"}</p>
+                <p className="opacity-50 text-xs font-black uppercase tracking-widest">Powered by Gemini AI</p>
               </div>
             </div>
           );
@@ -129,16 +184,15 @@ const App: React.FC = () => {
         if (paperGenerationError) {
           return (
             <div className="flex flex-col items-center justify-center h-[60vh] text-center space-y-8 px-8 animate-fadeIn">
-              <div className="w-24 h-24 bg-red-100 text-red-600 rounded-[2rem] flex items-center justify-center text-4xl shadow-lg"><i className="fa-solid fa-triangle-exclamation"></i></div>
-              <div className="space-y-3 max-w-sm">
-                <h3 className="text-3xl font-black">{lang === 'hi' ? 'क्षमा करें!' : 'Oops!'}</h3>
-                <p className="text-gray-500 font-medium">{paperGenerationError.msg}</p>
+              <div className="w-24 h-24 bg-red-100 text-red-600 rounded-[2.5rem] flex items-center justify-center text-4xl shadow-xl shadow-red-500/10"><i className="fa-solid fa-triangle-exclamation"></i></div>
+              <div className="max-w-md">
+                <h4 className="text-2xl font-black mb-2">{paperGenerationError.msg}</h4>
+                {paperGenerationError.details && <p className="text-[10px] font-mono opacity-30 mb-6 truncate">{paperGenerationError.details}</p>}
+                <p className="text-sm opacity-60 font-medium">This usually happens during high peak hours or if the daily usage quota is reached. Please try generating it again.</p>
               </div>
-              <div className="flex flex-col w-full max-w-xs gap-3">
-                <button onClick={handleRetryPaper} className="w-full bg-blue-600 text-white px-8 py-4 rounded-2xl font-black uppercase tracking-widest shadow-xl hover:bg-blue-700 active:scale-95 transition-all">
-                  <i className="fa-solid fa-rotate-right mr-2"></i> {lang === 'hi' ? 'पुनः प्रयास करें' : 'Retry Now'}
-                </button>
-                <button onClick={handleGoHome} className="w-full px-8 py-4 rounded-2xl font-black uppercase tracking-widest border-2 border-gray-100 text-gray-400 hover:bg-gray-50">{t.back}</button>
+              <div className="flex gap-4">
+                <button onClick={() => handleGoHome()} className={`px-8 py-3 rounded-xl font-bold transition-all ${darkMode ? 'bg-slate-800 text-slate-300' : 'bg-gray-100 text-gray-600'}`}>Cancel</button>
+                <button onClick={() => handleSelectSamplePaper(paperGenerationError.subject, paperGenerationError.classId, paperGenerationError.term)} className="bg-blue-600 text-white px-10 py-3 rounded-xl font-bold shadow-xl shadow-blue-500/20 hover:scale-105 active:scale-95 transition-all">Retry Now</button>
               </div>
             </div>
           );
@@ -148,17 +202,56 @@ const App: React.FC = () => {
         }
         return null;
       default:
-        return <Dashboard onSelectSubject={(s, cl) => { setSelectedSubject({ subject: s, classLabel: cl }); setActiveTab('curriculum'); }} onSearchHistoryClick={q => { setPendingQuery(q); setActiveTab('tutor'); }} onClearHistory={() => setSearchHistory([])} onSelectSamplePaper={handleSelectSamplePaper} searchHistory={searchHistory} darkMode={darkMode} lang={lang} />;
+        return null;
     }
   };
 
-  useEffect(() => {
-    if (activeTab === 'tutor') { setPendingQuery(undefined); setPendingFile(undefined); }
-  }, [activeTab]);
-
   return (
-    <Layout activeTab={activeTab} setActiveTab={setActiveTab} darkMode={darkMode} setDarkMode={setDarkMode} lang={lang} setLang={setLang} onSearchSelect={(s, cl, ch) => { setSelectedSubject({ subject: s, classLabel: cl, initialChapterId: ch }); setActiveTab('curriculum'); }}>
+    <Layout 
+      activeTab={activeTab} 
+      setActiveTab={setActiveTab} 
+      darkMode={darkMode} 
+      setDarkMode={setDarkMode} 
+      lang={lang} 
+      setLang={setLang} 
+      onSearchSelect={handleSearchSelect}
+    >
       {renderContent()}
+
+      {showGlobalApiKeyPrompt && (
+        <div className="fixed inset-0 z-[1000] flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-fadeIn">
+          <div className={`relative w-full max-w-md p-8 rounded-[2.5rem] shadow-3xl flex flex-col items-center text-center ${darkMode ? 'bg-slate-900 border border-slate-700 text-slate-100' : 'bg-white border border-gray-100 text-gray-900'}`}>
+            <button 
+              onClick={() => setShowGlobalApiKeyPrompt(false)} 
+              className={`absolute top-5 right-5 w-8 h-8 rounded-full flex items-center justify-center text-sm ${darkMode ? 'bg-slate-800 text-slate-400 hover:bg-slate-700' : 'bg-gray-100 text-gray-500 hover:bg-gray-200'}`}
+              title="Close"
+            >
+              <i className="fa-solid fa-xmark"></i>
+            </button>
+            <div className={`w-20 h-20 rounded-full flex items-center justify-center text-3xl mb-6 ${darkMode ? 'bg-red-900/20 text-red-400' : 'bg-red-100 text-red-600'}`}>
+              <i className="fa-solid fa-cloud-bolt"></i>
+            </div>
+            <h3 className="text-2xl font-black mb-4">{t.apiKeyRequiredTitle}</h3>
+            <p className={`text-sm mb-8 leading-relaxed ${darkMode ? 'text-slate-400' : 'text-gray-600'}`}>
+              {t.apiKeyQuotaMessage}
+            </p>
+            <button 
+              onClick={handleSelectPaidApiKey} 
+              className="w-full px-8 py-4 bg-blue-600 text-white rounded-[1.5rem] font-black uppercase tracking-widest text-sm shadow-xl shadow-blue-500/30 hover:bg-blue-700 transition-all hover:-translate-y-1 active:scale-95"
+            >
+              <i className="fa-solid fa-key mr-2"></i> {t.selectApiKeyButton}
+            </button>
+            <a 
+              href="https://ai.google.dev/gemini-api/docs/billing" 
+              target="_blank" 
+              rel="noopener noreferrer" 
+              className="mt-4 text-blue-500 hover:underline text-sm font-medium"
+            >
+              {t.learnMoreBilling} <i className="fa-solid fa-external-link text-xs ml-1"></i>
+            </a>
+          </div>
+        </div>
+      )}
     </Layout>
   );
 };

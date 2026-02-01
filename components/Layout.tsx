@@ -1,8 +1,8 @@
 
 import React, { useState } from 'react';
-import { translations } from '../translations';
-import SearchBar from './SearchBar';
-import { Subject } from '../types';
+import { translations } from '../translations.ts';
+import SearchBar from './SearchBar.tsx';
+import { Subject } from '../types.ts';
 
 interface LayoutProps {
   children: React.ReactNode;
@@ -123,7 +123,6 @@ const Layout: React.FC<LayoutProps> = ({ children, activeTab, setActiveTab, dark
                   darkMode ? 'bg-slate-800 border-slate-700 text-yellow-400' : 'bg-blue-900/50 border-blue-700 text-blue-200'
                 }`}
               >
-                {/* Fixed syntax error: removed extra braces and colons */}
                 <i className={`fa-solid ${darkMode ? 'fa-sun' : 'fa-moon'} w-6 text-center`}></i>
                 <span className="font-medium">{darkMode ? t.lightMode : t.darkMode}</span>
               </button>

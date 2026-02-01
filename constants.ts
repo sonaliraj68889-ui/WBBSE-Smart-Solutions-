@@ -1,3 +1,4 @@
+
 import { ClassLevel } from './types';
 
 export interface UsefulLink {
@@ -101,23 +102,23 @@ export const CLASSES: ClassLevel[] = [
         icon: 'fa-calculator',
         color: 'bg-indigo-600',
         chapters: [
-          { id: '10-m-1', title: 'एक चर वाले द्विघात समीकरण' },
-          { id: '10-m-2', title: 'सरल ब्याज' },
-          { id: '10-m-3', title: 'वृत्त से संबंधित प्रमेय' },
-          { id: '10-m-4', title: 'आयताकार समांतर षट्फलक या घनाभ' },
-          { id: '10-m-5', title: 'अनुपात और समानुपात' },
-          { id: '10-m-6', title: 'चक्रवृद्धि ब्याज और समान वृद्धि दर' },
-          { id: '10-m-8', title: 'लंब वृत्ताकार बेलन' },
-          { id: '10-m-9', title: 'द्विघात करणी' },
-          { id: '10-m-12', title: 'गोलक' },
-          { id: '10-m-13', title: 'भेद' },
-          { id: '10-m-14', title: 'साझा व्यापार' },
-          { id: '10-m-16', title: 'लंब वृत्ताकार शंकु' },
-          { id: '10-m-18', title: 'सदृशता' },
-          { id: '10-m-20', title: 'त्रिकोणमिति: कोण मापन की अवधारणा' },
-          { id: '10-m-23', title: 'त्रिकोणमितीय अनुपात और सर्वसमिकाएँ' },
-          { id: '10-m-25', title: 'ऊँचाई और दूरी' },
-          { id: '10-m-26', title: 'सांख्यिकी: माध्य, माध्यक, ओजाइव, बहुलक' }
+          { id: '10-m-1', title: 'एक चर वाले द्विघात समीकरण (Quadratic Equations with one variable)' },
+          { id: '10-m-2', title: 'सरल ब्याज (Simple Interest)' },
+          { id: '10-m-3', title: 'वृत्त से संबंधित प्रमेय (Theorems related to Circle)' },
+          { id: '10-m-4', title: 'आयताकार समांतर षट्फलक या घनाभ (Rectangular Parallelopiped or Cuboid)' },
+          { id: '10-m-5', title: 'अनुपात और समानुपात (Ratio and Proportion)' },
+          { id: '10-m-6', title: 'चक्रवृद्धि ब्याज और समान वृद्धि दर (Compound Interest and Uniform Rate of Increase or Decrease)' },
+          { id: '10-m-8', title: 'लंब वृत्ताकार बेलन (Right Circular Cylinder)' },
+          { id: '10-m-9', title: 'द्विघात करणी (Quadratic Surds)' },
+          { id: '10-m-12', title: 'गोलक (Sphere)' },
+          { id: '10-m-13', title: 'भेद (Variation)' },
+          { id: '10-m-14', title: 'साझा व्यापार (Partnership Business)' },
+          { id: '10-m-16', title: 'लंब वृत्ताकार शंकु (Right Circular Cone)' },
+          { id: '10-m-18', title: 'सदृशता (Similarity)' },
+          { id: '10-m-20', title: 'त्रिकोणमिति: कोण मापन की अवधारणा (Trigonometry: Concept of Measurement of Angle)' },
+          { id: '10-m-23', title: 'त्रिकोणमितीय अनुपात और सर्वसमिकाएँ (Trigonometric Ratios and Trigonometric Identities)' },
+          { id: '10-m-25', title: 'ऊँचाई और दूरी (Height and Distance)' },
+          { id: '10-m-26', title: 'सांख्यिकी: माध्य, माध्यक, ओजाइव, बहुलक (Statistics: Mean, Median, Ogive, Mode)' }
         ],
       },
       {
@@ -126,19 +127,19 @@ export const CLASSES: ClassLevel[] = [
         icon: 'fa-atom',
         color: 'bg-emerald-600',
         chapters: [
-          { id: '10-ps-1', title: 'हमारे पर्यावरण के प्रति चिंता' },
-          { id: '10-ps-2', title: 'गैसों का व्यवहार' },
-          { id: '10-ps-3', title: 'रासायनिक गणना' },
-          { id: '10-ps-4', title: 'तापीय घटना' },
-          { id: '10-ps-5', title: 'प्रकाश' },
-          { id: '10-ps-6', title: 'धारा विद्युत' },
-          { id: '10-ps-7', title: 'परमाणु नाभिक' },
-          { id: '10-ps-8.1', title: 'आवर्त सारणी' },
-          { id: '10-ps-8.2', title: 'आयनिक और सहसंयोजक बंधन' },
-          { id: '10-ps-8.3', title: 'वैद्युतिकी और रासायनिक अभिक्रिया' },
-          { id: '10-ps-8.4', title: 'अकार्बनिक रसायन' },
-          { id: '10-ps-8.5', title: 'धातुकर्म' },
-          { id: '10-ps-8.6', title: 'कार्बनिक रसायन' }
+          { id: '10-ps-1', title: 'हमारे पर्यावरण के प्रति चिंता (Concerns about our Environment)' },
+          { id: '10-ps-2', title: 'गैसों का व्यवहार (Behavior of Gases)' },
+          { id: '10-ps-3', title: 'रासायनिक गणना (Chemical Calculations)' },
+          { id: '10-ps-4', title: 'तापीय घटना (Thermal Phenomena)' },
+          { id: '10-ps-5', title: 'प्रकाश (Light)' },
+          { id: '10-ps-6', title: 'धारा विद्युत (Current Electricity)' },
+          { id: '10-ps-7', title: 'परमाणु नाभिक (Atomic Nucleus)' },
+          { id: '10-ps-8.1', title: 'आवर्त सारणी (Periodic Table)' },
+          { id: '10-ps-8.2', title: 'आयनिक और सहसंयोजक बंधन (Ionic and Covalent Bonding)' },
+          { id: '10-ps-8.3', title: 'वैद्युतिकी और रासायनिक अभिक्रिया (Electricity and Chemical Reactions)' },
+          { id: '10-ps-8.4', title: 'अकार्बनिक रसायन (Inorganic Chemistry)' },
+          { id: '10-ps-8.5', title: 'धातुकर्म (Metallurgy)' },
+          { id: '10-ps-8.6', title: 'कार्बनिक रसायन (Organic Chemistry)' }
         ],
       },
       {
@@ -147,11 +148,11 @@ export const CLASSES: ClassLevel[] = [
         icon: 'fa-dna',
         color: 'bg-green-600',
         chapters: [
-          { id: '10-ls-1', title: 'जीव जगत में नियंत्रण एवं समन्वय' },
-          { id: '10-ls-2', title: 'जीवन की निरंतरता' },
-          { id: '10-ls-3', title: 'वंशानुगति' },
-          { id: '10-ls-4', title: 'अभिव्यक्ति और अनुकूलन' },
-          { id: '10-ls-5', title: 'पर्यावरण और उसके संसाधन' }
+          { id: '10-ls-1', title: 'जीव जगत में नियंत्रण एवं समन्वय (Control and Coordination in Living Organisms)' },
+          { id: '10-ls-2', title: 'जीवन की निरंतरता (Continuity of Life)' },
+          { id: '10-ls-3', title: 'वंशानुगति (Heredity)' },
+          { id: '10-ls-4', title: 'अभिव्यक्ति और अनुकूलन (Evolution and Adaptation)' },
+          { id: '10-ls-5', title: 'पर्यावरण और उसके संसाधन (Environment and its Resources)' }
         ]
       },
       {
@@ -160,14 +161,14 @@ export const CLASSES: ClassLevel[] = [
         icon: 'fa-landmark',
         color: 'bg-amber-600',
         chapters: [
-          { id: '10-hi-1', title: 'इतिहास की अवधारणा' },
-          { id: '10-hi-2', title: 'सुधार: विशेषताएँ और अवलोकन' },
-          { id: '10-hi-3', title: 'प्रतिरोध और विद्रोह' },
-          { id: '10-hi-4', title: 'संघबद्धता की प्रारंभिक अवस्था' },
-          { id: '10-hi-5', title: 'वैकल्पिक विचार और पहल' },
-          { id: '10-hi-6', title: '20वीं सदी के भारत में आंदोलन' },
-          { id: '10-hi-7', title: 'महिला एवं छात्र आंदोलन' },
-          { id: '10-hi-8', title: 'उत्तर-औपनिवेशिक भारत' }
+          { id: '10-hi-1', title: 'इतिहास की अवधारणा (Ideas of History)' },
+          { id: '10-hi-2', title: 'सुधार: विशेषताएँ और अवलोकन (Reform: Characteristics and Observations)' },
+          { id: '10-hi-3', title: 'प्रतिरोध और विद्रोह (Resistance and Rebellion)' },
+          { id: '10-hi-4', title: 'संघबद्धता की प्रारंभिक अवस्था (Early Stages of Collective Action)' },
+          { id: '10-hi-5', title: 'वैकल्पिक विचार और पहल (Alternative Ideas and Initiatives)' },
+          { id: '10-hi-6', title: '20वीं सदी के भारत में आंदोलन (Movements in 20th Century India)' },
+          { id: '10-hi-7', title: 'महिला एवं छात्र आंदोलन (Women and Student Movements)' },
+          { id: '10-hi-8', title: 'उत्तर-औपनिवेशिक भारत (Post-Colonial India)' }
         ]
       },
       {
@@ -176,12 +177,12 @@ export const CLASSES: ClassLevel[] = [
         icon: 'fa-earth-europe',
         color: 'bg-teal-600',
         chapters: [
-          { id: '10-g-1', title: 'बहिर्जात प्रक्रियाएं' },
-          { id: '10-g-2', title: 'वायुमंडल' },
-          { id: '10-g-3', title: 'जलमंडल' },
-          { id: '10-g-4', title: 'अपशिष्ट प्रबंधन' },
-          { id: '10-g-5', title: 'भारत: प्राकृतिक और आर्थिक' },
-          { id: '10-g-6', title: 'उपग्रह चित्र और स्थलाकृतिक मानचित्र' }
+          { id: '10-g-1', title: 'बहिर्जात प्रक्रियाएं (Exogenetic Processes)' },
+          { id: '10-g-2', title: 'वायुमंडल (Atmosphere)' },
+          { id: '10-g-3', title: 'जलमंडल (Hydrosphere)' },
+          { id: '10-g-4', title: 'अपशिष्ट प्रबंधन (Waste Management)' },
+          { id: '10-g-5', title: 'भारत: प्राकृतिक और आर्थिक (India: Physical and Economic)' },
+          { id: '10-g-6', title: 'उपग्रह चित्र और स्थलाकृतिक मानचित्र (Satellite Imagery and Topographical Maps)' }
         ]
       }
     ],
@@ -268,20 +269,20 @@ export const CLASSES: ClassLevel[] = [
         icon: 'fa-square-root-variable',
         color: 'bg-indigo-500',
         chapters: [
-          { id: '9-m-1', title: 'वास्तविक संख्या' },
-          { id: '9-m-2', title: 'सूचकांक के नियम' },
-          { id: '9-m-3', title: 'लेखाचित्र' },
-          { id: '9-m-4', title: 'स्थानांक ज्यामिति: दूरी सूत्र' },
-          { id: '9-m-5', title: 'रैखिक सह-समीकरण' },
-          { id: '9-m-6', title: 'आयतकार क्षेत्र का क्षेत्रफल' },
-          { id: '9-m-7', title: 'बहुपदी व्यंजक' },
-          { id: '9-m-8', title: 'गुणनखंडन' },
-          { id: '9-m-9', title: 'भेदक और मध्य-बिंदु प्रमेय' },
-          { id: '9-m-10', title: 'लाभ और हानि' },
-          { id: '9-m-11', title: 'सांख्यिकी' },
-          { id: '9-m-12', title: 'त्रिभुज और चतुर्भुज का क्षेत्रफल' },
-          { id: '9-m-13', title: 'वृत्त की परिधि' },
-          { id: '9-m-14', title: 'वृत्त का क्षेत्रफल' },
+          { id: '9-m-1', title: 'वास्तविक संख्या (Real Numbers)' },
+          { id: '9-m-2', title: 'सूचकांक के नियम (Laws of Indices)' },
+          { id: '9-m-3', title: 'लेखाचित्र (Graph)' },
+          { id: '9-m-4', title: 'स्थानांक ज्यामिति: दूरी सूत्र (Coordinate Geometry: Distance Formula)' },
+          { id: '9-m-5', title: 'रैखिक सह-समीकरण (Linear Simultaneous Equations)' },
+          { id: '9-m-6', title: 'आयतकार क्षेत्र का क्षेत्रफल (Area of Rectangular Region)' },
+          { id: '9-m-7', title: 'बहुपदी व्यंजक (Polynomial)' },
+          { id: '9-m-8', title: 'गुणनखंडन (Factorisation)' },
+          { id: '9-m-9', title: 'भेदक और मध्य-बिंदु प्रमेय (Transversal and Mid-point Theorem)' },
+          { id: '9-m-10', title: 'लाभ और हानि (Profit and Loss)' },
+          { id: '9-m-11', title: 'सांख्यिकी (Statistics)' },
+          { id: '9-m-12', title: 'त्रिभुज और चतुर्भुज का क्षेत्रफल (Area of Triangle and Quadrilateral)' },
+          { id: '9-m-13', title: 'वृत्त की परिधि (Circumference of Circle)' },
+          { id: '9-m-14', title: 'वृत्त का क्षेत्रफल (Area of Circle)' },
           { id: '9-m-15', title: 'लघुगणक (Logarithm)' }
         ]
       },
@@ -291,16 +292,16 @@ export const CLASSES: ClassLevel[] = [
         icon: 'fa-flask-vial',
         color: 'bg-emerald-500',
         chapters: [
-          { id: '9-ps-1', title: 'मापन' },
-          { id: '9-ps-2', title: 'बल और गति' },
-          { id: '9-ps-3', title: 'पदार्थ: संरचना और गुण' },
-          { id: '9-ps-4', title: 'परमाणु संरचना' },
-          { id: '9-ps-5', title: 'मोल की अवधारणा' },
-          { id: '9-ps-6', title: 'विलयन' },
-          { id: '9-ps-7', title: 'अम्ल, क्षार और लवण' },
-          { id: '9-ps-8', title: 'कार्य, शक्ति और ऊर्जा' },
-          { id: '9-ps-9', title: 'ऊष्मा' },
-          { id: '9-ps-10', title: 'ध्वनि' }
+          { id: '9-ps-1', title: 'मापन (Measurement)' },
+          { id: '9-ps-2', title: 'बल और गति (Force and Motion)' },
+          { id: '9-ps-3', title: 'पदार्थ: संरचना और गुण (Matter: Structure and Properties)' },
+          { id: '9-ps-4', title: 'परमाणु संरचना (Atomic Structure)' },
+          { id: '9-ps-5', title: 'मोल की अवधारणा (Concept of Mole)' },
+          { id: '9-ps-6', title: 'विलयन (Solution)' },
+          { id: '9-ps-7', title: 'अम्ल, क्षार और लवण (Acids, Bases and Salts)' },
+          { id: '9-ps-8', title: 'कार्य, शक्ति और ऊर्जा (Work, Power and Energy)' },
+          { id: '9-ps-9', title: 'ऊष्मा (Heat)' },
+          { id: '9-ps-10', title: 'ध्वनि (Sound)' }
         ]
       },
       {
@@ -309,11 +310,11 @@ export const CLASSES: ClassLevel[] = [
         icon: 'fa-dna',
         color: 'bg-green-600',
         chapters: [
-          { id: '9-ls-1', title: 'जीवन और इसकी विविधता' },
-          { id: '9-ls-2', title: 'जीवन के संगठन का स्तर' },
-          { id: '9-ls-3', title: 'जीवन की शारीरिक प्रक्रियाएं' },
-          { id: '9-ls-4', title: 'जीवविज्ञान और मानव कल्याण' },
-          { id: '9-ls-5', title: 'पर्यावरण और उसके संसाधन' }
+          { id: '9-ls-1', title: 'जीवन और इसकी विविधता (Life and its Diversity)' },
+          { id: '9-ls-2', title: 'जीवन के संगठन का स्तर (Level of Organization of Life)' },
+          { id: '9-ls-3', title: 'जीवन की शारीरिक प्रक्रियाएं (Physiological Processes of Life)' },
+          { id: '9-ls-4', title: 'जीवविज्ञान और मानव कल्याण (Biology and Human Welfare)' },
+          { id: '9-ls-5', title: 'पर्यावरण और उसके संसाधन (Environment and its Resources)' }
         ]
       },
       {
@@ -322,13 +323,13 @@ export const CLASSES: ClassLevel[] = [
         icon: 'fa-landmark',
         color: 'bg-amber-500',
         chapters: [
-          { id: '9-hi-1', title: 'फ्रांसीसी क्रांति के कुछ पहलू' },
-          { id: '9-hi-2', title: 'क्रांतिकारी आदर्श, नेपोलियन साम्राज्य' },
-          { id: '9-hi-3', title: 'उन्नीसवीं सदी का यूरोप' },
-          { id: '9-hi-4', title: 'औद्योगिक क्रांति, उपनिवेशवाद और साम्राज्यवाद' },
-          { id: '9-hi-5', title: 'बीसवीं सदी का यूरोप' },
-          { id: '9-hi-6', title: 'द्वितीय विश्व युद्ध और उसके बाद' },
-          { id: '9-hi-7', title: 'संयुक्त राष्ट्र संघ (UNO)' }
+          { id: '9-hi-1', title: 'फ्रांसीसी क्रांति के कुछ पहलू (Some Aspects of the French Revolution)' },
+          { id: '9-hi-2', title: 'क्रांतिकारी आदर्श, नेपोलियन साम्राज्य (Revolutionary Ideals, Napoleonic Empire)' },
+          { id: '9-hi-3', title: 'उन्नीसवीं सदी का यूरोप (Nineteenth Century Europe)' },
+          { id: '9-hi-4', title: 'औद्योगिक क्रांति, उपनिवेशवाद और साम्राज्यवाद (Industrial Revolution, Colonialism and Imperialism)' },
+          { id: '9-hi-5', title: 'बीसवीं सदी का यूरोप (Twentieth Century Europe)' },
+          { id: '9-hi-6', title: 'द्वितीय विश्व युद्ध और उसके बाद (Second World War and After)' },
+          { id: '9-hi-7', title: 'संयुक्त राष्ट्र संघ (United Nations Organization)' }
         ]
       },
       {
@@ -337,14 +338,14 @@ export const CLASSES: ClassLevel[] = [
         icon: 'fa-earth-europe',
         color: 'bg-teal-500',
         chapters: [
-          { id: '9-g-1', title: 'ग्रह के रूप में पृथ्वी' },
-          { id: '9-g-2', title: 'पृथ्वी की गतियां' },
-          { id: '9-g-3', title: 'पृथ्वी के धरातल पर स्थान निर्धारण' },
-          { id: '9-g-4', title: 'भू-आकृतिक प्रक्रियाएं' },
-          { id: '9-g-5', title: 'अपक्षय' },
-          { id: '9-g-6', title: 'आपदा और प्रबंधन' },
-          { id: '9-g-7', title: 'भारत के संसाधन' },
-          { id: '9-g-8', title: 'पश्चिम बंगाल' }
+          { id: '9-g-1', title: 'ग्रह के रूप में पृथ्वी (Earth as a Planet)' },
+          { id: '9-g-2', title: 'पृथ्वी की गतियां (Movements of the Earth)' },
+          { id: '9-g-3', title: 'पृथ्वी के धरातल पर स्थान निर्धारण (Determination of Place on Earth\'s Surface)' },
+          { id: '9-g-4', title: 'भू-आकृतिक प्रक्रियाएं (Geomorphic Processes)' },
+          { id: '9-g-5', title: 'अपक्षय (Weathering)' },
+          { id: '9-g-6', title: 'आपदा और प्रबंधन (Hazards and Disasters Management)' },
+          { id: '9-g-7', title: 'भारत के संसाधन (Resources of India)' },
+          { id: '9-g-8', title: 'पश्चिम बंगाल (West Bengal)' }
         ]
       }
     ],
@@ -406,16 +407,16 @@ export const CLASSES: ClassLevel[] = [
         icon: 'fa-plus-minus',
         color: 'bg-indigo-400',
         chapters: [
-          { id: '8-m-1', title: 'पूर्व पाठों की पुनरावृत्ति' },
-          { id: '8-m-2', title: 'परिमेय संख्या की अवधारणा' },
-          { id: '8-m-3', title: 'पाई-चित्र' },
-          { id: '8-m-5', title: 'घनफल की अवधारणा' },
-          { id: '8-m-6', title: 'बीजगणितीय संख्याओं का गुणन और भाग' },
-          { id: '8-m-8', title: 'बीजगणितीय संख्याओं का गुणनखंडन' },
-          { id: '8-m-10', title: 'त्रैराशिक नियम' },
-          { id: '8-m-11', title: 'प्रतिशत' },
-          { id: '8-m-12', title: 'मिश्रण' },
-          { id: '8-m-13', title: 'समय और कार्य' }
+          { id: '8-m-1', title: 'पूर्व पाठों की पुनरावृत्ति (Revision of Previous Lessons)' },
+          { id: '8-m-2', title: 'परिमेय संख्या की अवधारणा (Concept of Rational Numbers)' },
+          { id: '8-m-3', title: 'पाई-चित्र (Pie Chart)' },
+          { id: '8-m-5', title: 'घनफल की अवधारणा (Concept of Cube Volume)' },
+          { id: '8-m-6', title: 'बीजगणितीय संख्याओं का गुणन और भाग (Multiplication and Division of Algebraic Expressions)' },
+          { id: '8-m-8', title: 'बीजगणितीय संख्याओं का गुणनखंडन (Factorisation of Algebraic Expressions)' },
+          { id: '8-m-10', title: 'त्रैराशिक नियम (Rule of Three)' },
+          { id: '8-m-11', title: 'प्रतिशत (Percentage)' },
+          { id: '8-m-12', title: 'मिश्रण (Mixture)' },
+          { id: '8-m-13', title: 'समय और कार्य (Time and Work)' }
         ]
       },
       {
@@ -424,12 +425,12 @@ export const CLASSES: ClassLevel[] = [
         icon: 'fa-microscope',
         color: 'bg-green-400',
         chapters: [
-          { id: '8-s-1', title: 'भौतिक पर्यावरण: बल और दबाव' },
-          { id: '8-s-2', title: 'पदार्थ की प्रकृति' },
-          { id: '8-s-3', title: 'सजीव जगत की संरचना' },
-          { id: '8-s-4', title: 'अंतःस्रावी ग्रंथियां और किशोरवस्था' },
-          { id: '8-s-5', title: 'जैव विविधता और संरक्षण' },
-          { id: '8-s-6', title: 'कृषि प्रणाली' }
+          { id: '8-s-1', title: 'भौतिक पर्यावरण: बल और दबाव (Physical Environment: Force and Pressure)' },
+          { id: '8-s-2', title: 'पदार्थ की प्रकृति (Nature of Matter)' },
+          { id: '8-s-3', title: 'सजीव जगत की संरचना (Structure of Living World)' },
+          { id: '8-s-4', title: 'अंतःस्रावी ग्रंथियां और किशोरवस्था (Endocrine Glands and Adolescence)' },
+          { id: '8-s-5', title: 'जैव विविधता और संरक्षण (Biodiversity and Conservation)' },
+          { id: '8-s-6', title: 'कृषि प्रणाली (Agricultural Systems)' }
         ]
       },
       {
@@ -438,11 +439,11 @@ export const CLASSES: ClassLevel[] = [
         icon: 'fa-shield-halved',
         color: 'bg-amber-500',
         chapters: [
-          { id: '8-hi-1', title: 'क्षेत्रीय शक्तियों का उदय' },
-          { id: '8-hi-2', title: 'औपनिवेशिक प्रभुत्व की स्थापना' },
-          { id: '8-hi-3', title: 'औपनिवेशिक अर्थव्यवस्था' },
-          { id: '8-hi-4', title: 'विद्रोह और प्रतिरोध' },
-          { id: '8-hi-5', title: 'भारतीय राष्ट्रवाद के आधार' }
+          { id: '8-hi-1', title: 'क्षेत्रीय शक्तियों का उदय (Rise of Regional Powers)' },
+          { id: '8-hi-2', title: 'औपनिवेशिक प्रभुत्व की स्थापना (Establishment of Colonial Dominance)' },
+          { id: '8-hi-3', title: 'औपनिवेशिक अर्थव्यवस्था (Colonial Economy)' },
+          { id: '8-hi-4', title: 'विद्रोह और प्रतिरोध (Rebellion and Resistance)' },
+          { id: '8-hi-5', title: 'भारतीय राष्ट्रवाद के आधार (Foundations of Indian Nationalism)' }
         ]
       },
       {
@@ -451,11 +452,11 @@ export const CLASSES: ClassLevel[] = [
         icon: 'fa-earth-americas',
         color: 'bg-teal-400',
         chapters: [
-          { id: '8-g-1', title: 'पृथ्वी के अंदर' },
-          { id: '8-g-2', title: 'अस्थिर पृथ्वी' },
-          { id: '8-g-3', title: 'वायुदाब और हवा' },
-          { id: '8-g-4', title: 'बादल और वर्षा' },
-          { id: '8-g-5', title: 'उत्तर अमेरिका' }
+          { id: '8-g-1', title: 'पृथ्वी के अंदर (Inside the Earth)' },
+          { id: '8-g-2', title: 'अस्थिर पृथ्वी (Unstable Earth)' },
+          { id: '8-g-3', title: 'वायुदाब और हवा (Air Pressure and Wind)' },
+          { id: '8-g-4', title: 'बादल और वर्षा (Clouds and Rain)' },
+          { id: '8-g-5', title: 'उत्तर अमेरिका (North America)' }
         ]
       }
     ],
@@ -517,18 +518,18 @@ export const CLASSES: ClassLevel[] = [
         icon: 'fa-divide',
         color: 'bg-indigo-300',
         chapters: [
-          { id: '7-m-0', title: 'पूर्व पाठों की पुनरावृत्ति' },
-          { id: '7-m-1', title: 'अनुपात' },
-          { id: '7-m-2', title: 'समानुपात' },
-          { id: '7-m-3', title: 'पूर्णांकों की अवधारणा' },
-          { id: '7-m-4', title: 'भिन्न' },
-          { id: '7-m-5', title: 'घातांक' },
-          { id: '7-m-6', title: 'बीजगणितीय चर की अवधारणा' },
-          { id: '7-m-7', title: 'रैखिक समीकरण' },
-          { id: '7-m-8', title: 'समान्तरिक रेखाएँ' },
-          { id: '7-m-9', title: 'त्रिभुज की रचना' },
-          { id: '7-m-10', title: 'प्रतिशत' },
-          { id: '7-m-11', title: 'समय और दूरी' }
+          { id: '7-m-0', title: 'पूर्व पाठों की पुनरावृत्ति (Revision of Previous Lessons)' },
+          { id: '7-m-1', title: 'अनुपात (Ratio)' },
+          { id: '7-m-2', title: 'समानुपात (Proportion)' },
+          { id: '7-m-3', title: 'पूर्णांकों की अवधारणा (Concept of Integers)' },
+          { id: '7-m-4', title: 'भिन्न (Fractions)' },
+          { id: '7-m-5', title: 'घातांक (Exponents)' },
+          { id: '7-m-6', title: 'बीजगणितीय चर की अवधारणा (Concept of Algebraic Variables)' },
+          { id: '7-m-7', title: 'रैखिक समीकरण (Linear Equations)' },
+          { id: '7-m-8', title: 'समान्तरिक रेखाएँ (Parallel Lines)' },
+          { id: '7-m-9', title: 'त्रिभुज की रचना (Construction of Triangles)' },
+          { id: '7-m-10', title: 'प्रतिशत (Percentage)' },
+          { id: '7-m-11', title: 'समय और दूरी (Time and Distance)' }
         ]
       },
       {
@@ -537,14 +538,14 @@ export const CLASSES: ClassLevel[] = [
         icon: 'fa-leaf',
         color: 'bg-green-300',
         chapters: [
-          { id: '7-s-1', title: 'भौतिक पर्यावरण: ऊष्मा' },
-          { id: '7-s-2', title: 'भौतिक पर्यावरण: प्रकाश' },
-          { id: '7-s-3', title: 'भौतिक पर्यावरण: चुंबकत्व' },
-          { id: '7-s-4', title: 'स्थिर विद्युत' },
-          { id: '7-s-5', title: 'परमाणु, अणु और रासायनिक अभिक्रिया' },
-          { id: '7-s-6', title: 'पर्यावरण और सतत विकास' },
-          { id: '7-s-7', title: 'मानव शरीर का संगठन' },
-          { id: '7-s-8', title: 'खाद्य और स्वास्थ्य' }
+          { id: '7-s-1', title: 'भौतिक पर्यावरण: ऊष्मा (Physical Environment: Heat)' },
+          { id: '7-s-2', title: 'भौतिक पर्यावरण: प्रकाश (Physical Environment: Light)' },
+          { id: '7-s-3', title: 'भौतिक पर्यावरण: चुंबकत्व (Physical Environment: Magnetism)' },
+          { id: '7-s-4', title: 'स्थिर विद्युत (Static Electricity)' },
+          { id: '7-s-5', title: 'परमाणु, अणु और रासायनिक अभिक्रिया (Atoms, Molecules and Chemical Reactions)' },
+          { id: '7-s-6', title: 'पर्यावरण और सतत विकास (Environment and Sustainable Development)' },
+          { id: '7-s-7', title: 'मानव शरीर का संगठन (Organization of Human Body)' },
+          { id: '7-s-8', title: 'खाद्य और स्वास्थ्य (Food and Health)' }
         ]
       },
       {
@@ -553,13 +554,13 @@ export const CLASSES: ClassLevel[] = [
         icon: 'fa-scroll',
         color: 'bg-amber-400',
         chapters: [
-          { id: '7-hi-1', title: 'इतिहास की समझ' },
-          { id: '7-hi-2', title: 'भारत का इतिहास: एक परिचय' },
-          { id: '7-hi-3', title: 'मध्यकालीन भारत में क्षेत्रीय शक्तियां' },
-          { id: '7-hi-4', title: 'दिल्ली के सुल्तान' },
-          { id: '7-hi-5', title: 'मुगल साम्राज्य' },
-          { id: '7-hi-6', title: 'भक्ति और सूफी आंदोलन' },
-          { id: '7-hi-7', title: 'मध्यकालीन भारत का जीवन' }
+          { id: '7-hi-1', title: 'इतिहास की समझ (Understanding History)' },
+          { id: '7-hi-2', title: 'भारत का इतिहास: एक परिचय (History of India: An Introduction)' },
+          { id: '7-hi-3', title: 'मध्यकालीन भारत में क्षेत्रीय शक्तियां (Regional Powers in Medieval India)' },
+          { id: '7-hi-4', title: 'दिल्ली के सुल्तान (Sultans of Delhi)' },
+          { id: '7-hi-5', title: 'मुगल साम्राज्य (Mughal Empire)' },
+          { id: '7-hi-6', title: 'भक्ति और सूफी आंदोलन (Bhakti and Sufi Movement)' },
+          { id: '7-hi-7', title: 'मध्यकालीन भारत का जीवन (Life in Medieval India)' }
         ]
       },
       {
@@ -568,13 +569,13 @@ export const CLASSES: ClassLevel[] = [
         icon: 'fa-map-location-dot',
         color: 'bg-teal-300',
         chapters: [
-          { id: '7-g-1', title: 'पृथ्वी की गतियां' },
-          { id: '7-g-2', title: 'वायुदाब और पवन' },
-          { id: '7-g-3', title: 'भूमि और नदियां' },
-          { id: '7-g-4', title: 'मिट्टी और वनस्पति' },
-          { id: '7-g-5', title: 'अफ्रीका' },
-          { id: '7-g-6', title: 'यूरोप' },
-          { id: '7-g-7', title: 'एशिया का परिचय' }
+          { id: '7-g-1', title: 'पृथ्वी की गतियां (Movements of the Earth)' },
+          { id: '7-g-2', title: 'वायुदाब और पवन (Air Pressure and Wind)' },
+          { id: '7-g-3', title: 'भूमि और नदियां (Land and Rivers)' },
+          { id: '7-g-4', title: 'मिट्टी और वनस्पति (Soil and Vegetation)' },
+          { id: '7-g-5', title: 'अफ्रीका (Africa)' },
+          { id: '7-g-6', title: 'यूरोप (Europe)' },
+          { id: '7-g-7', title: 'एशिया का परिचय (Introduction to Asia)' }
         ]
       }
     ],
@@ -636,14 +637,14 @@ export const CLASSES: ClassLevel[] = [
         icon: 'fa-equals',
         color: 'bg-indigo-200',
         chapters: [
-          { id: '6-m-0', title: 'संख्याओं का परिचय' },
-          { id: '6-m-1', title: 'बोडमास (BODMAS) नियम' },
-          { id: '6-m-2', title: 'ल.स.प. और म.स.प. (LCM & HCF)' },
-          { id: '6-m-3', title: 'दशमलव और भिन्न' },
-          { id: '6-m-4', title: 'अनुपात और समानुपात' },
-          { id: '6-m-5', title: 'प्रतिशत की अवधारणा' },
-          { id: '6-m-6', title: 'सांख्यिकी' },
-          { id: '6-m-7', title: 'ज्यामिति का परिचय' }
+          { id: '6-m-0', title: 'संख्याओं का परिचय (Introduction to Numbers)' },
+          { id: '6-m-1', title: 'बोडमास (BODMAS) नियम (BODMAS Rule)' },
+          { id: '6-m-2', title: 'ल.स.प. और म.स.प. (LCM & HCF) (LCM & HCF)' },
+          { id: '6-m-3', title: 'दशमलव और भिन्न (Decimals and Fractions)' },
+          { id: '6-m-4', title: 'अनुपात और समानुपात (Ratio and Proportion)' },
+          { id: '6-m-5', title: 'प्रतिशत की अवधारणा (Concept of Percentage)' },
+          { id: '6-m-6', title: 'सांख्यिकी (Statistics)' },
+          { id: '6-m-7', title: 'ज्यामिति का परिचय (Introduction to Geometry)' }
         ]
       },
       {
@@ -652,13 +653,13 @@ export const CLASSES: ClassLevel[] = [
         icon: 'fa-wind',
         color: 'bg-sky-400',
         chapters: [
-          { id: '6-s-1', title: 'सजीवों की परस्पर निर्भरता' },
-          { id: '6-s-2', title: 'पदार्थ की प्रकृति और गुण' },
-          { id: '6-s-3', title: 'मापन की अवधारणा' },
-          { id: '6-s-4', title: 'सामान्य मशीनें' },
-          { id: '6-s-5', title: 'जैव विविधता' },
-          { id: '6-s-6', title: 'अपशिष्ट प्रबंधन' },
-          { id: '6-s-7', title: 'बल और दबाव' }
+          { id: '6-s-1', title: 'सजीवों की परस्पर निर्भरता (Interdependence of Living Organisms)' },
+          { id: '6-s-2', title: 'पदार्थ की प्रकृति और गुण (Nature and Properties of Matter)' },
+          { id: '6-s-3', title: 'मापन की अवधारणा (Concept of Measurement)' },
+          { id: '6-s-4', title: 'सामान्य मशीनें (Simple Machines)' },
+          { id: '6-s-5', title: 'जैव विविधता (Biodiversity)' },
+          { id: '6-s-6', title: 'अपशिष्ट प्रबंधन (Waste Management)' },
+          { id: '6-s-7', title: 'बल और दबाव (Force and Pressure)' }
         ]
       }
     ],
@@ -707,13 +708,13 @@ export const CLASSES: ClassLevel[] = [
         icon: 'fa-plus',
         color: 'bg-blue-400',
         chapters: [
-          { id: '5-m-1', title: 'बड़ी संख्याएं' },
-          { id: '5-m-2', title: 'जोड़ और घटाव' },
-          { id: '5-m-3', title: 'गुणा और भाग' },
-          { id: '5-m-4', title: 'गुणनखंड और गुणज' },
-          { id: '5-m-5', title: 'अभाज्य और भाज्य संख्याएं' },
-          { id: '5-m-6', title: 'भिन्न की अवधारणा' },
-          { id: '5-m-7', title: 'ज्यामितीय आकार' }
+          { id: '5-m-1', title: 'बड़ी संख्याएं (Large Numbers)' },
+          { id: '5-m-2', title: 'जोड़ और घटाव (Addition and Subtraction)' },
+          { id: '5-m-3', title: 'गुणा और भाग (Multiplication and Division)' },
+          { id: '5-m-4', title: 'गुणनखंड और गुणज (Factors and Multiples)' },
+          { id: '5-m-5', title: 'अभाज्य और भाज्य संख्याएं (Prime and Composite Numbers)' },
+          { id: '5-m-6', title: 'भिन्न की अवधारणा (Concept of Fractions)' },
+          { id: '5-m-7', title: 'ज्यामितीय आकार (Geometrical Shapes)' }
         ]
       },
       {
@@ -722,12 +723,12 @@ export const CLASSES: ClassLevel[] = [
         icon: 'fa-tree',
         color: 'bg-green-500',
         chapters: [
-          { id: '5-e-1', title: 'मानव शरीर: त्वचा और हड्डियां' },
-          { id: '5-e-2', title: 'जीव जगत और विविधता' },
-          { id: '5-e-3', title: 'पारिस्थितिकी तंत्र' },
-          { id: '5-e-4', title: 'सामाजिक पर्यावरण' },
-          { id: '5-e-5', title: 'पारंपरिक ज्ञान और संस्कृति' },
-          { id: '5-e-6', title: 'जल संरक्षण' }
+          { id: '5-e-1', title: 'मानव शरीर: त्वचा और हड्डियां (Human Body: Skin and Bones)' },
+          { id: '5-e-2', title: 'जीव जगत और विविधता (Living World and Diversity)' },
+          { id: '5-e-3', title: 'पारिस्थितिकी तंत्र (Ecosystem)' },
+          { id: '5-e-4', title: 'सामाजिक पर्यावरण (Social Environment)' },
+          { id: '5-e-5', title: 'पारंपरिक ज्ञान और संस्कृति (Traditional Knowledge and Culture)' },
+          { id: '5-e-6', title: 'जल संरक्षण (Water Conservation)' }
         ]
       }
     ]

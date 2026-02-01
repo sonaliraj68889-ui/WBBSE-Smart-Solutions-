@@ -1,14 +1,14 @@
 
 import React, { useState } from 'react';
-import { CLASSES, USEFUL_LINKS } from '../constants';
-import { Subject, SearchHistoryItem, ExamTerm } from '../types';
-import { translations } from '../translations';
+import { CLASSES, USEFUL_LINKS } from '../constants.ts';
+import { Subject, SearchHistoryItem, ExamTerm } from '../types.ts';
+import { translations } from '../translations.ts';
 
 interface DashboardProps {
-  onSelectSubject: (subject: Subject, classLabel: string) => void;
+  onSelectSubject: (subject: Subject, classId: string) => void;
   onSearchHistoryClick: (query: string) => void;
   onClearHistory: () => void;
-  onSelectSamplePaper: (subject: string, classLabel: string, term: ExamTerm) => void;
+  onSelectSamplePaper: (subject: string, classId: string, term: ExamTerm) => void;
   searchHistory: SearchHistoryItem[];
   darkMode: boolean;
   lang: 'en' | 'hi';
@@ -35,6 +35,10 @@ const Dashboard: React.FC<DashboardProps> = ({
 
   const getLocalizedSubjectName = (subId: string, fallback: string) => {
     return t.subjects[subId as keyof typeof t.subjects] || fallback;
+  };
+
+  const getLocalizedClassName = (classId: string) => {
+    return (t.classLabels as any)[classId] || classId;
   };
 
   return (
@@ -81,7 +85,7 @@ const Dashboard: React.FC<DashboardProps> = ({
                   activeClassTab === c.id ? 'bg-blue-600 text-white shadow-lg' : 'text-gray-500 hover:text-gray-700 dark:hover:text-slate-300'
                 }`}
               >
-                {c.label.split(' ')[1] || c.label}
+                {getLocalizedClassName(c.id).split(' ')[1] || getLocalizedClassName(c.id)}
               </button>
             ))}
           </div>
@@ -111,7 +115,7 @@ const Dashboard: React.FC<DashboardProps> = ({
                   {currentClass.subjects.map(sub => (
                     <button 
                       key={sub.id}
-                      onClick={() => onSelectSamplePaper(getLocalizedSubjectName(sub.id, sub.name), currentClass.label, term.id)}
+                      onClick={() => onSelectSamplePaper(getLocalizedSubjectName(sub.id, sub.name), currentClass.id, term.id)}
                       className={`text-left px-3 py-2.5 rounded-xl text-[11px] font-black uppercase tracking-tight transition-all flex items-center justify-between group/btn ${
                         darkMode 
                           ? 'bg-slate-900 text-slate-400 hover:bg-blue-600 hover:text-white' 
@@ -163,14 +167,14 @@ const Dashboard: React.FC<DashboardProps> = ({
       {CLASSES.map((classLevel) => (
         <section key={classLevel.id} className="space-y-4">
           <div className="flex items-center justify-between px-2">
-            <h2 className={`text-2xl font-bold ${darkMode ? 'text-slate-100' : 'text-gray-800'}`}>{classLevel.label}</h2>
+            <h2 className={`text-2xl font-bold ${darkMode ? 'text-slate-100' : 'text-gray-800'}`}>{getLocalizedClassName(classLevel.id)}</h2>
             <button className="text-blue-600 font-semibold hover:underline text-sm">{t.viewAll}</button>
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
             {classLevel.subjects.map((subject) => (
               <div 
                 key={subject.id}
-                onClick={() => onSelectSubject(subject, classLevel.label)}
+                onClick={() => onSelectSubject(subject, classLevel.id)}
                 className={`group cursor-pointer rounded-2xl p-6 border transition-all duration-300 shadow-sm hover:shadow-xl ${
                   darkMode ? 'bg-slate-900 border-slate-800 hover:border-blue-700' : 'bg-white border-gray-100 hover:border-blue-200'
                 }`}

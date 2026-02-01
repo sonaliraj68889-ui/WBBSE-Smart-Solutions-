@@ -1,10 +1,11 @@
 
 import React, { useState, useEffect, useRef } from 'react';
-import { CLASSES } from '../constants';
-import { translations } from '../translations';
-import { Subject, Chapter } from '../types';
+import { CLASSES } from '../constants.ts';
+import { translations } from '../translations.ts';
+import { Subject, Chapter } from '../types.ts';
 
 interface SearchResult {
+  classId: string;
   classLabel: string;
   subject: Subject;
   chapter: Chapter;
@@ -13,7 +14,7 @@ interface SearchResult {
 interface SearchBarProps {
   darkMode: boolean;
   lang: 'en' | 'hi';
-  onResultClick: (subject: Subject, classLabel: string, chapterId: string) => void;
+  onResultClick: (subject: Subject, classId: string, chapterId: string) => void;
   isMobileSearchVisible?: boolean;
 }
 
@@ -34,6 +35,10 @@ const SearchBar: React.FC<SearchBarProps> = ({ darkMode, lang, onResultClick, is
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
+  const getLocalizedClassName = (classId: string) => {
+    return (t.classLabels as any)[classId] || classId;
+  };
+
   useEffect(() => {
     if (query.length < 2) {
       setResults([]);
@@ -45,18 +50,19 @@ const SearchBar: React.FC<SearchBarProps> = ({ darkMode, lang, onResultClick, is
     const lowerQuery = query.toLowerCase();
 
     CLASSES.forEach((cls) => {
+      const classLabel = getLocalizedClassName(cls.id);
       cls.subjects.forEach((sub) => {
-        // Match in subject name
         const localizedSubName = (t.subjects as any)[sub.id] || sub.name;
         
         sub.chapters.forEach((chap) => {
           if (
             chap.title.toLowerCase().includes(lowerQuery) ||
             localizedSubName.toLowerCase().includes(lowerQuery) ||
-            cls.label.toLowerCase().includes(lowerQuery)
+            classLabel.toLowerCase().includes(lowerQuery)
           ) {
             searchResults.push({
-              classLabel: cls.label,
+              classId: cls.id,
+              classLabel: classLabel,
               subject: sub,
               chapter: chap,
             });
@@ -65,12 +71,12 @@ const SearchBar: React.FC<SearchBarProps> = ({ darkMode, lang, onResultClick, is
       });
     });
 
-    setResults(searchResults.slice(0, 8)); // Limit to 8 results for UX
+    setResults(searchResults.slice(0, 8));
     setShowDropdown(true);
-  }, [query, t.subjects]);
+  }, [query, t.subjects, t.classLabels]);
 
   const handleResultClick = (res: SearchResult) => {
-    onResultClick(res.subject, res.classLabel, res.chapter.id);
+    onResultClick(res.subject, res.classId, res.chapter.id);
     setQuery('');
     setShowDropdown(false);
   };
