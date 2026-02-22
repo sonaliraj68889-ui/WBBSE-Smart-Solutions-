@@ -755,7 +755,7 @@ const SmartTutor: React.FC<SmartTutorProps> = ({ darkMode, lang, initialQuery, i
                   </div>
                 </div>
               </div>
-            ) : (
+            ) : examResult ? (
               <div className="animate-fadeIn space-y-8 md:space-y-10 pb-16 flex-1">
                 <div className={`rounded-[2rem] md:rounded-[3rem] p-8 md:p-20 text-center shadow-2xl relative overflow-hidden ${darkMode ? 'bg-slate-900 border border-slate-800' : 'bg-white border border-gray-100'}`}>
                   <div className="absolute top-0 left-0 w-full h-2 md:h-3 bg-gradient-to-r from-blue-400 via-indigo-500 to-purple-600"></div>
