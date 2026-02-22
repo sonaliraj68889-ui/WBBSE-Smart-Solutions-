@@ -102,6 +102,7 @@ const App: React.FC = () => {
           switch (err.code) {
             case 'SAFETY_BLOCKED': friendlyMsg = t.errorSafety; break;
             case 'SERVER_ERROR': friendlyMsg = t.errorServer; break;
+            case 'INVALID_KEY': friendlyMsg = t.errorInvalidKey; break;
           }
         }
         setPaperGenerationError({ 
@@ -249,12 +250,19 @@ const App: React.FC = () => {
             <p className={`text-sm mb-8 leading-relaxed ${darkMode ? 'text-slate-400' : 'text-gray-600'}`}>
               {t.apiKeyQuotaMessage}
             </p>
-            <button 
-              onClick={handleSelectPaidApiKey} 
-              className="w-full px-8 py-4 bg-blue-600 text-white rounded-[1.5rem] font-black uppercase tracking-widest text-sm shadow-xl shadow-blue-500/30 hover:bg-blue-700 transition-all hover:-translate-y-1 active:scale-95"
-            >
-              <i className="fa-solid fa-key mr-2"></i> {t.selectApiKeyButton}
-            </button>
+            {window.aistudio ? (
+              <button 
+                onClick={handleSelectPaidApiKey} 
+                className="w-full px-8 py-4 bg-blue-600 text-white rounded-[1.5rem] font-black uppercase tracking-widest text-sm shadow-xl shadow-blue-500/30 hover:bg-blue-700 transition-all hover:-translate-y-1 active:scale-95"
+              >
+                <i className="fa-solid fa-key mr-2"></i> {t.selectApiKeyButton}
+              </button>
+            ) : (
+              <div className={`p-4 rounded-xl text-sm font-medium ${darkMode ? 'bg-slate-800 text-slate-300' : 'bg-gray-100 text-gray-700'}`}>
+                <p className="mb-2"><i className="fa-solid fa-triangle-exclamation text-amber-500 mr-2"></i>Environment Configuration Required</p>
+                <p className="text-xs opacity-70">Please configure the <code>VITE_GEMINI_API_KEY</code> environment variable in your Netlify dashboard settings to continue.</p>
+              </div>
+            )}
             <a 
               href="https://ai.google.dev/gemini-api/docs/billing" 
               target="_blank" 

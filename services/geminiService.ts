@@ -2,7 +2,7 @@
 import { GoogleGenAI, Type, Modality } from "@google/genai";
 import { SamplePaper, ExamTerm, ExamQuestion } from "../types.ts";
 
-export type ApiErrorCode = 'QUOTA_EXCEEDED' | 'SAFETY_BLOCKED' | 'SERVER_ERROR' | 'UNKNOWN';
+export type ApiErrorCode = 'QUOTA_EXCEEDED' | 'SAFETY_BLOCKED' | 'SERVER_ERROR' | 'INVALID_KEY' | 'UNKNOWN';
 
 export class ApiError extends Error {
   constructor(public message: string, public code: ApiErrorCode, public originalError?: any) {
@@ -34,6 +34,11 @@ async function withRetry<T>(fn: () => Promise<T>, maxRetries = 3): Promise<T> {
         await new Promise(resolve => setTimeout(resolve, delay));
         continue;
       }
+
+      // Handle Invalid Key
+      if (status === 400 || status === 403 || errorStr.includes('400') || errorStr.includes('403') || errorStr.includes('API key')) {
+         throw new ApiError("Invalid or missing API Key.", "INVALID_KEY", error);
+      }
       
       // Handle Server Errors
       if (status >= 500 || errorStr.includes('500')) {
@@ -56,7 +61,13 @@ async function withRetry<T>(fn: () => Promise<T>, maxRetries = 3): Promise<T> {
   throw new ApiError(lastError?.message || "An unexpected error occurred", "UNKNOWN", lastError);
 }
 
-const getAIClient = () => new GoogleGenAI({ apiKey: process.env.API_KEY });
+const getAIClient = () => {
+  const apiKey = import.meta.env.VITE_GEMINI_API_KEY || process.env.GEMINI_API_KEY || process.env.API_KEY;
+  if (!apiKey) {
+    console.error("Gemini API Key is missing. Please set VITE_GEMINI_API_KEY in your environment variables.");
+  }
+  return new GoogleGenAI({ apiKey: apiKey || "" });
+};
 
 const MATH_NOTATION_RULE = `MATH NOTATION: You MUST use clear Unicode text for mathematical expressions. Do NOT use LaTeX code or dollar signs ($).
 - Use Unicode superscripts for exponents: x², y³, cm², m/s², 10⁻¹⁹.

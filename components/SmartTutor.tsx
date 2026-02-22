@@ -162,6 +162,7 @@ const SmartTutor: React.FC<SmartTutorProps> = ({ darkMode, lang, initialQuery, i
         case 'QUOTA_EXCEEDED':
           onQuotaExceeded(); 
           return "";
+        case 'INVALID_KEY': return t.errorInvalidKey;
         case 'SAFETY_BLOCKED': return t.errorSafety;
         case 'SERVER_ERROR': return t.errorServer;
         default: return t.errorGeneric;
