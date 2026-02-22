@@ -1,9 +1,9 @@
 
-
 import React, { useState, useEffect } from 'react';
 import { Subject, Chapter } from '../types.ts';
 import { summarizeChapter, fetchChapterQuestions, ApiError } from '../services/geminiService.ts';
 import { translations } from '../translations.ts';
+import MathText from './MathText.tsx';
 
 interface ChapterViewerProps {
   subject: Subject;
@@ -13,7 +13,7 @@ interface ChapterViewerProps {
   darkMode: boolean;
   lang: 'en' | 'hi';
   initialChapterId?: string;
-  onQuotaExceeded: () => void; // New prop for global quota error handling
+  onQuotaExceeded: () => void;
 }
 
 type SummaryLength = 'short' | 'medium' | 'long';
@@ -32,7 +32,7 @@ const ChapterViewer: React.FC<ChapterViewerProps> = ({
   darkMode, 
   lang, 
   initialChapterId,
-  onQuotaExceeded // Destructure new prop
+  onQuotaExceeded 
 }) => {
   const t = translations[lang];
   const [selectedChapter, setSelectedChapter] = useState<Chapter | null>(null);
@@ -54,15 +54,15 @@ const ChapterViewer: React.FC<ChapterViewerProps> = ({
     if (err instanceof ApiError) {
       switch (err.code) {
         case 'QUOTA_EXCEEDED':
-          onQuotaExceeded(); // Trigger global prompt
-          setError(null); // Clear local error if global prompt takes over
+          onQuotaExceeded(); 
+          setError(null); 
           setErrorDetails(null);
           break;
         case 'SAFETY_BLOCKED': setError(t.errorSafety); break;
         case 'SERVER_ERROR': setError(t.errorServer); break;
         default: setError(t.errorGeneric); break;
       }
-      if (err.code !== 'QUOTA_EXCEEDED') { // Only set local details if not quota error
+      if (err.code !== 'QUOTA_EXCEEDED') { 
         setErrorDetails(err.message);
       }
     } else {
@@ -108,7 +108,7 @@ const ChapterViewer: React.FC<ChapterViewerProps> = ({
   };
 
   const toggleAnswer = (key: string) => setVisibleAnswers(prev => ({ ...prev, [key]: !prev[key] }));
-
+  
   useEffect(() => {
     if (initialChapterId) {
       const chapter = subject.chapters.find(c => c.id === initialChapterId);
@@ -118,6 +118,7 @@ const ChapterViewer: React.FC<ChapterViewerProps> = ({
 
   return (
     <div className="animate-fadeIn space-y-6 pb-20">
+      {/* Interactive Toolbar */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div className="flex items-center space-x-4">
           <button onClick={onBack} className={`w-10 h-10 flex items-center justify-center rounded-full shadow-md transition-all hover:scale-110 active:scale-95 ${darkMode ? 'bg-slate-800 text-slate-100' : 'bg-white text-gray-600'}`}>
@@ -136,6 +137,7 @@ const ChapterViewer: React.FC<ChapterViewerProps> = ({
         </div>
       </div>
 
+      {/* Interactive Main Layout */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         <div className="lg:col-span-1 space-y-4">
           <div className={`p-6 rounded-[2rem] border shadow-sm ${darkMode ? 'bg-slate-900 border-slate-800' : 'bg-white border-gray-100'}`}>
@@ -242,8 +244,8 @@ const ChapterViewer: React.FC<ChapterViewerProps> = ({
                             </div>
                           </div>
                           
-                          <div className={`prose max-w-none ${darkMode ? 'prose-invert prose-slate' : 'prose-blue'} text-lg md:text-xl leading-[1.8] font-medium whitespace-pre-wrap`}>
-                            {summary}
+                          <div className={`prose max-w-none ${darkMode ? 'prose-invert prose-slate' : 'prose-blue'} text-lg md:text-xl leading-[1.8] font-medium`}>
+                            <MathText text={summary} />
                           </div>
                         </section>
 
@@ -270,39 +272,57 @@ const ChapterViewer: React.FC<ChapterViewerProps> = ({
                     )}
 
                     {activeMode === 'qa' && (
-                      <div className="space-y-10 py-4 animate-fadeIn">
-                        <div className="flex items-center justify-between border-b pb-4">
-                           <h4 className="flex items-center space-x-4 text-2xl font-black uppercase tracking-tight">
-                              <i className="fa-solid fa-pen-to-square text-amber-500"></i>
-                              <span>{t.generateQA}</span>
-                           </h4>
-                           <button onClick={() => handleModeSwitch('qa')} className="text-[10px] font-black uppercase text-blue-500 hover:underline"><i className="fa-solid fa-rotate mr-2"></i> {t.regenerateQA}</button>
+                      <div className="space-y-10 animate-fadeIn">
+                        <div className="flex items-center justify-between border-b-4 border-double pb-6 mb-10 border-current/10">
+                           <div className="flex items-center space-x-3">
+                              <div className="w-12 h-12 rounded-2xl bg-amber-500 text-white flex items-center justify-center text-xl shadow-lg shadow-amber-500/20">
+                                 <i className="fa-solid fa-clipboard-question"></i>
+                              </div>
+                              <h4 className="text-xl font-black uppercase tracking-tight text-amber-600">{t.generateQA}</h4>
+                           </div>
+                           <button 
+                             onClick={() => handleModeSwitch('qa')} 
+                             className="w-10 h-10 rounded-xl flex items-center justify-center border hover:bg-gray-50 dark:hover:bg-slate-800 transition-all" 
+                             title={t.regenerateQA}
+                           >
+                             <i className="fa-solid fa-rotate-right"></i>
+                           </button>
                         </div>
-                        <div className="space-y-6">
-                          {qaSolutions.map((qa, i) => (
-                            <div key={i} className={`rounded-3xl border transition-all ${darkMode ? 'bg-slate-900 border-slate-800' : 'bg-white border-gray-100 shadow-xl'}`}>
-                              <button onClick={() => toggleAnswer(`qa-${i}`)} className="w-full text-left p-8 flex items-start justify-between group">
-                                <div className="flex items-start space-x-6">
-                                   <span className="w-10 h-10 flex-shrink-0 bg-amber-500 text-white rounded-2xl flex items-center justify-center text-sm font-black shadow-lg group-hover:scale-110 transition-transform">Q{i+1}</span>
-                                   <span className="font-black text-xl leading-snug tracking-tight">{qa.question}</span>
-                                </div>
-                                <i className={`fa-solid fa-chevron-${visibleAnswers[`qa-${i}`] ? 'up' : 'down'} opacity-20 mt-3 text-sm`}></i>
-                              </button>
-                              {visibleAnswers[`qa-${i}`] && (
-                                <div className={`p-10 border-t bg-gray-50 dark:bg-slate-800/50 text-base md:text-lg leading-[1.8] font-medium whitespace-pre-wrap animate-fadeIn border-l-8 border-amber-500`}>{qa.answer}</div>
-                              )}
-                            </div>
-                          ))}
-                        </div>
+
+                        {qaSolutions.map((qa, index) => (
+                          <div key={index} className={`p-6 md:p-8 rounded-[2rem] border transition-all ${darkMode ? 'bg-slate-900 border-slate-800' : 'bg-white border-gray-100 shadow-lg'}`}>
+                             <div className="flex items-start space-x-4 mb-6">
+                               <span className="w-8 h-8 rounded-lg bg-blue-600 text-white flex-shrink-0 flex items-center justify-center font-black text-xs shadow-md">Q{index + 1}</span>
+                               <h5 className="text-lg md:text-xl font-bold leading-snug pt-1"><MathText text={qa.question} /></h5>
+                             </div>
+                             
+                             <div className={`relative overflow-hidden rounded-2xl transition-all ${visibleAnswers[`q-${index}`] ? 'max-h-[1000px] opacity-100' : 'max-h-0 opacity-0'}`}>
+                               <div className={`p-6 md:p-8 border-t-2 border-dashed border-current/10 ${darkMode ? 'bg-slate-800/50' : 'bg-gray-50'}`}>
+                                  <div className="flex items-center space-x-2 mb-4 opacity-40">
+                                    <i className="fa-solid fa-pen-nib text-xs"></i>
+                                    <span className="text-[10px] font-black uppercase tracking-widest">{lang === 'hi' ? 'उत्तर' : 'Answer'}</span>
+                                  </div>
+                                  <div className="text-base md:text-lg leading-relaxed font-medium opacity-90"><MathText text={qa.answer} /></div>
+                               </div>
+                             </div>
+                             
+                             <button 
+                               onClick={() => toggleAnswer(`q-${index}`)} 
+                               className={`w-full py-4 mt-4 rounded-xl font-black text-[10px] uppercase tracking-[0.2em] flex items-center justify-center space-x-2 transition-all ${
+                                 visibleAnswers[`q-${index}`] 
+                                   ? (darkMode ? 'bg-slate-800 text-slate-400' : 'bg-gray-100 text-gray-500') 
+                                   : 'bg-blue-600 text-white shadow-xl hover:bg-blue-700 active:scale-95'
+                               }`}
+                             >
+                               <span>{visibleAnswers[`q-${index}`] ? t.hideSolutions : t.viewSolutions}</span>
+                               <i className={`fa-solid ${visibleAnswers[`q-${index}`] ? 'fa-chevron-up' : 'fa-chevron-down'}`}></i>
+                             </button>
+                          </div>
+                        ))}
                       </div>
                     )}
                   </div>
                 )}
-              </div>
-              
-              <div className={`p-6 border-t flex items-center justify-between ${darkMode ? 'bg-slate-900 border-slate-800' : 'bg-gray-50 border-gray-100'}`}>
-                 <span className="text-[10px] font-black uppercase tracking-[0.3em] opacity-30">{t.developedBy} {t.authorName}</span>
-                 <p className="text-[11px] font-bold opacity-20">WBBSE Smart Solutions AI-Powered Content</p>
               </div>
             </div>
           )}

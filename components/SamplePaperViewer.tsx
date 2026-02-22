@@ -2,6 +2,7 @@
 import React, { useState } from 'react';
 import { SamplePaper } from '../types.ts';
 import { translations } from '../translations.ts';
+import MathText from './MathText.tsx';
 
 interface SamplePaperViewerProps {
   paper: SamplePaper;
@@ -87,28 +88,28 @@ const SamplePaperViewer: React.FC<SamplePaperViewerProps> = ({ paper, darkMode, 
         </div>
 
         <div className="space-y-20">
-          {paper.sections.map((section, sIdx) => (
+          {paper.sections?.map((section, sIdx) => (
             <div key={sIdx} className="space-y-10 print:break-inside-avoid">
               <h2 className="text-2xl font-black border-b-4 border-blue-600 pb-2 uppercase">{section.title}</h2>
               <p className="text-sm italic font-bold opacity-60">{section.instructions}</p>
               {section.passage && (
                 <div className={`p-10 rounded-[2rem] border-2 shadow-inner leading-relaxed text-lg font-serif italic ${darkMode ? 'bg-slate-950/50 border-slate-800' : 'bg-stone-50 border-stone-200'}`}>
-                  {section.passage.split('\n').map((p, i) => <p key={i} className={i > 0 ? 'mt-4' : ''}>{p}</p>)}
+                  {section.passage.split('\n').map((p, i) => <p key={i} className={i > 0 ? 'mt-4' : ''}><MathText text={p} isInline /></p>)}
                 </div>
               )}
               <div className="space-y-12">
-                {section.questions.map((q, qIdx) => (
+                {section.questions?.map((q, qIdx) => (
                   <div key={q.id} className="relative pl-12 print:break-inside-avoid">
                     <span className="absolute left-0 top-0 font-black text-2xl opacity-20">{qIdx + 1}.</span>
                     <div className="flex justify-between items-start gap-8">
                       <div className="flex-1">
-                        <p className="font-bold text-xl mb-6">{q.text}</p>
-                        {q.options && (
+                        <p className="font-bold text-xl mb-6"><MathText text={q.text} /></p>
+                        {q.options && q.options.length > 0 && (
                           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-6">
                             {q.options.map((opt, o) => (
                               <div key={o} className="flex items-center space-x-4">
                                 <span className="w-8 h-8 flex-shrink-0 flex items-center justify-center border-2 border-current/20 rounded-xl text-[10px] font-black">{String.fromCharCode(65 + o)}</span>
-                                <span className="font-bold opacity-80">{opt}</span>
+                                <span className="font-bold opacity-80"><MathText text={opt} isInline /></span>
                               </div>
                             ))}
                           </div>
@@ -116,7 +117,9 @@ const SamplePaperViewer: React.FC<SamplePaperViewerProps> = ({ paper, darkMode, 
                         {showAnswers && q.answer && (
                           <div className="mt-8 p-6 rounded-3xl text-sm border-2 bg-emerald-500/5 border-emerald-500/20 text-emerald-700 dark:text-emerald-400">
                             <span className="font-black uppercase text-[10px] block mb-2 opacity-60 text-inherit">Solution</span>
-                            <span className="font-bold text-lg">{q.answer}</span>
+                            <div className="font-medium text-base leading-relaxed">
+                              <MathText text={q.answer} />
+                            </div>
                           </div>
                         )}
                       </div>

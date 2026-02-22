@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { translations } from '../translations.ts';
 import SearchBar from './SearchBar.tsx';
 import { Subject } from '../types.ts';
@@ -18,11 +18,35 @@ interface LayoutProps {
 const Layout: React.FC<LayoutProps> = ({ children, activeTab, setActiveTab, darkMode, setDarkMode, lang, setLang, onSearchSelect }) => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [isMobileSearchOpen, setIsMobileSearchOpen] = useState(false);
+  const [isFullscreen, setIsFullscreen] = useState(false);
   const t = translations[lang];
+
+  useEffect(() => {
+    const handleFullscreenChange = () => {
+      setIsFullscreen(!!document.fullscreenElement);
+    };
+    document.addEventListener('fullscreenchange', handleFullscreenChange);
+    return () => {
+      document.removeEventListener('fullscreenchange', handleFullscreenChange);
+    };
+  }, []);
+
+  const toggleFullscreen = () => {
+    if (!document.fullscreenElement) {
+      document.documentElement.requestFullscreen().catch((err) => {
+        console.error(`Error attempting to enable full-screen mode: ${err.message}`);
+      });
+    } else {
+      if (document.exitFullscreen) {
+        document.exitFullscreen();
+      }
+    }
+  };
 
   const navItems = [
     { id: 'dashboard', label: t.dashboard, icon: 'fa-home' },
     { id: 'tutor', label: t.smartTutor, icon: 'fa-robot' },
+    { id: 'practice', label: t.practiceMode, icon: 'fa-bullseye' },
     { id: 'curriculum', label: t.curriculum, icon: 'fa-graduation-cap' },
     { id: 'resources', label: t.studyMaterials, icon: 'fa-file-signature' },
   ];
@@ -36,17 +60,20 @@ const Layout: React.FC<LayoutProps> = ({ children, activeTab, setActiveTab, dark
             <i className="fa-solid fa-graduation-cap text-2xl"></i>
             <span className="font-bold text-xl tracking-tight">WBBSE Smart Solutions</span>
           </div>
-          <div className="flex items-center space-x-3">
+          <div className="flex items-center space-x-2">
             <button 
               onClick={() => setIsMobileSearchOpen(!isMobileSearchOpen)}
               className={`p-2 rounded-lg transition-colors ${isMobileSearchOpen ? 'bg-white/20' : ''}`}
             >
               <i className="fa-solid fa-magnifying-glass"></i>
             </button>
+            <button onClick={toggleFullscreen} className="p-2">
+              <i className={`fa-solid ${isFullscreen ? 'fa-compress' : 'fa-expand'}`}></i>
+            </button>
             <button onClick={() => setDarkMode(!darkMode)} className="p-2">
               <i className={`fa-solid ${darkMode ? 'fa-sun text-yellow-400' : 'fa-moon text-white'}`}></i>
             </button>
-            <button onClick={() => setIsSidebarOpen(!isSidebarOpen)}>
+            <button onClick={() => setIsSidebarOpen(!isSidebarOpen)} className="p-2">
               <i className={`fa-solid ${isSidebarOpen ? 'fa-xmark' : 'fa-bars'} text-2xl`}></i>
             </button>
           </div>
@@ -160,6 +187,15 @@ const Layout: React.FC<LayoutProps> = ({ children, activeTab, setActiveTab, dark
               />
             </div>
             <div className="flex items-center space-x-3">
+              <button 
+                onClick={toggleFullscreen}
+                className={`p-3.5 rounded-2xl border transition-all hover:scale-105 active:scale-95 ${
+                  darkMode ? 'bg-slate-800 border-slate-700 text-slate-300' : 'bg-white border-gray-100 text-gray-600 shadow-sm'
+                }`}
+                title={isFullscreen ? "Exit Fullscreen" : "Enter Fullscreen"}
+              >
+                <i className={`fa-solid ${isFullscreen ? 'fa-compress' : 'fa-expand'} text-lg`}></i>
+              </button>
               <button 
                 onClick={() => setLang(lang === 'en' ? 'hi' : 'en')}
                 className={`p-3.5 rounded-2xl border transition-all hover:scale-105 active:scale-95 ${

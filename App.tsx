@@ -5,13 +5,17 @@ import Dashboard from './components/Dashboard.tsx';
 import SmartTutor from './components/SmartTutor.tsx';
 import ChapterViewer from './components/ChapterViewer.tsx';
 import SamplePaperViewer from './components/SamplePaperViewer.tsx';
+import PracticeMode from './components/PracticeMode.tsx';
 import { Subject, SearchHistoryItem, SamplePaper, ExamTerm } from './types.ts';
 import { translations } from './translations.ts';
 import { generateSamplePaper, ApiError } from './services/geminiService.ts';
 
 const App: React.FC = () => {
   const [activeTab, setActiveTab] = useState('dashboard');
-  const [lang, setLang] = useState<'en' | 'hi'>(() => (localStorage.getItem('lang') as any) || 'en');
+  const [lang, setLang] = useState<'en' | 'hi'>(() => {
+    const saved = localStorage.getItem('lang');
+    return (saved === 'en' || saved === 'hi') ? saved : 'en';
+  });
   const [darkMode, setDarkMode] = useState(() => JSON.parse(localStorage.getItem('darkMode') || 'false'));
   const [selectedSubject, setSelectedSubject] = useState<{ subject: Subject, classId: string, initialChapterId?: string } | null>(null);
   const [searchHistory, setSearchHistory] = useState<SearchHistoryItem[]>(() => {
@@ -80,6 +84,7 @@ const App: React.FC = () => {
 
   const handleSelectSamplePaper = async (subject: string, classId: string, term: ExamTerm) => {
     setActiveTab('papers');
+    setSelectedSamplePaper(null); // Clear previous paper to show loading state for new generation
     setIsGeneratingPaper(true);
     setPaperGenerationError(null);
     setPaperGenerationStatus(0);
@@ -148,6 +153,15 @@ const App: React.FC = () => {
             onSaveSearch={q => setSearchHistory(prev => [{ id: Math.random().toString(36).substr(2,9), query: q, timestamp: new Date() }, ...prev.filter(h => h.query !== q)].slice(0, 10))} 
             onHome={handleGoHome}
             onQuotaExceeded={handleQuotaExceeded}
+          />
+        );
+      case 'practice':
+        return (
+          <PracticeMode 
+            darkMode={darkMode} 
+            lang={lang} 
+            onQuotaExceeded={handleQuotaExceeded}
+            onHome={handleGoHome}
           />
         );
       case 'curriculum':

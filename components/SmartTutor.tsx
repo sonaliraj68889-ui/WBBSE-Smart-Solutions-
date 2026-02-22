@@ -1,11 +1,11 @@
 
-
 import React, { useState, useRef, useEffect } from 'react';
-import { GoogleGenAI, LiveServerMessage, Modality, Blob } from '@google/genai';
+import { GoogleGenAI, LiveServerMessage, Modality } from '@google/genai';
 import { solveProblem, generateDiagram, fetchExamQuestions, generateSpeech, translateContent, ApiError } from '../services/geminiService.ts';
 import { Message, ExamQuestion, ExamResult, ExamTerm, Chapter } from '../types.ts';
 import { translations } from '../translations.ts';
 import { CLASSES } from '../constants.ts';
+import MathText from './MathText.tsx';
 
 interface SmartTutorProps {
   darkMode: boolean;
@@ -14,7 +14,13 @@ interface SmartTutorProps {
   initialFile?: { data: string, name: string, mimeType: string };
   onSaveSearch: (query: string) => void;
   onHome: () => void;
-  onQuotaExceeded: () => void; // New prop for global quota error handling
+  onQuotaExceeded: () => void;
+}
+
+// Define interface for PCM data structure
+interface PcmData {
+  data: string;
+  mimeType: string;
 }
 
 const SAVED_EXAM_KEY = 'wbbse_active_exam_session';
@@ -154,8 +160,8 @@ const SmartTutor: React.FC<SmartTutorProps> = ({ darkMode, lang, initialQuery, i
     if (err instanceof ApiError) {
       switch (err.code) {
         case 'QUOTA_EXCEEDED':
-          onQuotaExceeded(); // Trigger global prompt
-          return ""; // Return empty as global prompt will handle message
+          onQuotaExceeded(); 
+          return "";
         case 'SAFETY_BLOCKED': return t.errorSafety;
         case 'SERVER_ERROR': return t.errorServer;
         default: return t.errorGeneric;
@@ -201,7 +207,7 @@ const SmartTutor: React.FC<SmartTutorProps> = ({ darkMode, lang, initialQuery, i
       setMessages(prev => [...prev, botMsg]);
     } catch (err) {
       const errorMsg = getFriendlyErrorMessage(err);
-      if (errorMsg) { // Only show local message if not handled by global prompt
+      if (errorMsg) { 
         setMessages(prev => [...prev, { 
           id: Math.random().toString(36).substr(2, 9), 
           role: 'model', 
@@ -227,7 +233,7 @@ const SmartTutor: React.FC<SmartTutorProps> = ({ darkMode, lang, initialQuery, i
       setExamTimer(600);
     } catch (error) {
       const errorMsg = getFriendlyErrorMessage(error);
-      if (errorMsg) { // Only show local message if not handled by global prompt
+      if (errorMsg) { 
         alert(`⚠️ ${errorMsg}`);
       }
     } finally {
@@ -270,7 +276,7 @@ const SmartTutor: React.FC<SmartTutorProps> = ({ darkMode, lang, initialQuery, i
               const int16 = new Int16Array(l);
               for (let i = 0; i < l; i++) int16[i] = inputData[i] * 32768;
               
-              const pcmBlob: Blob = {
+              const pcmBlob: PcmData = {
                 data: encode(new Uint8Array(int16.buffer)),
                 mimeType: 'audio/pcm;rate=16000',
               };
@@ -325,14 +331,13 @@ const SmartTutor: React.FC<SmartTutorProps> = ({ darkMode, lang, initialQuery, i
           onerror: (e) => {
             console.error("Live Error:", e);
             stopLiveSession();
-            // Live session errors can also be quota related
             if (e.error && e.error.message && (e.error.message.includes('quota') || e.error.message.includes('429'))) {
               onQuotaExceeded();
             }
           }
         },
         config: {
-          responseModalalities: [Modality.AUDIO],
+          responseModalities: [Modality.AUDIO],
           systemInstruction: `You are an expert WBBSE Hindi Medium Tutor. Assist the student verbally. Keep responses concise and educational. Strictly Hindi/English mix. NO BENGALI.`,
           speechConfig: {
             voiceConfig: { prebuiltVoiceConfig: { voiceName: lang === 'hi' ? 'Kore' : 'Zephyr' } }
@@ -345,7 +350,7 @@ const SmartTutor: React.FC<SmartTutorProps> = ({ darkMode, lang, initialQuery, i
       liveSessionRef.current = sessionPromise;
     } catch (err) {
       const errorMsg = getFriendlyErrorMessage(err);
-      if (errorMsg) { // Only show local message if not handled by global prompt
+      if (errorMsg) { 
         alert(`⚠️ ${errorMsg}`);
       }
     }
@@ -372,7 +377,6 @@ const SmartTutor: React.FC<SmartTutorProps> = ({ darkMode, lang, initialQuery, i
       text: `Question: ${messages.find(m => m.timestamp < msg.timestamp && m.role === 'user')?.text || 'WBBSE Query'}\n\nAI Solution: ${textToShare}`,
     };
 
-    // Conditionally add the URL if it's a valid web protocol (http or https)
     if (window.location.protocol === 'http:' || window.location.protocol === 'https:') {
       shareData.url = window.location.href;
     }
@@ -381,8 +385,6 @@ const SmartTutor: React.FC<SmartTutorProps> = ({ darkMode, lang, initialQuery, i
       try {
         await navigator.share(shareData);
       } catch (err: any) {
-        console.error("Error sharing:", err);
-        // Fallback to clipboard copy if sharing fails, especially for 'Invalid URL' errors
         if (err instanceof DOMException && (err.name === 'NotAllowedError' || err.message.includes('Invalid URL') || err.message.includes('permission denied'))) {
              navigator.clipboard.writeText(textToShare);
              setShowCopiedId(msg.id);
@@ -390,7 +392,6 @@ const SmartTutor: React.FC<SmartTutorProps> = ({ darkMode, lang, initialQuery, i
         }
       }
     } else {
-      // Fallback for browsers that do not support navigator.share
       navigator.clipboard.writeText(textToShare);
       setShowCopiedId(msg.id);
       setTimeout(() => setShowCopiedId(null), 2000);
@@ -418,8 +419,8 @@ const SmartTutor: React.FC<SmartTutorProps> = ({ darkMode, lang, initialQuery, i
       if (isCorrect) correctCount++;
       return {
         question: q.question,
-        userAnswer: q.options[userAnswers[idx]] || (lang === 'hi' ? "कोई उत्तर नहीं" : "No answer"),
-        correctAnswer: q.options[q.correctAnswer],
+        userAnswer: q.options && q.options[userAnswers[idx]] ? q.options[userAnswers[idx]] : (lang === 'hi' ? "कोई उत्तर नहीं" : "No answer"),
+        correctAnswer: q.options && q.options[q.correctAnswer] ? q.options[q.correctAnswer] : "",
         isCorrect,
         explanation: q.explanation
       };
@@ -486,7 +487,7 @@ const SmartTutor: React.FC<SmartTutorProps> = ({ darkMode, lang, initialQuery, i
       } : m));
     } catch (err) {
       const errorMsg = getFriendlyErrorMessage(err);
-      if (errorMsg) { // Only show local message if not handled by global prompt
+      if (errorMsg) { 
          setMessages(prev => prev.map(m => m.id === msgId ? { ...m, isTranslating: false } : m));
       }
     }
@@ -539,7 +540,7 @@ const SmartTutor: React.FC<SmartTutorProps> = ({ darkMode, lang, initialQuery, i
       };
     } catch (error) {
       const errorMsg = getFriendlyErrorMessage(error);
-      if (errorMsg) { // Only show local message if not handled by global prompt
+      if (errorMsg) { 
         console.error("Speech playback error:", errorMsg);
       }
     } finally {
@@ -567,7 +568,7 @@ const SmartTutor: React.FC<SmartTutorProps> = ({ darkMode, lang, initialQuery, i
       }
     } catch(err: any) {
       const errorMsg = getFriendlyErrorMessage(err);
-      if (errorMsg) { // Only show local message if not handled by global prompt
+      if (errorMsg) { 
         setMessages(prev => [...prev, { id: Math.random().toString(36).substr(2, 9), role: 'model', text: `⚠️ ${errorMsg}`, timestamp: new Date() }]);
       }
     } finally {
@@ -754,7 +755,7 @@ const SmartTutor: React.FC<SmartTutorProps> = ({ darkMode, lang, initialQuery, i
                   </div>
                 </div>
               </div>
-            ) : examResult ? (
+            ) : (
               <div className="animate-fadeIn space-y-8 md:space-y-10 pb-16 flex-1">
                 <div className={`rounded-[2rem] md:rounded-[3rem] p-8 md:p-20 text-center shadow-2xl relative overflow-hidden ${darkMode ? 'bg-slate-900 border border-slate-800' : 'bg-white border border-gray-100'}`}>
                   <div className="absolute top-0 left-0 w-full h-2 md:h-3 bg-gradient-to-r from-blue-400 via-indigo-500 to-purple-600"></div>
@@ -777,14 +778,16 @@ const SmartTutor: React.FC<SmartTutorProps> = ({ darkMode, lang, initialQuery, i
                         <span className="w-8 h-8 md:w-10 md:h-10 rounded-xl md:rounded-2xl bg-blue-500/10 text-blue-600 flex items-center justify-center text-xs md:text-sm font-black shadow-inner">#{i+1}</span>
                         <span className={`text-[9px] md:text-[10px] font-black uppercase tracking-[0.1em] md:tracking-[0.2em] px-4 md:px-6 py-1.5 md:py-2.5 rounded-full border shadow-sm ${res.isCorrect ? 'text-emerald-500 bg-emerald-500/10 border-emerald-500/20' : 'text-red-500 bg-red-500/10 border-red-500/20'}`}><i className={`fa-solid ${res.isCorrect ? 'fa-check' : 'fa-xmark'} mr-2 md:mr-3`}></i> {res.isCorrect ? 'Correct' : 'Incorrect'}</span>
                       </div>
-                      <p className="font-black text-lg md:text-2xl mb-6 md:mb-10 leading-tight tracking-tight">{res.question}</p>
+                      <div className="font-black text-lg md:text-2xl mb-6 md:mb-10 leading-tight tracking-tight">
+                        <MathText text={res.question} />
+                      </div>
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6 text-sm mb-6 md:mb-10">
-                        <div className={`p-4 md:p-6 rounded-[1.5rem] md:rounded-[2rem] border-2 ${res.isCorrect ? 'border-emerald-500/20 bg-emerald-500/5' : 'border-red-500/20 bg-red-500/5'}`}><span className="opacity-40 block text-[9px] md:text-[10px] font-black uppercase mb-2 md:mb-3 tracking-widest">Student Choice</span><span className={`font-black text-base md:text-lg ${res.isCorrect ? 'text-emerald-500' : 'text-red-500'}`}>{res.userAnswer}</span></div>
-                        <div className={`p-4 md:p-6 rounded-[1.5rem] md:rounded-[2rem] border-2 border-emerald-500/20 bg-emerald-500/10 shadow-inner`}><span className="opacity-40 block text-[9px] md:text-[10px] font-black uppercase mb-2 md:mb-3 tracking-widest text-emerald-600">Correct Answer</span><span className="text-emerald-600 font-black text-base md:text-lg">{res.correctAnswer}</span></div>
+                        <div className={`p-4 md:p-6 rounded-[1.5rem] md:rounded-[2rem] border-2 ${res.isCorrect ? 'border-emerald-500/20 bg-emerald-500/5' : 'border-red-500/20 bg-red-500/5'}`}><span className="opacity-40 block text-[9px] md:text-[10px] font-black uppercase mb-2 md:mb-3 tracking-widest">Student Choice</span><span className={`font-black text-base md:text-lg ${res.isCorrect ? 'text-emerald-500' : 'text-red-500'}`}><MathText text={res.userAnswer} isInline /></span></div>
+                        <div className={`p-4 md:p-6 rounded-[1.5rem] md:rounded-[2rem] border-2 border-emerald-500/20 bg-emerald-500/10 shadow-inner`}><span className="opacity-40 block text-[9px] md:text-[10px] font-black uppercase mb-2 md:mb-3 tracking-widest text-emerald-600">Correct Answer</span><span className="text-emerald-600 font-black text-base md:text-lg"><MathText text={res.correctAnswer} isInline /></span></div>
                       </div>
                       <div className={`p-4 md:p-6 rounded-2xl md:rounded-3xl ${darkMode ? 'bg-slate-800/50' : 'bg-gray-50'} border border-current/5`}>
                          <p className="text-[10px] font-bold uppercase tracking-widest opacity-40 mb-2">Explanation</p>
-                         <p className="text-xs md:text-sm font-medium leading-relaxed opacity-80">{res.explanation}</p>
+                         <div className="text-xs md:text-sm font-medium leading-relaxed opacity-80"><MathText text={res.explanation} /></div>
                       </div>
                     </div>
                   ))}
@@ -804,12 +807,14 @@ const SmartTutor: React.FC<SmartTutorProps> = ({ darkMode, lang, initialQuery, i
                    <div className="absolute top-0 left-0 w-full h-1 md:h-2 bg-gray-100 dark:bg-slate-800">
                      <div className="h-full bg-blue-600 transition-all duration-700 ease-out shadow-[0_0_15px_rgba(37,99,235,0.5)]" style={{ width: `${((currentExamIndex + 1) / examQuestions.length) * 100}%` }}></div>
                    </div>
-                   <h3 className="text-xl md:text-5xl font-black mb-10 md:mb-20 leading-[1.1] tracking-tighter text-center max-w-4xl mx-auto">{examQuestions[currentExamIndex].question}</h3>
+                   <h3 className="text-xl md:text-5xl font-black mb-10 md:mb-20 leading-[1.1] tracking-tighter text-center max-w-4xl mx-auto">
+                     <MathText text={examQuestions[currentExamIndex].question} />
+                   </h3>
                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6 max-w-5xl mx-auto w-full">
-                     {examQuestions[currentExamIndex].options.map((option, idx) => (
+                     {examQuestions[currentExamIndex].options && examQuestions[currentExamIndex].options.map((option, idx) => (
                        <button key={idx} onClick={() => { const newAnswers = [...userAnswers]; newAnswers[currentExamIndex] = idx; setUserAnswers(newAnswers); }} className={`w-full text-left p-6 md:p-8 rounded-[1.5rem] md:rounded-[2.5rem] border-2 md:border-4 transition-all relative group ${userAnswers[currentExamIndex] === idx ? 'bg-blue-600/10 border-blue-600 shadow-2xl scale-[1.02]' : (darkMode ? 'bg-slate-800 border-slate-700 text-slate-300 hover:border-slate-500' : 'bg-gray-50 border-white text-gray-700 hover:shadow-2xl hover:scale-[1.02] shadow-sm')}`}>
                          {userAnswers[currentExamIndex] === idx && <div className="absolute -right-2 -top-2 md:-right-3 md:-top-3 w-8 h-8 md:w-10 md:h-10 rounded-full bg-blue-600 text-white flex items-center justify-center shadow-2xl border-2 md:border-4 border-white dark:border-slate-900 animate-fadeIn"><i className="fa-solid fa-check text-xs md:text-sm"></i></div>}
-                         <div className="flex items-center space-x-4 md:space-x-6"><div className={`w-10 h-10 md:w-14 md:h-14 rounded-xl md:rounded-2xl flex items-center justify-center font-black text-lg md:text-xl shadow-inner transition-all ${userAnswers[currentExamIndex] === idx ? 'bg-blue-600 text-white' : 'bg-gray-200 dark:bg-slate-700 text-gray-500 group-hover:bg-blue-500 group-hover:text-white'}`}>{String.fromCharCode(65 + idx)}</div><span className="text-lg md:text-2xl font-black tracking-tight">{option}</span></div>
+                         <div className="flex items-center space-x-4 md:space-x-6"><div className={`w-10 h-10 md:w-14 md:h-14 rounded-xl md:rounded-2xl flex items-center justify-center font-black text-lg md:text-xl shadow-inner transition-all ${userAnswers[currentExamIndex] === idx ? 'bg-blue-600 text-white' : 'bg-gray-200 dark:bg-slate-700 text-gray-500 group-hover:bg-blue-500 group-hover:text-white'}`}>{String.fromCharCode(65 + idx)}</div><span className="text-lg md:text-2xl font-black tracking-tight"><MathText text={option} isInline /></span></div>
                        </button>
                      ))}
                    </div>
@@ -883,12 +888,8 @@ const SmartTutor: React.FC<SmartTutorProps> = ({ darkMode, lang, initialQuery, i
                     </div>
                   )}
 
-                  <div className={`prose prose-sm md:prose-lg max-w-none prose-p:leading-relaxed prose-p:mb-3 md:prose-p:mb-4 prose-headings:font-black ${msg.text.startsWith('⚠️') ? 'text-red-500 dark:text-red-400' : ''}`}>
-                    {(msg.showTranslated && msg.translatedText ? msg.translatedText : msg.text).split('\n').map((line, i) => (
-                      <p key={i} className="mb-3 md:mb-4 whitespace-pre-wrap text-inherit font-medium">
-                        {line}
-                      </p>
-                    ))}
+                  <div className={`prose prose-sm md:prose-lg max-w-none prose-p:leading-relaxed prose-p:mb-3 md:prose-p:mb-4 prose-headings:font-black ${darkMode ? 'prose-invert' : ''} ${msg.text.startsWith('⚠️') ? 'text-red-500 dark:text-red-400' : ''}`}>
+                    <MathText text={msg.showTranslated && msg.translatedText ? msg.translatedText : msg.text} />
                     
                     {msg.imageUrl && (
                       <div className="mt-4 md:mt-8 rounded-[1.5rem] md:rounded-[2rem] overflow-hidden border-2 md:border-4 border-current/10 shadow-2xl group/img">

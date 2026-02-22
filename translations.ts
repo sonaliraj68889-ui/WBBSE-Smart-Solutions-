@@ -4,6 +4,7 @@ export const translations = {
     dashboard: "Dashboard",
     smartTutor: "AI Smart Tutor",
     curriculum: "Curriculum",
+    practiceMode: "Practice Mode",
     studyMaterials: "Study Materials",
     lightMode: "Light Mode",
     darkMode: "Dark Mode",
@@ -19,7 +20,7 @@ export const translations = {
     startLearning: "Get Solution",
     chaptersAvailable: "Chapters Listed",
     importantNote: "Important: Hindi Medium Resources",
-    routineUpdate: "Latest 2025 WBBSE Hindi Medium primary & secondary routines uploaded.",
+    routineUpdate: "Latest 2026 WBBSE Hindi Medium primary & secondary routines uploaded.",
     viewRoutine: "View Routine",
     back: "Back",
     mainMenu: "Main Menu",
@@ -114,6 +115,21 @@ export const translations = {
     apiKeyQuotaMessage: "You've reached the daily usage limit for AI services. To continue using the advanced features without interruption, please provide your own paid Google Cloud API key.",
     selectApiKeyButton: "Select Paid API Key",
     learnMoreBilling: "Learn More About Billing",
+    
+    // Practice Mode
+    chapterPractice: "Chapter Wise Practice",
+    selectPracticeTopic: "Select a topic to start practicing",
+    practiceComplete: "Practice Session Complete",
+    checkAnswer: "Check Answer",
+    yourAnswer: "Your Answer",
+    correct: "Correct!",
+    incorrect: "Incorrect",
+    explanation: "Explanation",
+    nextQuestion: "Next Question",
+    finishPractice: "Finish Practice",
+    startPractice: "Start Practice",
+    practiceLoading: "Generating custom practice questions...",
+    
     classLabels: {
       'class-10': 'Class 10 (Madhyamik)',
       'class-9': 'Class 9',
@@ -138,6 +154,7 @@ export const translations = {
     dashboard: "डैशबोर्ड",
     smartTutor: "एआई स्मार्ट ट्यूटर",
     curriculum: "पाठ्यक्रम",
+    practiceMode: "अभ्यास मोड",
     studyMaterials: "अध्ययन सामग्री",
     lightMode: "लाइट मोड",
     darkMode: " डार्क मोड",
@@ -153,7 +170,7 @@ export const translations = {
     startLearning: "समाधान प्राप्त करें",
     chaptersAvailable: "अध्याय सूचीबद्ध",
     importantNote: "महत्वपूर्ण: हिंदी माध्यम संसाधन",
-    routineUpdate: "नवीनतम 2025 WBBSE हिंदी माध्यम प्राथमिक और माध्यमिक रूटीन अपलोड किए गए हैं।",
+    routineUpdate: "नवीनतम 2026 WBBSE हिंदी माध्यम प्राथमिक और माध्यमिक रूटीन अपलोड किए गए हैं।",
     viewRoutine: "रूटीन देखें",
     back: "पीछे",
     mainMenu: "मुख्य मेनू",
@@ -248,13 +265,28 @@ export const translations = {
     apiKeyQuotaMessage: "एआई सेवाओं के लिए दैनिक उपयोग की सीमा समाप्त हो गई है। निर्बाध रूप से उन्नत सुविधाओं का उपयोग जारी रखने के लिए, कृपया अपनी सशुल्क Google क्लाउड एपीआई कुंजी प्रदान करें।",
     selectApiKeyButton: "सशुल्क एपीआई कुंजी चुनें",
     learnMoreBilling: "बिलिंग के बारे में और जानें",
+
+    // Practice Mode
+    chapterPractice: "अध्याय वार अभ्यास",
+    selectPracticeTopic: "अभ्यास शुरू करने के लिए एक विषय चुनें",
+    practiceComplete: "अभ्यास सत्र पूरा हुआ",
+    checkAnswer: "उत्तर जांचें",
+    yourAnswer: "आपका उत्तर",
+    correct: "सही!",
+    incorrect: "गलत",
+    explanation: "व्याख्या",
+    nextQuestion: "अगला प्रश्न",
+    finishPractice: "अभ्यास समाप्त करें",
+    startPractice: "अभ्यास शुरू करें",
+    practiceLoading: "कस्टम अभ्यास प्रश्न तैयार हो रहे हैं...",
+    
     classLabels: {
       'class-10': 'कक्षा 10 (माध्यमिक)',
       'class-9': 'कक्षा 9',
       'class-8': 'कक्षा 8',
       'class-7': 'कक्षा 7',
-      'class-6': 'कक्षा 6',
-      'class-5': 'कक्षा 5'
+      'class-6': 'Class 6',
+      'class-5': 'Class 5'
     },
     subjects: {
       'hindi': 'हिंदी',
