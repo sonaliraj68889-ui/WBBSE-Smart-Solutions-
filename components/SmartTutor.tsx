@@ -194,7 +194,7 @@ const SmartTutor: React.FC<SmartTutorProps> = ({ darkMode, lang, initialQuery, i
     try {
       const response = await solveProblem(
         currentInput, 
-        "WBBSE Hindi Medium", 
+        "WBBSE Class 5-10 Tutor", 
         currentFile ? { data: currentFile.data, mimeType: currentFile.mimeType } : undefined
       );
       const botMsg: Message = { 
@@ -338,7 +338,7 @@ const SmartTutor: React.FC<SmartTutorProps> = ({ darkMode, lang, initialQuery, i
         },
         config: {
           responseModalities: [Modality.AUDIO],
-          systemInstruction: `You are an expert WBBSE Hindi Medium Tutor. Assist the student verbally. Keep responses concise and educational. Strictly Hindi/English mix. NO BENGALI.`,
+          systemInstruction: `You are an expert WBBSE Class 5-10 Tutor. Assist the student verbally with any subject in Hindi or English. Keep responses concise and educational.`,
           speechConfig: {
             voiceConfig: { prebuiltVoiceConfig: { voiceName: lang === 'hi' ? 'Kore' : 'Zephyr' } }
           },
