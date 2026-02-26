@@ -770,6 +770,10 @@ const SmartTutor: React.FC<SmartTutorProps> = ({ darkMode, lang, initialQuery, i
                     </button>
                     <button onClick={() => { setIsExamMode(false); setExamResult(null); setExamQuestions([]); }} className={`w-full sm:w-auto px-8 md:px-14 py-4 md:py-5 rounded-[2.5rem] font-black uppercase tracking-[0.2em] text-[10px] md:text-xs border-2 transition-all ${darkMode ? 'bg-slate-800 border-slate-700 text-slate-300 hover:bg-slate-700' : 'bg-gray-100 border-gray-200 text-gray-600 hover:bg-gray-200'}`}>{t.back}</button>
                   </div>
+                  <div className="mt-8">
+                    <p className="text-[10px] font-black uppercase tracking-[0.2em] opacity-30">Developed by</p>
+                    <p className="text-xs font-black uppercase tracking-widest text-blue-500 opacity-60 mt-1">Ritik Roushan Sah</p>
+                  </div>
                 </div>
                 
                 <div className="grid grid-cols-1 gap-6 md:gap-8">

@@ -51,9 +51,9 @@ const SamplePaperViewer: React.FC<SamplePaperViewerProps> = ({ paper, darkMode, 
   return (
     <div className="animate-fadeIn pb-20">
       <div className="flex flex-col md:flex-row md:items-center justify-between mb-8 no-print gap-4">
-        <button onClick={onBack} className={`px-4 py-2.5 rounded-2xl flex items-center space-x-2 font-black text-xs uppercase transition-all shadow-md ${darkMode ? 'bg-slate-800 text-slate-200' : 'bg-white text-gray-700'}`}>
-          <i className="fa-solid fa-arrow-left"></i>
-          <span>{t.back}</span>
+        <button onClick={onBack} className={`px-4 py-2.5 rounded-2xl flex items-center space-x-2 font-black text-xs uppercase transition-all shadow-md ${darkMode ? 'bg-slate-800 text-slate-200 hover:bg-slate-700' : 'bg-white text-gray-700 hover:bg-gray-50'}`}>
+          <i className="fa-solid fa-house"></i>
+          <span>{t.mainMenu}</span>
         </button>
         <div className="flex flex-wrap items-center gap-3">
           {showCopied && <span className="text-[10px] font-bold text-emerald-500">{t.copied}</span>}

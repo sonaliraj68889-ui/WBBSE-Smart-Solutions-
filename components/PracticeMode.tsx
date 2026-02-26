@@ -133,6 +133,10 @@ const PracticeMode: React.FC<PracticeModeProps> = ({ darkMode, lang, onQuotaExce
              Try Again
            </button>
         </div>
+        <div className="mt-8">
+          <p className="text-[10px] font-black uppercase tracking-[0.2em] opacity-30">Developed by</p>
+          <p className="text-xs font-black uppercase tracking-widest text-blue-500 opacity-60 mt-1">Ritik Roushan Sah</p>
+        </div>
       </div>
     );
   }
@@ -207,8 +211,9 @@ const PracticeMode: React.FC<PracticeModeProps> = ({ darkMode, lang, onQuotaExce
 
         {/* Footer Actions */}
         <div className="flex items-center justify-between pt-4">
-           <button onClick={handleReset} className="px-6 py-3 rounded-xl font-bold uppercase text-xs tracking-widest opacity-40 hover:opacity-100 transition-opacity">
-              Exit
+           <button onClick={onHome} className="px-6 py-3 rounded-xl font-bold uppercase text-xs tracking-widest opacity-40 hover:opacity-100 transition-opacity flex items-center space-x-2">
+              <i className="fa-solid fa-house"></i>
+              <span>{t.mainMenu}</span>
            </button>
            {!showAnswer ? (
              <button 
@@ -234,9 +239,15 @@ const PracticeMode: React.FC<PracticeModeProps> = ({ darkMode, lang, onQuotaExce
   // 1. & 2. Selection View (Class -> Subject -> Chapter)
   return (
     <div className="space-y-8 animate-fadeIn pb-20">
-      <div className="text-center space-y-2 mb-10">
-        <h2 className={`text-3xl font-black ${darkMode ? 'text-white' : 'text-gray-900'}`}>{t.chapterPractice}</h2>
-        <p className="opacity-60 font-medium max-w-lg mx-auto">{t.selectPracticeTopic}</p>
+      <div className="flex justify-between items-center mb-10">
+        <div className="space-y-2">
+          <h2 className={`text-3xl font-black ${darkMode ? 'text-white' : 'text-gray-900'}`}>{t.chapterPractice}</h2>
+          <p className="opacity-60 font-medium max-w-lg">{t.selectPracticeTopic}</p>
+        </div>
+        <button onClick={onHome} className={`px-4 py-2 rounded-xl flex items-center space-x-2 font-black text-[10px] uppercase tracking-widest shadow-md transition-all hover:bg-opacity-80 ${darkMode ? 'bg-slate-800 text-slate-200' : 'bg-white text-gray-700 border border-gray-100'}`}>
+          <i className="fa-solid fa-house"></i>
+          <span className="hidden sm:inline">{t.mainMenu}</span>
+        </button>
       </div>
 
       {/* Breadcrumbs for Selection */}

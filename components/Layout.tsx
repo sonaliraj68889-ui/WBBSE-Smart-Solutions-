@@ -38,7 +38,6 @@ const Layout: React.FC<LayoutProps> = ({ children, activeTab, setActiveTab, dark
               <i className="fa-solid fa-graduation-cap text-2xl"></i>
               <span className="font-bold text-xl tracking-tight">WBBSE Smart Solutions</span>
             </div>
-            <span className="text-[9px] font-black uppercase tracking-widest opacity-60 mt-0.5">Developed by Ritik Roushan Sah</span>
           </div>
           <div className="flex items-center space-x-2">
             <button 
@@ -87,7 +86,6 @@ const Layout: React.FC<LayoutProps> = ({ children, activeTab, setActiveTab, dark
               </div>
               <span className="font-bold text-xl tracking-tight">WBBSE Smart</span>
             </div>
-            <span className="text-[9px] font-black uppercase tracking-widest opacity-60 mt-2 ml-1">Developed by Ritik Roushan Sah</span>
           </div>
 
           <nav className="space-y-2 flex-1">
