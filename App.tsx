@@ -258,9 +258,49 @@ const App: React.FC = () => {
                 <i className="fa-solid fa-key mr-2"></i> {t.selectApiKeyButton}
               </button>
             ) : (
-              <div className={`p-4 rounded-xl text-sm font-medium ${darkMode ? 'bg-slate-800 text-slate-300' : 'bg-gray-100 text-gray-700'}`}>
-                <p className="mb-2"><i className="fa-solid fa-triangle-exclamation text-amber-500 mr-2"></i>Environment Configuration Required</p>
-                <p className="text-xs opacity-70">Please configure the <code>VITE_GEMINI_API_KEY</code> environment variable in your Netlify dashboard settings to continue.</p>
+              <div className={`p-4 rounded-xl text-sm font-medium w-full ${darkMode ? 'bg-slate-800 text-slate-300' : 'bg-gray-100 text-gray-700'}`}>
+                <p className="mb-2 font-bold"><i className="fa-solid fa-triangle-exclamation text-amber-500 mr-2"></i>Environment Configuration Required</p>
+                <p className="text-xs opacity-70 mb-4">Please configure the <code>VITE_GEMINI_API_KEY</code> environment variable in your Vercel or Netlify dashboard settings.</p>
+                
+                <div className="relative">
+                  <div className="absolute inset-0 flex items-center">
+                    <div className="w-full border-t border-gray-300/20"></div>
+                  </div>
+                  <div className="relative flex justify-center text-xs uppercase">
+                    <span className={`px-2 ${darkMode ? 'bg-slate-800 text-slate-500' : 'bg-gray-100 text-gray-500'}`}>Or enter manually</span>
+                  </div>
+                </div>
+
+                <div className="mt-4 flex gap-2">
+                  <input 
+                    type="password" 
+                    placeholder="Paste Gemini API Key here"
+                    className={`flex-1 px-3 py-2 rounded-lg text-xs border focus:outline-none focus:ring-2 focus:ring-blue-500 ${darkMode ? 'bg-slate-900 border-slate-700 text-white' : 'bg-white border-gray-300 text-black'}`}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter') {
+                        const val = (e.target as HTMLInputElement).value.trim();
+                        if (val) {
+                          localStorage.setItem('user_provided_api_key', val);
+                          window.location.reload();
+                        }
+                      }
+                    }}
+                  />
+                  <button 
+                    className="bg-blue-600 text-white px-3 py-2 rounded-lg text-xs font-bold hover:bg-blue-700"
+                    onClick={(e) => {
+                      const input = (e.currentTarget.previousElementSibling as HTMLInputElement);
+                      const val = input.value.trim();
+                      if (val) {
+                        localStorage.setItem('user_provided_api_key', val);
+                        window.location.reload();
+                      }
+                    }}
+                  >
+                    Save
+                  </button>
+                </div>
+                <p className="text-[10px] mt-2 opacity-50 text-center">Key is stored locally in your browser.</p>
               </div>
             )}
             <a 

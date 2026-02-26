@@ -46,6 +46,7 @@ const ChapterViewer: React.FC<ChapterViewerProps> = ({
   const [error, setError] = useState<string | null>(null);
   const [errorDetails, setErrorDetails] = useState<string | null>(null);
   const [visibleAnswers, setVisibleAnswers] = useState<Record<string, boolean>>({});
+  const contentRef = React.useRef<HTMLDivElement>(null);
 
   const getLocalizedSubjectName = () => t.subjects[subject.id as keyof typeof t.subjects] || subject.name;
   const getLocalizedClassName = () => (t.classLabels as any)[classId] || classId;
@@ -76,6 +77,14 @@ const ChapterViewer: React.FC<ChapterViewerProps> = ({
     setErrorDetails(null);
     setSelectedChapter(chapter);
     setActiveMode('summary');
+    
+    // Scroll to content area on mobile/smaller screens
+    if (window.innerWidth < 1024 && contentRef.current) {
+      setTimeout(() => {
+        contentRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }, 100);
+    }
+
     try {
       const result = await summarizeChapter(chapter.title, getLocalizedSubjectName(), length, subject.id);
       setSummary(result);
@@ -121,9 +130,6 @@ const ChapterViewer: React.FC<ChapterViewerProps> = ({
       {/* Interactive Toolbar */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div className="flex items-center space-x-4">
-          <button onClick={onBack} className={`w-10 h-10 flex items-center justify-center rounded-full shadow-md transition-all hover:scale-110 active:scale-95 ${darkMode ? 'bg-slate-800 text-slate-100' : 'bg-white text-gray-600'}`}>
-            <i className="fa-solid fa-chevron-left"></i>
-          </button>
           <div>
             <h2 className={`text-2xl font-bold ${darkMode ? 'text-slate-100' : 'text-gray-800'}`}>{getLocalizedSubjectName()}</h2>
             <p className="text-[10px] font-black uppercase tracking-widest opacity-40">{getLocalizedClassName()}</p>
@@ -140,28 +146,48 @@ const ChapterViewer: React.FC<ChapterViewerProps> = ({
       {/* Interactive Main Layout */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         <div className="lg:col-span-1 space-y-4">
-          <div className={`p-6 rounded-[2rem] border shadow-sm ${darkMode ? 'bg-slate-900 border-slate-800' : 'bg-white border-gray-100'}`}>
-            <h3 className="font-black mb-4 uppercase text-[11px] tracking-widest opacity-40">Chapter Index</h3>
-            <div className="space-y-2 max-h-[60vh] overflow-y-auto custom-scrollbar pr-2">
-              {subject.chapters.map((chapter, idx) => (
-                <button
-                  key={chapter.id}
-                  onClick={() => loadSummary(chapter)}
-                  className={`w-full text-left p-4 rounded-2xl transition-all border flex items-center space-x-3 group ${
-                    selectedChapter?.id === chapter.id 
-                      ? (darkMode ? 'bg-blue-600 border-blue-500 text-white shadow-lg translate-x-1' : 'bg-blue-600 border-blue-500 text-white shadow-lg translate-x-1')
-                      : (darkMode ? 'bg-slate-800 border-slate-700 text-slate-400 hover:border-blue-500 hover:text-slate-200' : 'bg-white border-gray-100 text-gray-700 hover:border-blue-300 hover:bg-blue-50/50')
-                  }`}
-                >
-                  <span className={`w-6 h-6 rounded-lg flex items-center justify-center text-[10px] font-black ${selectedChapter?.id === chapter.id ? 'bg-white/20' : 'bg-current opacity-10'}`}>{idx + 1}</span>
-                  <span className="font-bold text-sm leading-tight">{chapter.title}</span>
-                </button>
-              ))}
+          <div className={`p-6 rounded-[2rem] border shadow-sm flex flex-col h-full ${darkMode ? 'bg-slate-900 border-slate-800' : 'bg-white border-gray-100'}`}>
+            <div className="flex items-center justify-between mb-6">
+              <h3 className="font-black uppercase text-[11px] tracking-widest opacity-50 flex items-center">
+                <i className="fa-solid fa-list-ul mr-2"></i> Chapter Index
+              </h3>
+              <span className="text-[10px] font-bold bg-blue-500/10 text-blue-600 px-2.5 py-1 rounded-lg">{subject.chapters.length}</span>
+            </div>
+            <div className="space-y-3 max-h-[60vh] overflow-y-auto custom-scrollbar pr-2 flex-1">
+              {subject.chapters.map((chapter, idx) => {
+                const isSelected = selectedChapter?.id === chapter.id;
+                return (
+                  <button
+                    key={chapter.id}
+                    onClick={() => loadSummary(chapter)}
+                    className={`w-full text-left p-4 rounded-2xl transition-all duration-300 border flex items-start space-x-4 group relative overflow-hidden ${
+                      isSelected 
+                        ? (darkMode ? 'bg-gradient-to-br from-blue-600 to-indigo-700 border-blue-500 text-white shadow-[0_8px_30px_rgb(0,0,0,0.12)] shadow-blue-500/30 scale-[1.02]' : 'bg-gradient-to-br from-blue-500 to-indigo-600 border-blue-400 text-white shadow-[0_8px_30px_rgb(0,0,0,0.12)] shadow-blue-500/30 scale-[1.02]')
+                        : (darkMode ? 'bg-slate-800/50 border-slate-700/50 text-slate-400 hover:bg-slate-800 hover:border-slate-600 hover:text-slate-200' : 'bg-gray-50/50 border-gray-100 text-gray-600 hover:bg-white hover:border-gray-200 hover:shadow-md hover:text-gray-900')
+                    }`}
+                  >
+                    {isSelected && (
+                      <div className="absolute top-0 left-0 w-1.5 h-full bg-white/30 rounded-l-2xl"></div>
+                    )}
+                    <span className={`w-8 h-8 shrink-0 rounded-xl flex items-center justify-center text-[11px] font-black transition-colors ${
+                      isSelected 
+                        ? 'bg-white/20 text-white shadow-inner' 
+                        : (darkMode ? 'bg-slate-900 text-slate-500 group-hover:bg-slate-700 group-hover:text-slate-300' : 'bg-white text-gray-400 shadow-sm group-hover:bg-blue-50 group-hover:text-blue-500')
+                    }`}>
+                      {idx + 1}
+                    </span>
+                    <div className="flex flex-col pt-1">
+                      <span className={`font-bold text-sm leading-snug ${isSelected ? 'text-white' : ''}`}>{chapter.title}</span>
+                      {isSelected && <span className="text-[9px] font-black uppercase tracking-widest text-blue-100 mt-2 flex items-center"><i className="fa-solid fa-bolt text-amber-300 mr-1.5"></i> Active</span>}
+                    </div>
+                  </button>
+                );
+              })}
             </div>
           </div>
         </div>
 
-        <div className="lg:col-span-2 flex flex-col space-y-6">
+        <div className="lg:col-span-2 flex flex-col space-y-6" ref={contentRef}>
           {!selectedChapter ? (
             <div className={`rounded-[3rem] p-20 text-center border-2 border-dashed flex flex-col items-center justify-center space-y-6 h-full ${darkMode ? 'bg-slate-900 border-slate-800 text-slate-600' : 'bg-white border-gray-200 text-gray-300'}`}>
               <i className="fa-solid fa-book-open-reader text-6xl"></i>

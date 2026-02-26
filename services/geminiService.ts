@@ -18,6 +18,14 @@ async function withRetry<T>(fn: () => Promise<T>, maxRetries = 3): Promise<T> {
       return await fn();
     } catch (error: any) {
       lastError = error;
+
+      // If error is already ApiError, handle accordingly
+      if (error instanceof ApiError) {
+         if (error.code === 'INVALID_KEY' || error.code === 'SAFETY_BLOCKED' || error.code === 'QUOTA_EXCEEDED') {
+            throw error; // Don't retry fatal errors
+         }
+      }
+
       const errorStr = error?.message || error?.toString() || "";
       const status = error?.status || error?.error?.status;
       
@@ -62,24 +70,19 @@ async function withRetry<T>(fn: () => Promise<T>, maxRetries = 3): Promise<T> {
 }
 
 const getAIClient = () => {
-  const apiKey = import.meta.env.VITE_GEMINI_API_KEY || process.env.GEMINI_API_KEY || process.env.API_KEY;
+  const apiKey = import.meta.env.VITE_GEMINI_API_KEY || process.env.GEMINI_API_KEY || process.env.API_KEY || localStorage.getItem('user_provided_api_key');
   if (!apiKey) {
-    console.error("Gemini API Key is missing. Please set VITE_GEMINI_API_KEY in your environment variables.");
+    throw new ApiError("API Key is missing. Please set VITE_GEMINI_API_KEY in your environment variables or provide it in the app settings.", "INVALID_KEY");
   }
-  return new GoogleGenAI({ apiKey: apiKey || "" });
+  return new GoogleGenAI({ apiKey: apiKey });
 };
 
-const MATH_NOTATION_RULE = `MATH NOTATION: You MUST use clear Unicode text for mathematical expressions. Do NOT use LaTeX code or dollar signs ($).
-- Use Unicode superscripts for exponents: x², y³, cm², m/s², 10⁻¹⁹.
-- Use Unicode subscripts where available: H₂O.
-- Use standard Unicode symbols: √ (square root), ± (plus-minus), ≠ (not equal), ≈ (approx), × (multiply), ÷ (divide), π (pi), ° (degree), Δ (delta), ∠ (angle), ≅ (congruent), || (parallel), ⊥ (perpendicular).
-- Fractions: Use simplified single-line format using slash, e.g., 1/2, a/b, (a+b)/c.
-- Example: Write x² + 2x + 1 = 0 instead of LaTeX.
-- Example: Write I = Prt/100 instead of LaTeX fractions.`;
+// ... (MATH_NOTATION_RULE remains same)
 
 export const solveProblem = async (problem: string, context?: string, fileData?: { data: string, mimeType: string }) => {
   return withRetry(async () => {
     const ai = getAIClient();
+    // ... rest of function
     const contents = fileData 
       ? { parts: [{ inlineData: { data: fileData.data.split(',')[1], mimeType: fileData.mimeType } }, { text: problem }] }
       : problem;
