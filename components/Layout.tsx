@@ -33,9 +33,12 @@ const Layout: React.FC<LayoutProps> = ({ children, activeTab, setActiveTab, dark
       {/* Mobile Header */}
       <header className={`md:hidden p-4 flex flex-col sticky top-0 z-50 transition-all duration-300 ${darkMode ? 'bg-slate-900 border-b border-slate-800' : 'bg-blue-700 text-white shadow-md'}`}>
         <div className="flex justify-between items-center w-full">
-          <div className="flex items-center space-x-2">
-            <i className="fa-solid fa-graduation-cap text-2xl"></i>
-            <span className="font-bold text-xl tracking-tight">WBBSE Smart Solutions</span>
+          <div className="flex flex-col">
+            <div className="flex items-center space-x-2">
+              <i className="fa-solid fa-graduation-cap text-2xl"></i>
+              <span className="font-bold text-xl tracking-tight">WBBSE Smart Solutions</span>
+            </div>
+            <span className="text-[9px] font-black uppercase tracking-widest opacity-60 mt-0.5">Developed by Ritik Roushan Sah</span>
           </div>
           <div className="flex items-center space-x-2">
             <button 
@@ -77,13 +80,14 @@ const Layout: React.FC<LayoutProps> = ({ children, activeTab, setActiveTab, dark
         ${darkMode ? 'bg-slate-900 border-r border-slate-800' : 'bg-blue-800 text-white'}
       `}>
         <div className="p-6 h-full flex flex-col">
-          <div className="hidden md:flex items-center justify-between mb-10">
+          <div className="hidden md:flex flex-col mb-10">
             <div className="flex items-center space-x-3">
               <div className={darkMode ? 'bg-blue-600 p-2 rounded-lg' : 'bg-white p-2 rounded-lg'}>
                 <i className={`fa-solid fa-graduation-cap ${darkMode ? 'text-white' : 'text-blue-800'} text-2xl`}></i>
               </div>
               <span className="font-bold text-xl tracking-tight">WBBSE Smart</span>
             </div>
+            <span className="text-[9px] font-black uppercase tracking-widest opacity-60 mt-2 ml-1">Developed by Ritik Roushan Sah</span>
           </div>
 
           <nav className="space-y-2 flex-1">

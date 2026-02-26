@@ -311,6 +311,15 @@ const App: React.FC = () => {
             >
               {t.learnMoreBilling} <i className="fa-solid fa-external-link text-xs ml-1"></i>
             </a>
+            
+            <div className="mt-8 pt-4 border-t border-inherit/10 w-full text-center">
+              <p className="text-[9px] font-black uppercase tracking-[0.2em] opacity-40">
+                {t.developedBy}
+              </p>
+              <p className="text-[11px] font-bold mt-0.5 opacity-60 text-blue-500">
+                {t.authorName}
+              </p>
+            </div>
           </div>
         </div>
       )}

@@ -247,10 +247,15 @@ const Dashboard: React.FC<DashboardProps> = ({
       </section>
       
       {/* Footer developed by mention */}
-      <footer className="pt-8 pb-4 text-center border-t border-inherit/10 opacity-40">
-        <p className="text-[10px] font-black uppercase tracking-[0.2em]">
-          {t.developedBy} <span className="text-blue-500">{t.authorName}</span>
-        </p>
+      <footer className="pt-10 pb-6 text-center border-t border-inherit/10">
+        <div className={`inline-flex flex-col items-center justify-center p-4 rounded-2xl ${darkMode ? 'bg-slate-900 border border-slate-800' : 'bg-white border border-gray-100 shadow-sm'}`}>
+          <p className="text-[10px] font-black uppercase tracking-[0.2em] opacity-50 mb-1">
+            {t.developedBy}
+          </p>
+          <p className="text-sm font-black tracking-widest text-blue-600 uppercase">
+            {t.authorName}
+          </p>
+        </div>
       </footer>
     </div>
   );

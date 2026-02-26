@@ -77,7 +77,17 @@ const getAIClient = () => {
   return new GoogleGenAI({ apiKey: apiKey });
 };
 
-// ... (MATH_NOTATION_RULE remains same)
+const MATH_NOTATION_RULE = `
+**CRITICAL: MATHEMATICAL NOTATION RULES**
+- Use plain text for simple expressions (e.g., x^2 + y^2 = z^2).
+- Use Unicode characters for common symbols (e.g., √, π, θ, ±, ×, ÷, ≤, ≥, ≠).
+- For fractions, use the slash symbol (e.g., 1/2, (x+1)/(x-1)).
+- For subscripts, use underscore (e.g., H_2O, a_n).
+- For complex formulas, write them out clearly in plain text.
+- **DO NOT** use LaTeX notation (e.g., \\frac, \\sqrt, $...$, $$...$$).
+- **DO NOT** use MathML or any other markup language.
+- Ensure all mathematical expressions are easily readable without a math renderer.
+`;
 
 export const solveProblem = async (problem: string, context?: string, fileData?: { data: string, mimeType: string }) => {
   return withRetry(async () => {
@@ -664,6 +674,22 @@ export const generatePracticeSet = async (subject: string, classLabel: string, c
       contents,
       config: {
         responseMimeType: "application/json",
+        responseSchema: {
+          type: Type.ARRAY,
+          items: {
+            type: Type.OBJECT,
+            properties: {
+              question: { type: Type.STRING },
+              options: { 
+                type: Type.ARRAY,
+                items: { type: Type.STRING }
+              },
+              correctAnswer: { type: Type.INTEGER },
+              explanation: { type: Type.STRING }
+            },
+            required: ["question", "options", "correctAnswer", "explanation"]
+          }
+        },
         maxOutputTokens: 8192,
         temperature: 0.8,
       }

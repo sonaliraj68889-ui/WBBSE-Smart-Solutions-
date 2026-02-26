@@ -1002,7 +1002,10 @@ const SmartTutor: React.FC<SmartTutorProps> = ({ darkMode, lang, initialQuery, i
         ) : (
           <div className="text-center py-2"><p className="text-[9px] text-gray-400 font-black uppercase tracking-[0.3em] flex items-center justify-center"><i className="fa-solid fa-shield-halved mr-2 text-blue-500 text-sm animate-pulse"></i> AI Practice Active</p></div>
         )}
-        <div className="mt-2 text-center"><p className="text-[8px] text-gray-400 font-black uppercase tracking-widest opacity-40">{t.voiceActive}</p></div>
+        <div className="mt-2 text-center flex flex-col items-center justify-center space-y-1">
+          <p className="text-[8px] text-gray-400 font-black uppercase tracking-widest opacity-40">{t.voiceActive}</p>
+          <p className="text-[8px] font-black uppercase tracking-widest opacity-30 text-blue-500">Developed by Ritik Roushan Sah</p>
+        </div>
       </div>
     </div>
   );

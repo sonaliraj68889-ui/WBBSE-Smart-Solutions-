@@ -354,6 +354,11 @@ const ChapterViewer: React.FC<ChapterViewerProps> = ({
           )}
         </div>
       </div>
+
+      <div className="mt-12 text-center pb-8">
+        <p className="text-[10px] font-black uppercase tracking-[0.2em] opacity-30">Developed by</p>
+        <p className="text-xs font-black uppercase tracking-widest text-blue-500 opacity-60 mt-1">Ritik Roushan Sah</p>
+      </div>
     </div>
   );
 };

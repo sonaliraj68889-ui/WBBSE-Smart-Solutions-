@@ -241,12 +241,22 @@ const PracticeMode: React.FC<PracticeModeProps> = ({ darkMode, lang, onQuotaExce
 
       {/* Breadcrumbs for Selection */}
       <div className="flex items-center justify-center space-x-2 text-xs font-bold uppercase tracking-widest mb-8 opacity-60">
-         <span className={selectedClassId ? 'text-blue-500 cursor-pointer' : ''} onClick={() => { setSelectedClassId(null); setSelectedSubject(null); }}>Class</span>
+         <span className={selectedClassId ? 'text-blue-500 cursor-pointer' : ''} onClick={() => { setSelectedClassId(null); setSelectedSubject(null); setError(null); }}>Class</span>
          <i className="fa-solid fa-chevron-right text-[10px]"></i>
-         <span className={selectedSubject ? 'text-blue-500 cursor-pointer' : ''} onClick={() => setSelectedSubject(null)}>Subject</span>
+         <span className={selectedSubject ? 'text-blue-500 cursor-pointer' : ''} onClick={() => { setSelectedSubject(null); setError(null); }}>Subject</span>
          <i className="fa-solid fa-chevron-right text-[10px]"></i>
          <span>Chapter</span>
       </div>
+
+      {error && (
+        <div className="max-w-3xl mx-auto p-6 bg-red-100 text-red-700 rounded-2xl flex items-center space-x-4 mb-8">
+          <i className="fa-solid fa-triangle-exclamation text-2xl"></i>
+          <div>
+            <h4 className="font-bold">Error Generating Practice Set</h4>
+            <p className="text-sm opacity-80">{error}</p>
+          </div>
+        </div>
+      )}
 
       {!selectedClassId && (
         <div className="grid grid-cols-2 md:grid-cols-3 gap-4 max-w-4xl mx-auto">
@@ -298,6 +308,11 @@ const PracticeMode: React.FC<PracticeModeProps> = ({ darkMode, lang, onQuotaExce
             ))}
          </div>
       )}
+
+      <div className="mt-12 text-center pb-8">
+        <p className="text-[10px] font-black uppercase tracking-[0.2em] opacity-30">Developed by</p>
+        <p className="text-xs font-black uppercase tracking-widest text-blue-500 opacity-60 mt-1">Ritik Roushan Sah</p>
+      </div>
     </div>
   );
 };
