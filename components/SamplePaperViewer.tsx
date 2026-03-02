@@ -94,7 +94,7 @@ const SamplePaperViewer: React.FC<SamplePaperViewerProps> = ({ paper, darkMode, 
               <p className="text-sm italic font-bold opacity-60">{section.instructions}</p>
               {section.passage && (
                 <div className={`p-10 rounded-[2rem] border-2 shadow-inner leading-relaxed text-lg font-serif italic ${darkMode ? 'bg-slate-950/50 border-slate-800' : 'bg-stone-50 border-stone-200'}`}>
-                  {section.passage.split('\n').map((p, i) => <p key={i} className={i > 0 ? 'mt-4' : ''}><MathText text={p} isInline /></p>)}
+                  {(section.passage || '').split('\n').map((p, i) => <p key={i} className={i > 0 ? 'mt-4' : ''}><MathText text={p} isInline /></p>)}
                 </div>
               )}
               <div className="space-y-12">

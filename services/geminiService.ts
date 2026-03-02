@@ -69,7 +69,7 @@ async function withRetry<T>(fn: () => Promise<T>, maxRetries = 3): Promise<T> {
   throw new ApiError(lastError?.message || "An unexpected error occurred", "UNKNOWN", lastError);
 }
 
-const getAIClient = () => {
+export const getAIClient = () => {
   const apiKey = import.meta.env.VITE_GEMINI_API_KEY || process.env.GEMINI_API_KEY || process.env.API_KEY || localStorage.getItem('user_provided_api_key');
   if (!apiKey) {
     throw new ApiError("API Key is missing. Please set VITE_GEMINI_API_KEY in your environment variables or provide it in the app settings.", "INVALID_KEY");
@@ -93,8 +93,8 @@ export const solveProblem = async (problem: string, context?: string, fileData?:
   return withRetry(async () => {
     const ai = getAIClient();
     // ... rest of function
-    const contents = fileData 
-      ? { parts: [{ inlineData: { data: fileData.data.split(',')[1], mimeType: fileData.mimeType } }, { text: problem }] }
+    const contents = fileData && fileData.data
+      ? { parts: [{ inlineData: { data: fileData.data.split(',')[1] || fileData.data, mimeType: fileData.mimeType } }, { text: problem }] }
       : problem;
 
     const response = await ai.models.generateContent({
@@ -442,14 +442,14 @@ export const generateSamplePaper = async (subject: string, classLabel: string, t
              
              **Section 1: Reading Comprehension (Seen) - Prose (5 Marks)**
              - title: "Section A: Reading Comprehension (Seen) - Prose"
-             - passage: [Generate a SUBSTANTIAL passage (min 150 words) from "${syllabusTopics.split(',')[0]}" (Prose). e.g., "Swami went to school..."]
+             - passage: [Generate a SUBSTANTIAL passage (min 150 words) from "${(syllabusTopics || '').split(',')[0] || 'Prose'}" (Prose). e.g., "Swami went to school..."]
              - questions: 
                - 2 MCQs (1 mark each).
                - 3 Complete the sentences (1 mark each).
              
              **Section 2: Reading Comprehension (Seen) - Poetry (5 Marks)**
              - title: "Section A: Reading Comprehension (Seen) - Poetry"
-             - passage: [Generate the FULL poem or 2 stanzas from "${syllabusTopics.split(',')[1]}" (Poetry)]
+             - passage: [Generate the FULL poem or 2 stanzas from "${(syllabusTopics || '').split(',')[1] || 'Poetry'}" (Poetry)]
              - questions:
                - 2 MCQs (1 mark each).
                - 2 SAQ (Short Answer) questions (1.5 marks each approx).

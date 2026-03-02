@@ -85,7 +85,7 @@ const Dashboard: React.FC<DashboardProps> = ({
                   activeClassTab === c.id ? 'bg-blue-600 text-white shadow-lg' : 'text-gray-500 hover:text-gray-700 dark:hover:text-slate-300'
                 }`}
               >
-                {getLocalizedClassName(c.id).split(' ')[1] || getLocalizedClassName(c.id)}
+                {(getLocalizedClassName(c.id) || '').split(' ')[1] || getLocalizedClassName(c.id)}
               </button>
             ))}
           </div>

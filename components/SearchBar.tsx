@@ -130,7 +130,7 @@ const SearchBar: React.FC<SearchBarProps> = ({ darkMode, lang, onResultClick, is
                     <div className="flex items-center space-x-2 mb-1">
                       <span className={`text-[9px] font-black uppercase tracking-widest px-2 py-0.5 rounded-full ${
                         darkMode ? 'bg-slate-800 text-slate-500' : 'bg-gray-100 text-gray-500'
-                      }`}>{res.classLabel.split(' ')[1] || res.classLabel}</span>
+                      }`}>{(res.classLabel || '').split(' ')[1] || res.classLabel}</span>
                       <span className="text-[10px] font-bold text-blue-500 opacity-80">{(t.subjects as any)[res.subject.id] || res.subject.name}</span>
                     </div>
                     <p className="font-bold text-sm truncate">{res.chapter.title}</p>

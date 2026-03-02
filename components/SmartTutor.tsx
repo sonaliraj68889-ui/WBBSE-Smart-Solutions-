@@ -1,7 +1,7 @@
 
 import React, { useState, useRef, useEffect } from 'react';
 import { GoogleGenAI, LiveServerMessage, Modality } from '@google/genai';
-import { solveProblem, generateDiagram, fetchExamQuestions, generateSpeech, translateContent, ApiError } from '../services/geminiService.ts';
+import { solveProblem, generateDiagram, fetchExamQuestions, generateSpeech, translateContent, ApiError, getAIClient } from '../services/geminiService.ts';
 import { Message, ExamQuestion, ExamResult, ExamTerm, Chapter } from '../types.ts';
 import { translations } from '../translations.ts';
 import { CLASSES } from '../constants.ts';
@@ -252,7 +252,7 @@ const SmartTutor: React.FC<SmartTutorProps> = ({ darkMode, lang, initialQuery, i
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
       micStreamRef.current = stream;
 
-      const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+      const ai = getAIClient();
       
       audioContextInRef.current = new (window.AudioContext || (window as any).webkitAudioContext)({ sampleRate: 16000 });
       audioContextOutRef.current = new (window.AudioContext || (window as any).webkitAudioContext)({ sampleRate: 24000 });
@@ -718,7 +718,7 @@ const SmartTutor: React.FC<SmartTutorProps> = ({ darkMode, lang, initialQuery, i
                       <div className="grid grid-cols-3 gap-2 md:gap-3">
                         {CLASSES.map(c => (
                           <button key={c.id} onClick={() => setSelectedClassId(c.id)} className={`px-3 md:px-4 py-3 md:py-4 rounded-[1.25rem] md:rounded-[1.5rem] text-[10px] md:text-[11px] font-black border transition-all ${selectedClassId === c.id ? 'bg-blue-600 text-white border-blue-600 shadow-2xl scale-105' : (darkMode ? 'bg-slate-800 border-slate-700 text-slate-400 hover:bg-slate-700' : 'bg-white border-gray-200 text-gray-500 hover:shadow-lg')}`}>
-                            {getLocalizedClassName(c.id).split(' ')[1] || getLocalizedClassName(c.id)}
+                            {(getLocalizedClassName(c.id) || '').split(' ')[1] || getLocalizedClassName(c.id)}
                           </button>
                         ))}
                       </div>
