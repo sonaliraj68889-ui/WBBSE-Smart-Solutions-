@@ -79,10 +79,10 @@ export const getAIClient = () => {
 
 const MATH_NOTATION_RULE = `
 **CRITICAL: MATHEMATICAL NOTATION RULES**
-- Use plain text for simple expressions (e.g., x^2 + y^2 = z^2).
+- Use plain text for simple expressions (e.g., x² + y² = z²). DO NOT use caret (^) for superscripts.
 - Use Unicode characters for common symbols (e.g., √, π, θ, ±, ×, ÷, ≤, ≥, ≠).
 - For fractions, use the slash symbol (e.g., 1/2, (x+1)/(x-1)).
-- For subscripts, use underscore (e.g., H_2O, a_n).
+- For subscripts, use Unicode subscript characters (e.g., H₂O, CO₂, aₙ). DO NOT use underscores for subscripts.
 - For complex formulas, write them out clearly in plain text.
 - **DO NOT** use LaTeX notation (e.g., \\frac, \\sqrt, $...$, $$...$$).
 - **DO NOT** use MathML or any other markup language.

@@ -23,6 +23,7 @@ const MathText: React.FC<MathTextProps> = ({ text, className = '', isInline = fa
 
     const renderContent = async (el: HTMLElement, content: string) => {
       el.innerHTML = '';
+      if (!content) return;
       
       // Split by Mermaid blocks, then by Math delimiters
       // We use a capture group to keep the delimiters
