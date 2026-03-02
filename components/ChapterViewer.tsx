@@ -144,16 +144,16 @@ const ChapterViewer: React.FC<ChapterViewerProps> = ({
       </div>
 
       {/* Interactive Main Layout */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        <div className="lg:col-span-1 space-y-4">
-          <div className={`p-6 rounded-[2rem] border shadow-sm flex flex-col h-full ${darkMode ? 'bg-slate-900 border-slate-800' : 'bg-white border-gray-100'}`}>
+      <div className={`grid grid-cols-1 ${!selectedChapter ? 'lg:grid-cols-1 max-w-3xl mx-auto w-full' : 'lg:grid-cols-3'} gap-8`}>
+        <div className={`${selectedChapter ? 'hidden lg:block lg:col-span-1' : ''} space-y-4`}>
+          <div className={`p-6 md:p-8 rounded-[2rem] border shadow-sm flex flex-col h-full ${darkMode ? 'bg-slate-900 border-slate-800' : 'bg-white border-gray-100'}`}>
             <div className="flex items-center justify-between mb-6">
               <h3 className="font-black uppercase text-[11px] tracking-widest opacity-50 flex items-center">
                 <i className="fa-solid fa-list-ul mr-2"></i> Chapter Index
               </h3>
               <span className="text-[10px] font-bold bg-blue-500/10 text-blue-600 px-2.5 py-1 rounded-lg">{subject.chapters.length}</span>
             </div>
-            <div className="space-y-3 max-h-[60vh] overflow-y-auto custom-scrollbar pr-2 flex-1">
+            <div className="space-y-3 max-h-[70vh] overflow-y-auto custom-scrollbar pr-2 flex-1">
               {subject.chapters.map((chapter, idx) => {
                 const isSelected = selectedChapter?.id === chapter.id;
                 return (
@@ -187,16 +187,8 @@ const ChapterViewer: React.FC<ChapterViewerProps> = ({
           </div>
         </div>
 
-        <div className="lg:col-span-2 flex flex-col space-y-6" ref={contentRef}>
-          {!selectedChapter ? (
-            <div className={`rounded-[3rem] p-20 text-center border-2 border-dashed flex flex-col items-center justify-center space-y-6 h-full ${darkMode ? 'bg-slate-900 border-slate-800 text-slate-600' : 'bg-white border-gray-200 text-gray-300'}`}>
-              <i className="fa-solid fa-book-open-reader text-6xl"></i>
-              <div>
-                <h3 className="text-2xl font-black uppercase tracking-widest mb-2">{t.selectChapter}</h3>
-                <p className="text-sm font-bold opacity-60">Professional board solutions for Hindi medium.</p>
-              </div>
-            </div>
-          ) : (
+        {selectedChapter && (
+          <div className="lg:col-span-2 flex flex-col space-y-6" ref={contentRef}>
             <div className={`rounded-[2.5rem] shadow-2xl border overflow-hidden flex flex-col transition-all duration-500 ${darkMode ? 'bg-slate-950 border-slate-800' : 'bg-white border-gray-100'}`}>
               <div className={`p-6 md:p-10 text-white relative overflow-hidden ${subject.color}`}>
                 <div className="absolute -right-10 -top-10 text-[10rem] opacity-10 rotate-12">
@@ -351,8 +343,8 @@ const ChapterViewer: React.FC<ChapterViewerProps> = ({
                 )}
               </div>
             </div>
-          )}
-        </div>
+          </div>
+        )}
       </div>
 
       <div className="mt-12 text-center pb-8">

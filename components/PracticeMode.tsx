@@ -28,6 +28,8 @@ const PracticeMode: React.FC<PracticeModeProps> = ({ darkMode, lang, onQuotaExce
   const [showAnswer, setShowAnswer] = useState(false);
   const [score, setScore] = useState(0);
   const [isFinished, setIsFinished] = useState(false);
+  const [userAnswers, setUserAnswers] = useState<(number | null)[]>([]);
+  const [isReviewing, setIsReviewing] = useState(false);
 
   // Helper to get localized names
   const getLocalizedClassName = (id: string) => (t.classLabels as any)[id] || id;
@@ -43,6 +45,8 @@ const PracticeMode: React.FC<PracticeModeProps> = ({ darkMode, lang, onQuotaExce
     setCurrentIndex(0);
     setScore(0);
     setIsFinished(false);
+    setUserAnswers([]);
+    setIsReviewing(false);
     
     try {
       const classLabel = getLocalizedClassName(selectedClassId);
@@ -72,6 +76,13 @@ const PracticeMode: React.FC<PracticeModeProps> = ({ darkMode, lang, onQuotaExce
   const handleCheckAnswer = () => {
     if (selectedOption === null) return;
     setShowAnswer(true);
+    
+    setUserAnswers(prev => {
+      const newAnswers = [...prev];
+      newAnswers[currentIndex] = selectedOption;
+      return newAnswers;
+    });
+
     if (selectedOption === questions[currentIndex].correctAnswer) {
       setScore(prev => prev + 1);
     }
@@ -93,6 +104,8 @@ const PracticeMode: React.FC<PracticeModeProps> = ({ darkMode, lang, onQuotaExce
      setSelectedChapter(null);
      setQuestions([]);
      setIsFinished(false);
+     setUserAnswers([]);
+     setIsReviewing(false);
   };
 
   // --- RENDERERS ---
@@ -113,6 +126,56 @@ const PracticeMode: React.FC<PracticeModeProps> = ({ darkMode, lang, onQuotaExce
 
   // 4. Result View
   if (isFinished) {
+    if (isReviewing) {
+      return (
+        <div className="max-w-4xl mx-auto space-y-8 animate-fadeIn pb-20">
+          <div className="flex items-center justify-between mb-8">
+            <h2 className="text-3xl font-black">Review Answers</h2>
+            <button onClick={() => setIsReviewing(false)} className="px-6 py-3 bg-blue-600 text-white rounded-xl font-bold uppercase tracking-widest hover:bg-blue-700 transition-all">
+              Back to Results
+            </button>
+          </div>
+          <div className="space-y-8">
+            {questions.map((q, idx) => {
+              const userAnswer = userAnswers[idx];
+              const isCorrect = userAnswer === q.correctAnswer;
+              return (
+                <div key={idx} className={`p-6 md:p-8 rounded-[2rem] border transition-all ${darkMode ? 'bg-slate-900 border-slate-800' : 'bg-white border-gray-100 shadow-lg'}`}>
+                  <div className="flex items-start justify-between mb-6">
+                    <span className="w-8 h-8 rounded-lg bg-blue-600 text-white flex-shrink-0 flex items-center justify-center font-black text-xs shadow-md">Q{idx + 1}</span>
+                    <span className={`text-[10px] font-black uppercase tracking-widest px-4 py-1.5 rounded-full border ${isCorrect ? 'text-emerald-500 bg-emerald-500/10 border-emerald-500/20' : 'text-red-500 bg-red-500/10 border-red-500/20'}`}>
+                      {isCorrect ? 'Correct' : 'Incorrect'}
+                    </span>
+                  </div>
+                  <h5 className="text-lg md:text-xl font-bold leading-snug mb-6"><MathText text={q.question} /></h5>
+                  
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+                    <div className={`p-4 rounded-xl border-2 ${isCorrect ? 'border-emerald-500/20 bg-emerald-500/5' : 'border-red-500/20 bg-red-500/5'}`}>
+                      <span className="opacity-40 block text-[10px] font-black uppercase mb-2 tracking-widest">Your Answer</span>
+                      <span className={`font-bold ${isCorrect ? 'text-emerald-500' : 'text-red-500'}`}>
+                        {userAnswer !== null && userAnswer !== undefined ? <MathText text={q.options[userAnswer]} isInline /> : 'Not Answered'}
+                      </span>
+                    </div>
+                    <div className="p-4 rounded-xl border-2 border-emerald-500/20 bg-emerald-500/10">
+                      <span className="opacity-40 block text-[10px] font-black uppercase mb-2 tracking-widest text-emerald-600">Correct Answer</span>
+                      <span className="text-emerald-600 font-bold">
+                        <MathText text={q.options[q.correctAnswer]} isInline />
+                      </span>
+                    </div>
+                  </div>
+                  
+                  <div className={`p-4 rounded-xl ${darkMode ? 'bg-slate-800/50' : 'bg-gray-50'} border border-current/5`}>
+                    <p className="text-[10px] font-bold uppercase tracking-widest opacity-40 mb-2">Explanation</p>
+                    <div className="text-sm font-medium leading-relaxed opacity-80"><MathText text={q.explanation} /></div>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      );
+    }
+
     return (
       <div className="flex flex-col items-center justify-center min-h-[60vh] text-center animate-fadeIn space-y-8">
         <div className="w-24 h-24 rounded-full bg-emerald-500 text-white flex items-center justify-center text-5xl shadow-2xl mb-4">
@@ -122,15 +185,18 @@ const PracticeMode: React.FC<PracticeModeProps> = ({ darkMode, lang, onQuotaExce
         <div className="text-6xl font-black text-blue-600">
            {score} <span className="text-3xl opacity-30">/</span> {questions.length}
         </div>
-        <div className="flex space-x-4">
-           <button onClick={handleReset} className="px-8 py-3 bg-blue-600 text-white rounded-xl font-bold uppercase tracking-widest hover:bg-blue-700 shadow-lg transition-all">
-             {t.mainMenu}
+        <div className="flex flex-wrap justify-center gap-4">
+           <button onClick={() => setIsReviewing(true)} className="px-8 py-3 bg-indigo-600 text-white rounded-xl font-bold uppercase tracking-widest hover:bg-indigo-700 shadow-lg transition-all">
+             Review Answers
            </button>
            <button onClick={() => { 
              // Retry same chapter
              if(selectedChapter) handleStartPractice(selectedChapter);
-           }} className="px-8 py-3 bg-gray-100 text-gray-700 dark:bg-slate-800 dark:text-slate-200 rounded-xl font-bold uppercase tracking-widest hover:bg-gray-200 transition-all">
+           }} className="px-8 py-3 bg-blue-600 text-white rounded-xl font-bold uppercase tracking-widest hover:bg-blue-700 shadow-lg transition-all">
              Try Again
+           </button>
+           <button onClick={handleReset} className="px-8 py-3 bg-gray-100 text-gray-700 dark:bg-slate-800 dark:text-slate-200 rounded-xl font-bold uppercase tracking-widest hover:bg-gray-200 transition-all">
+             {t.mainMenu}
            </button>
         </div>
         <div className="mt-8">
@@ -244,10 +310,21 @@ const PracticeMode: React.FC<PracticeModeProps> = ({ darkMode, lang, onQuotaExce
           <h2 className={`text-3xl font-black ${darkMode ? 'text-white' : 'text-gray-900'}`}>{t.chapterPractice}</h2>
           <p className="opacity-60 font-medium max-w-lg">{t.selectPracticeTopic}</p>
         </div>
-        <button onClick={onHome} className={`px-4 py-2 rounded-xl flex items-center space-x-2 font-black text-[10px] uppercase tracking-widest shadow-md transition-all hover:bg-opacity-80 ${darkMode ? 'bg-slate-800 text-slate-200' : 'bg-white text-gray-700 border border-gray-100'}`}>
-          <i className="fa-solid fa-house"></i>
-          <span className="hidden sm:inline">{t.mainMenu}</span>
-        </button>
+        <div className="flex items-center space-x-3">
+          {(selectedClassId || selectedSubject) && (
+            <button onClick={() => {
+              if (selectedSubject) setSelectedSubject(null);
+              else if (selectedClassId) setSelectedClassId(null);
+            }} className={`px-4 py-2 rounded-xl flex items-center space-x-2 font-black text-[10px] uppercase tracking-widest shadow-md transition-all hover:bg-opacity-80 ${darkMode ? 'bg-slate-800 text-slate-200' : 'bg-white text-gray-700 border border-gray-100'}`}>
+              <i className="fa-solid fa-arrow-left"></i>
+              <span className="hidden sm:inline">{t.back}</span>
+            </button>
+          )}
+          <button onClick={onHome} className={`px-4 py-2 rounded-xl flex items-center space-x-2 font-black text-[10px] uppercase tracking-widest shadow-md transition-all hover:bg-opacity-80 ${darkMode ? 'bg-slate-800 text-slate-200' : 'bg-white text-gray-700 border border-gray-100'}`}>
+            <i className="fa-solid fa-house"></i>
+            <span className="hidden sm:inline">{t.mainMenu}</span>
+          </button>
+        </div>
       </div>
 
       {/* Breadcrumbs for Selection */}
