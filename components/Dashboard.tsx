@@ -4,7 +4,6 @@ import { CLASSES, USEFUL_LINKS } from '../constants.ts';
 import { Subject, SearchHistoryItem, ExamTerm } from '../types.ts';
 import { translations } from '../translations.ts';
 import { getAllOfflineContent, OfflineContent } from '../services/offlineService.ts';
-import IntroVideo from './IntroVideo.tsx';
 
 interface DashboardProps {
   onSelectSubject: (subject: Subject, classId: string) => void;
@@ -28,7 +27,6 @@ const Dashboard: React.FC<DashboardProps> = ({
   const t = translations[lang];
   const [activeClassTab, setActiveClassTab] = useState(CLASSES[0].id);
   const [offlineItems, setOfflineItems] = useState<OfflineContent[]>([]);
-  const [showIntroVideo, setShowIntroVideo] = useState(false);
 
   useEffect(() => {
     const loadOfflineContent = async () => {
@@ -74,27 +72,12 @@ const Dashboard: React.FC<DashboardProps> = ({
               <i className="fa-solid fa-medal text-yellow-400"></i>
               <span className="text-sm font-semibold">{t.topLearner}</span>
             </div>
-            <button 
-              onClick={() => setShowIntroVideo(true)}
-              className="bg-white text-blue-600 hover:bg-blue-50 px-4 py-2 rounded-xl flex items-center space-x-2 font-bold shadow-lg transition-colors"
-            >
-              <i className="fa-solid fa-play"></i>
-              <span className="text-sm">Watch Intro</span>
-            </button>
           </div>
         </div>
         <div className={`absolute -right-10 -bottom-10 opacity-10 rotate-12 ${darkMode ? 'text-blue-500' : 'text-white'}`}>
           <i className="fa-solid fa-book-open text-[15rem]"></i>
         </div>
       </section>
-
-      {showIntroVideo && (
-        <IntroVideo 
-          darkMode={darkMode} 
-          lang={lang} 
-          onClose={() => setShowIntroVideo(false)} 
-        />
-      )}
 
       {/* Sample Papers Archive Section */}
       <section className={`p-6 rounded-3xl border shadow-sm transition-colors ${darkMode ? 'bg-slate-900 border-slate-800' : 'bg-white border-gray-100'}`}>

@@ -9,9 +9,10 @@ interface SavedOfflineProps {
   lang: 'en' | 'hi';
   onSelectSubject: (subject: Subject, classId: string) => void;
   onSelectSamplePaper: (subject: string, classId: string, term: ExamTerm) => void;
+  onHome: () => void;
 }
 
-const SavedOffline: React.FC<SavedOfflineProps> = ({ darkMode, lang, onSelectSubject, onSelectSamplePaper }) => {
+const SavedOffline: React.FC<SavedOfflineProps> = ({ darkMode, lang, onSelectSubject, onSelectSamplePaper, onHome }) => {
   const t = translations[lang];
   const [offlineItems, setOfflineItems] = useState<OfflineContent[]>([]);
 
@@ -33,6 +34,18 @@ const SavedOffline: React.FC<SavedOfflineProps> = ({ darkMode, lang, onSelectSub
 
   return (
     <div className="space-y-8 animate-fadeIn pb-12">
+      <div className="flex items-center justify-between">
+        <button 
+          onClick={onHome}
+          className={`flex items-center space-x-2 px-4 py-2 rounded-xl transition-all ${
+            darkMode ? 'bg-slate-800 hover:bg-slate-700 text-slate-300' : 'bg-white hover:bg-gray-50 text-gray-600 shadow-sm border border-gray-200'
+          }`}
+        >
+          <i className="fa-solid fa-arrow-left"></i>
+          <span className="font-bold">{lang === 'hi' ? 'मुख्य मेनू' : 'Main Menu'}</span>
+        </button>
+      </div>
+
       <section className={`p-6 md:p-8 rounded-3xl border shadow-sm transition-colors ${darkMode ? 'bg-slate-900 border-slate-800' : 'bg-white border-gray-100'}`}>
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
           <div>

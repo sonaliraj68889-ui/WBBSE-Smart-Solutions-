@@ -205,6 +205,7 @@ const App: React.FC = () => {
               setActiveTab('curriculum');
             }}
             onSelectSamplePaper={handleSelectSamplePaper}
+            onHome={handleGoHome}
           />
         );
       case 'papers':
