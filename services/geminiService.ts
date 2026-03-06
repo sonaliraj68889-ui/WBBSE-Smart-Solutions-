@@ -305,21 +305,57 @@ export const generateSamplePaper = async (subject: string, classLabel: string, t
       if (classData) {
         const subjectData = classData.subjects.find(s => s.id === subjectLower);
         if (subjectData && subjectData.chapters) {
-          // If it's Summative 1, take first 1/3 of chapters
-          // If Summative 2, take middle 1/3
-          // If Summative 3, take all chapters
-          const totalChapters = subjectData.chapters.length;
-          let startIdx = 0;
-          let endIdx = totalChapters;
-          
-          if (term === 'Summative 1') {
-            endIdx = Math.ceil(totalChapters / 3);
-          } else if (term === 'Summative 2') {
-            startIdx = Math.ceil(totalChapters / 3);
-            endIdx = Math.ceil((totalChapters * 2) / 3);
+          let selectedChapters: typeof subjectData.chapters = [];
+
+          if (subjectLower.includes('hindi')) {
+            // Group Hindi chapters by prefix (e.g., "काव्य:", "गद्य:") to ensure a mix in each term
+            const groups: Record<string, typeof subjectData.chapters> = {};
+            const noPrefixGroup: typeof subjectData.chapters = [];
+            
+            subjectData.chapters.forEach(ch => {
+              const match = ch.title.match(/^([^:]+):/);
+              if (match) {
+                const prefix = match[1];
+                if (!groups[prefix]) groups[prefix] = [];
+                groups[prefix].push(ch);
+              } else {
+                noPrefixGroup.push(ch);
+              }
+            });
+
+            const getSlice = (arr: any[]) => {
+              const len = arr.length;
+              let start = 0;
+              let end = len;
+              if (term === 'Summative 1') {
+                end = Math.ceil(len / 3);
+              } else if (term === 'Summative 2') {
+                start = Math.ceil(len / 3);
+                end = Math.ceil((len * 2) / 3);
+              }
+              return arr.slice(start, end);
+            };
+
+            Object.values(groups).forEach(group => {
+              selectedChapters.push(...getSlice(group));
+            });
+            selectedChapters.push(...getSlice(noPrefixGroup));
+          } else {
+            // Standard slicing for other subjects
+            const totalChapters = subjectData.chapters.length;
+            let startIdx = 0;
+            let endIdx = totalChapters;
+            
+            if (term === 'Summative 1') {
+              endIdx = Math.ceil(totalChapters / 3);
+            } else if (term === 'Summative 2') {
+              startIdx = Math.ceil(totalChapters / 3);
+              endIdx = Math.ceil((totalChapters * 2) / 3);
+            }
+            
+            selectedChapters = subjectData.chapters.slice(startIdx, endIdx);
           }
           
-          const selectedChapters = subjectData.chapters.slice(startIdx, endIdx);
           syllabusTopics = selectedChapters.map((ch, idx) => `${idx + 1}. ${ch.title}`).join('\n');
         }
       }
@@ -343,18 +379,14 @@ export const generateSamplePaper = async (subject: string, classLabel: string, t
         `;
         
         if (subjectLower.includes('hindi')) {
-            const classData = CLASSES.find(c => c.id === `class-${classLabel}`);
-            const hindiSubject = classData?.subjects.find(s => s.id === 'hindi');
-            const chaptersList = hindiSubject?.chapters.map(c => c.title).join(', ') || '';
-            
             promptInstructions += `
             
             **CRITICAL FOR HINDI:** You MUST use the official WBBSE Hindi syllabus for Class ${classLabel}.
             DO NOT use Class 10 chapters like 'Raidas ke pad', 'Dhumketu', 'Tisari Kasam', 'Ramdas', 'Naurangiya', 'Naubat khane mein ibadat', etc.
             Use age-appropriate chapters, poems, and grammar specifically meant for Class ${classLabel} Hindi students.
             
-            **OFFICIAL CLASS ${classLabel} HINDI SYLLABUS CHAPTERS TO USE:**
-            ${chaptersList}
+            **OFFICIAL CLASS ${classLabel} HINDI SYLLABUS CHAPTERS TO USE FOR THIS TERM:**
+            ${syllabusTopics}
             
             Ensure ALL questions are derived strictly from these chapters.
             `;
