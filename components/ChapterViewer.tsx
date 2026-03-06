@@ -242,24 +242,9 @@ const ChapterViewer: React.FC<ChapterViewerProps> = ({
                     }`}>
                       {idx + 1}
                     </span>
-                    <div className="flex flex-col pt-1 flex-1">
+                    <div className="flex flex-col pt-1">
                       <span className={`font-bold text-sm leading-snug ${isSelected ? 'text-white' : ''}`}>{chapter.title}</span>
                       {isSelected && <span className="text-[9px] font-black uppercase tracking-widest text-blue-100 mt-2 flex items-center"><i className="fa-solid fa-bolt text-amber-300 mr-1.5"></i> Active</span>}
-                    </div>
-                    <div className="flex items-center justify-center shrink-0">
-                      {savedChapters[chapter.id] ? (
-                        <i className={`fa-solid fa-circle-check text-lg ${isSelected ? 'text-white' : 'text-green-500'}`} title="Saved for offline"></i>
-                      ) : savingChapter === chapter.id ? (
-                        <i className={`fa-solid fa-spinner fa-spin text-lg ${isSelected ? 'text-white' : 'text-blue-500'}`}></i>
-                      ) : (
-                        <button 
-                          onClick={(e) => saveEntireChapter(chapter, e)}
-                          className={`p-2 rounded-full transition-colors ${isSelected ? 'hover:bg-white/20 text-white/70 hover:text-white' : 'hover:bg-gray-200 text-gray-400 hover:text-gray-600'}`}
-                          title="Save for offline"
-                        >
-                          <i className="fa-solid fa-download"></i>
-                        </button>
-                      )}
                     </div>
                   </button>
                 );

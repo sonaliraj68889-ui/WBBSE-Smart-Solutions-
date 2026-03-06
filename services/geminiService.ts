@@ -195,16 +195,16 @@ export const generateSamplePaper = async (subject: string, classLabel: string, t
       if (term === 'Summative 1') {
          if (subjectLower.includes('math')) {
             syllabusTopics = `
-            1. Quadratic Equation with one variable (एक चर वाले द्विघात समीकरण)
-            2. Simple Interest (सरल ब्याज)
-            3. Theorem related to circle (वृत्त से संबंधित प्रमेय)
-            4. Rectangular Parallelopiped or Cuboid (आयताकार समांतर षट्फलक या घनाभ)
-            5. Ratio and proportion (अनुपात और समानुपात)
-            6. Compound interest and uniform rate of increase or decrease (चक्रवृद्धि ब्याज और समान वृद्धि दर)
-            7. Theorem related to angle in a circle (वृत्तस्थ कोण संबंधित प्रमेय)
-            8. Right circular cylinder (लंब वृत्ताकार बेलन)
-            9. Quadratic Surd (द्विघात करणी)
-            10. Theorems related to cyclic quadrilateral (चक्रीय चतुर्भुज संबंधित प्रमेय)
+            1. एक चर वाले द्विघात समीकरण (Quadratic Equation with one variable)
+            2. सरल ब्याज (Simple Interest)
+            3. वृत्त से संबंधित प्रमेय (Theorem related to circle)
+            4. आयताकार समांतर षट्फलक या घनाभ (Rectangular Parallelopiped as Cuboid)
+            5. अनुपात और समानुपात (Ratio and proportion)
+            6. चक्रवृद्धि ब्याज और समान वृद्धि या ह्रास दर (Compound interest and uniform rate of increase and decrease)
+            7. वृत्तस्थ कोण संबंधित प्रमेय (Theorems related to angle in a circle)
+            8. लंब वृत्ताकार बेलन (Right circular cylinder)
+            9. द्विघात करणी (Quadratic Surd)
+            10. चक्रीय चतुर्भुज संबंधित प्रमेय (Theorems related to cyclic Quadrilateral)
             `;
          } else if (subjectLower.includes('physci') || subjectLower.includes('physical')) {
             syllabusTopics = `
@@ -251,13 +251,14 @@ export const generateSamplePaper = async (subject: string, classLabel: string, t
       } else if (term === 'Summative 2') {
          if (subjectLower.includes('math')) {
             syllabusTopics = `
-            11. Construction: Construction of circumcircle and incircle of a triangle (त्रिभुज के परिवृत्त और अंतर्वृत्त की रचना)
-            12. Sphere (गोलक)
-            13. Variation (भेद)
-            14. Partnership Business (साझा व्यापार)
-            15. Theorems related to Tangent to a circle (वृत्त की स्पर्श रेखा संबंधित प्रमेय)
-            16. Right circular cone (लंब वृत्ताकार शंकु)
-            17. Similarity (सादृश्यता)
+            11. एक चर वाले द्विघात समीकरण (Quadratic equation in one variable)
+            12. रचना: त्रिभुज के परिवृत्त और अंतर्वृत्त की रचना (Construction: Construction of circum circle and incircle of a triangle)
+            13. गोलक (Sphere)
+            14. भेद (Variation)
+            15. साझा व्यापार (Partnership Business)
+            16. वृत्त की स्पर्श रेखा संबंधित प्रमेय (Theorems related to tangent to a circle)
+            17. लंब वृत्ताकार शंकु (Right circular cone)
+            18. सदृशता (Similarity)
             `;
          } else if (subjectLower.includes('physci') || subjectLower.includes('physical')) {
             syllabusTopics = `
