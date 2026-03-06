@@ -172,19 +172,26 @@ export const generateSamplePaper = async (subject: string, classLabel: string, t
     const ai = getAIClient();
     const subjectLower = subject.toLowerCase();
     const isMadhyamik = classLabel.includes('10');
+    const isClass9 = classLabel.includes('9');
+    const isClass678 = classLabel.includes('6') || classLabel.includes('7') || classLabel.includes('8');
     const isEnglish = subjectLower.includes('english');
     
     let marks = 40;
     let time = "1 Hour 30 Minutes";
     let syllabusTopics = "";
 
-    if (term === 'Summative 3' || term === 'Madhyamik Selection') {
-      marks = isMadhyamik ? 90 : 70;
-      time = isMadhyamik ? "3 Hours 15 Minutes" : "2 Hours 30 Minutes";
+    if (isClass678) {
+      if (term === 'Summative 1') { marks = 30; time = "1 Hour"; }
+      else if (term === 'Summative 2') { marks = 50; time = "1 Hour 30 Minutes"; }
+      else { marks = 70; time = "2 Hours 30 Minutes"; }
+    } else if (isClass9 || isMadhyamik) {
+      if (term === 'Summative 1') { marks = 40; time = "1 Hour 30 Minutes"; }
+      else if (term === 'Summative 2') { marks = 40; time = "1 Hour 30 Minutes"; }
+      else { marks = 90; time = "3 Hours 15 Minutes"; }
     }
 
     // --- SYLLABUS MAPPING FOR SUMMATIVE 1 & 2 (Based on WBBSE 2026 Images) ---
-    if (isMadhyamik) {
+    if (isMadhyamik || isClass9) {
       if (term === 'Summative 1') {
          if (subjectLower.includes('math')) {
             syllabusTopics = `
@@ -363,32 +370,54 @@ export const generateSamplePaper = async (subject: string, classLabel: string, t
 
     let promptInstructions = "";
     
-    if (!isMadhyamik) {
+    if (isClass678) {
+        let structureText = "";
+        if (marks === 30) {
+            structureText = `
+            1. **Group A (MCQ):** 5 questions (1 mark each).
+            2. **Group B (VSA):** 5 questions (1 mark each) (Fill blanks, True/False, one word).
+            3. **Group C (Short Answer):** 5 questions (2 marks each).
+            4. **Group D (Long Answer):** 2 questions (5 marks each).
+            `;
+        } else if (marks === 50) {
+            structureText = `
+            1. **Group A (MCQ):** 10 questions (1 mark each).
+            2. **Group B (VSA):** 10 questions (1 mark each) (Fill blanks, True/False, one word).
+            3. **Group C (Short Answer):** 5 questions (2 marks each).
+            4. **Group D (Long Answer):** 4 questions (5 marks each).
+            `;
+        } else {
+            structureText = `
+            1. **Group A (MCQ):** 14 questions (1 mark each).
+            2. **Group B (VSA):** 16 questions (1 mark each) (Fill blanks, True/False, one word).
+            3. **Group C (Short Answer):** 10 questions (2 marks each).
+            4. **Group D (Long Answer):** 4 questions (5 marks each).
+            `;
+        }
+
         promptInstructions = `
         **STRICT WBBSE CLASS ${classLabel} ${subject.toUpperCase()} PATTERN**
         Structure the 'sections' array appropriately for Class ${classLabel} ${term} examination.
         Total Marks: ${marks}.
         Ensure questions are strictly from the Class ${classLabel} syllabus for ${subject}.
-        Do NOT include any Class 10 or Madhyamik level questions.
+        Do NOT include any Class 9, 10 or Madhyamik level questions.
         
         **STRUCTURE:**
-        1. **Group A (MCQ):** 10-20% of total marks.
-        2. **Group B (VSA):** 20-30% of total marks (Fill blanks, True/False, one word).
-        3. **Group C (Short Answer):** 20-30% of total marks (2-3 marks each).
-        4. **Group D (Long Answer):** Remaining marks (4-5 marks each).
+        ${structureText}
         `;
         
         if (subjectLower.includes('hindi')) {
             promptInstructions += `
             
             **CRITICAL FOR HINDI:** You MUST use the official WBBSE Hindi syllabus for Class ${classLabel}.
-            DO NOT use Class 10 chapters like 'Raidas ke pad', 'Dhumketu', 'Tisari Kasam', 'Ramdas', 'Naurangiya', 'Naubat khane mein ibadat', etc.
+            DO NOT use Class 9 or 10 chapters like 'Raidas ke pad', 'Dhumketu', 'Tisari Kasam', 'Ramdas', 'Naurangiya', 'Naubat khane mein ibadat', etc.
             Use age-appropriate chapters, poems, and grammar specifically meant for Class ${classLabel} Hindi students.
             
             **OFFICIAL CLASS ${classLabel} HINDI SYLLABUS CHAPTERS TO USE FOR THIS TERM:**
             ${syllabusTopics}
             
             Ensure ALL questions are derived strictly from these chapters.
+            Make sure to include questions from all sections present in the syllabus for this term (e.g., पद्य खण्ड/काव्य-खण्ड, गद्य खण्ड/गद्य-खण्ड, एकांकी, सहायक पाठ, व्याकरण).
             `;
         }
     } else {
@@ -403,7 +432,7 @@ export const generateSamplePaper = async (subject: string, classLabel: string, t
           3. **Q3. True/False:** 5 questions to answer out of 6 provided (1 mark each).
           4. **Q4. Short Answer (SA):** 10 questions to answer out of 12 provided (2 marks each).
           5. **Q5. Arithmetic:** 1 question to answer out of 2 (5 marks). (Topics: Simple/Compound Interest, Partnership).
-          6. **Q6. Quadratic Equations:** 1 question to answer out of 2 (3 marks).
+          6. **Q6. Algebra (Quadratic Equations etc):** 1 question to answer out of 2 (3 marks).
           7. **Q7. Surds/Variation:** 1 question to answer out of 2 (3 marks).
           8. **Q8. Ratio & Proportion:** 1 question to answer out of 2 (3 marks).
           9. **Q9. Geometry (Theorems):** 1 question to answer out of 2 (5 marks).
@@ -442,19 +471,19 @@ export const generateSamplePaper = async (subject: string, classLabel: string, t
           - questions: 6 MCQs, 3 True/False w/ Support, 4 SAQs.
           
           **Section 4: Grammar and Vocabulary (20 Marks)**
-          - title: "Section C: Grammar and Vocabulary"
-          - questions: Verb Forms, Articles/Prepositions, Do as Directed, Phrasal Verbs, Vocabulary.
+          - title: "Section B: Grammar and Vocabulary"
+          - questions: Verb Forms (3 marks), Articles/Prepositions (3 marks), Do as Directed (3 marks), Phrasal Verbs (3 marks), Vocabulary from Unseen Passage (8 marks).
           
           **Section 5: Writing (30 Marks)**
-          - title: "Section D: Writing Skills"
-          - questions: Story, Letter, Report/Notice (10 marks each).
+          - title: "Section C: Writing Skills"
+          - questions: Story (10 marks), Notice (10 marks), Letter (10 marks).
           `;
         } else if (subjectLower.includes('history')) {
           promptInstructions = `
           **STRICT WBBSE HISTORY (2026 ORIGINAL PAPER PATTERN)**
           Structure the 'sections' array exactly as follows (Total 90 Marks):
           1. **Group A (MCQ):** 20 compulsory questions (1x20=20).
-          2. **Group B (VSA) (16 Marks):** Answer 16 out of 20.
+          2. **Group B (VSA) (16 Marks):** Answer 16 out of 20 (taking at least one from each sub-group).
              - Sub-group 2.1: Answer in one sentence (4 qs).
              - Sub-group 2.2: True or False (4 qs).
              - Sub-group 2.3: Match Column A with B (4 items).
@@ -470,15 +499,15 @@ export const generateSamplePaper = async (subject: string, classLabel: string, t
           Structure the 'sections' array exactly as follows (Total 90 Marks):
           1. **Group A (MCQ):** 14 compulsory questions (1x14=14).
           2. **Group B (VSA) (22 Marks):** Answer 22 out of 26.
-             - True/False (Answer 6).
-             - Fill in blanks (Answer 6).
-             - Answer in one or two words (Answer 6).
-             - Match Columns (4 matches).
+             - 2.1 True/False (Answer 6).
+             - 2.2 Fill in blanks (Answer 6).
+             - 2.3 Answer in one or two words (Answer 6).
+             - 2.4 Match Columns (4 matches).
           3. **Group C (Short Answer - 2 Marks):** Answer 6 questions out of 12 (2x6=12). (Definitions/Concepts).
           4. **Group D (Explanatory - 3 Marks):** Answer 4 questions out of 8 (3x4=12). (Reasoning/Differences).
           5. **Group E (Long Answer - 5 Marks) (20 Marks):**
-             - Physical Geography: Answer 2 out of 4 (5x2=10).
-             - Economic/Regional Geography: Answer 2 out of 4 (5x2=10).
+             - 5.1 Physical Geography: Answer 2 out of 4 (5x2=10).
+             - 5.2 Economic/Regional Geography: Answer 2 out of 4 (5x2=10).
           6. **Group F (Map Pointing):** 10 items on Map of India (1x10=10).
           `;
         } else if (subjectLower.includes('hindi')) {
@@ -487,12 +516,12 @@ export const generateSamplePaper = async (subject: string, classLabel: string, t
           Structure the 'sections' array exactly as follows (Total 90 Marks):
           1. **Q1. MCQ:** 17 compulsory questions (1x17=17). (Grammar & Literature mixed).
           2. **Q2. VSA:** Answer 19 questions (1x19=19). (Approx 20-25 words).
-          3. **Q3. Short Explanatory (3 Marks):** Answer 2 questions (1 Prose, 1 Poetry) (3x2=6).
-          4. **Q4. Long Answer (Literature - 5 Marks):** Answer 4 questions (5x4=20). (From Prose, Poetry, Essay, etc.).
-          5. **Q5. Supplementary Long Answer (5 Marks):** Answer 2 questions (5x2=10).
-          6. **Q6. Essay:** Write 1 essay (10 Marks).
+          3. **Q3. Short Explanatory (3 Marks):** Answer 2 questions (1 Prose, 1 Poetry) (3x2=6). (Max 60 words).
+          4. **Q4. Long Answer (Literature - 5 Marks):** Answer 3 questions (5x3=15). (Max 150-200 words).
+          5. **Q5. Supplementary Long Answer (5 Marks):** Answer 2 questions (5x2=10). (Max 150 words).
+          6. **Q6. Essay:** Write 1 essay (10 Marks). (Max 300 words).
           7. **Q7. Translation:** English to Hindi (4 Marks).
-          8. **Q8. Report/Dialogue:** Answer 1 question (5 Marks).
+          8. **Q8. Report/Dialogue:** Answer 1 question (5 Marks). (Max 150 words).
           `;
         } else if (subjectLower.includes('life science') || subjectLower.includes('lifesci')) {
             promptInstructions = `
@@ -505,8 +534,8 @@ export const generateSamplePaper = async (subject: string, classLabel: string, t
                - Match Columns (Answer 5).
                - Answer in one word/sentence (Answer 6).
             3. **Group C (Short Answer - 2 Marks):** Answer 12 questions out of 17 (2x12=24).
-            4. **Group D (Long Answer - 5 Marks):** Answer 6 questions (5x6=30).
-               - Internal choices provided.
+            4. **Group D (Long Answer - 5 Marks):** Answer 6 questions or their alternatives (5x6=30).
+               - Marks can be divided as 3+2, 2+3, or 5.
                - Q4.1 must be a Diagram question.
             `;
         } else if (subjectLower.includes('physical science') || subjectLower.includes('physci')) {
@@ -569,16 +598,30 @@ export const generateSamplePaper = async (subject: string, classLabel: string, t
              For all MCQs, format options strictly as "(a) option", "(b) option", "(c) option", "(d) option". 
              Do NOT use "A(a)" or "A. (a)".
              `;
+        } else if (subjectLower.includes('hindi')) {
+             promptInstructions = `
+             **STRICT WBBSE HINDI UNIT TEST PATTERN (40 MARKS)**
+             **SYLLABUS:** Strictly generate questions ONLY from these topics: ${syllabusTopics}
+             
+             **STRUCTURE:**
+             1. **Group A (MCQ):** 8 questions (1 mark each).
+             2. **Group B (VSA):** 8 questions (1 mark each).
+             3. **Group C (Short Answer):** 4 questions (2 marks each).
+             4. **Group D (Long Answer):** 2 questions (5 marks each).
+             5. **Group E (Grammar/Translation):** 6 marks total.
+             
+             Ensure questions are balanced across the specified chapters.
+             `;
         } else {
              promptInstructions = `
              **STRICT WBBSE UNIT TEST PATTERN (40 MARKS)**
              **SYLLABUS:** Strictly generate questions ONLY from these topics: ${syllabusTopics}
              
              **STRUCTURE:**
-             1. **Group A (MCQ):** approx 6-8 marks.
-             2. **Group B (VSA):** approx 4-6 marks (Fill blanks, True/False, etc.).
-             3. **Group C (Short Answer):** approx 8-10 marks (2 marks each).
-             4. **Group D (Long Answer):** approx 16-20 marks (3 or 5 marks each depending on subject nature).
+             1. **Group A (MCQ):** 8 questions (1 mark each).
+             2. **Group B (VSA):** 8 questions (1 mark each) (Fill blanks, True/False, etc.).
+             3. **Group C (Short Answer):** 4 questions (2 marks each).
+             4. **Group D (Long Answer):** 3 questions (5 marks each) or 5 questions (3 marks each).
              
              Ensure questions are balanced across the specified chapters.
              `;
