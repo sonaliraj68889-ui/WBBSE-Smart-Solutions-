@@ -6,6 +6,7 @@ import SmartTutor from './components/SmartTutor.tsx';
 import ChapterViewer from './components/ChapterViewer.tsx';
 import SamplePaperViewer from './components/SamplePaperViewer.tsx';
 import PracticeMode from './components/PracticeMode.tsx';
+import SavedOffline from './components/SavedOffline.tsx';
 import { Subject, SearchHistoryItem, SamplePaper, ExamTerm } from './types.ts';
 import { translations } from './translations.ts';
 import { generateSamplePaper, ApiError } from './services/geminiService.ts';
@@ -194,6 +195,18 @@ const App: React.FC = () => {
             onQuotaExceeded={handleQuotaExceeded}
           />
         ) : null;
+      case 'offline':
+        return (
+          <SavedOffline 
+            darkMode={darkMode} 
+            lang={lang} 
+            onSelectSubject={(subject, classId) => {
+              setSelectedSubject({ subject, classId });
+              setActiveTab('curriculum');
+            }}
+            onSelectSamplePaper={handleSelectSamplePaper}
+          />
+        );
       case 'papers':
         if (isGeneratingPaper) {
           return (

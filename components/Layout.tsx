@@ -38,6 +38,7 @@ const Layout: React.FC<LayoutProps> = ({ children, activeTab, setActiveTab, dark
     { id: 'practice', label: t.practiceMode, icon: 'fa-bullseye' },
     { id: 'curriculum', label: t.curriculum, icon: 'fa-graduation-cap' },
     { id: 'resources', label: t.studyMaterials, icon: 'fa-file-signature' },
+    { id: 'offline', label: lang === 'hi' ? 'ऑफ़लाइन सहेजा गया' : 'Saved Offline', icon: 'fa-cloud-arrow-down' },
   ];
 
   return (
