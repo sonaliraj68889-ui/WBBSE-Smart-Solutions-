@@ -1,6 +1,7 @@
 
 import { GoogleGenAI, Type, Modality } from "@google/genai";
 import { SamplePaper, ExamTerm, ExamQuestion } from "../types.ts";
+import { CLASSES } from "../constants";
 
 export type ApiErrorCode = 'QUOTA_EXCEEDED' | 'SAFETY_BLOCKED' | 'SERVER_ERROR' | 'INVALID_KEY' | 'UNKNOWN';
 
@@ -70,7 +71,10 @@ async function withRetry<T>(fn: () => Promise<T>, maxRetries = 3): Promise<T> {
 }
 
 export const getAIClient = () => {
-  const apiKey = import.meta.env.VITE_GEMINI_API_KEY || process.env.GEMINI_API_KEY || process.env.API_KEY || localStorage.getItem('user_provided_api_key');
+  let apiKey = import.meta.env.VITE_GEMINI_API_KEY || localStorage.getItem('user_provided_api_key');
+  if (!apiKey && typeof process !== 'undefined' && process.env) {
+    apiKey = process.env.GEMINI_API_KEY || process.env.API_KEY;
+  }
   if (!apiKey) {
     throw new ApiError("API Key is missing. Please set VITE_GEMINI_API_KEY in your environment variables or provide it in the app settings.", "INVALID_KEY");
   }
@@ -180,126 +184,185 @@ export const generateSamplePaper = async (subject: string, classLabel: string, t
     }
 
     // --- SYLLABUS MAPPING FOR SUMMATIVE 1 & 2 (Based on WBBSE 2026 Images) ---
-    if (term === 'Summative 1') {
-       if (subjectLower.includes('math')) {
-          syllabusTopics = `
-          1. Quadratic Equation with one variable (एक चर वाले द्विघात समीकरण)
-          2. Simple Interest (सरल ब्याज)
-          3. Theorem related to circle (वृत्त से संबंधित प्रमेय)
-          4. Rectangular Parallelopiped or Cuboid (आयताकार समांतर षट्फलक या घनाभ)
-          5. Ratio and proportion (अनुपात और समानुपात)
-          6. Compound interest and uniform rate of increase or decrease (चक्रवृद्धि ब्याज और समान वृद्धि दर)
-          7. Theorem related to angle in a circle (वृत्तस्थ कोण संबंधित प्रमेय)
-          8. Right circular cylinder (लंब वृत्ताकार बेलन)
-          9. Quadratic Surd (द्विघात करणी)
-          10. Theorems related to cyclic quadrilateral (चक्रीय चतुर्भुज संबंधित प्रमेय)
-          `;
-       } else if (subjectLower.includes('physci') || subjectLower.includes('physical')) {
-          syllabusTopics = `
-          1. Concerns about our environment (हमारे पर्यावरण के प्रति अभिरुचियां)
-          2. Behaviour of Gases (गैसों का आचरण)
-          3. Light (प्रकाश)
-          4. Periodic Table and Periodicity of the properties of elements (तत्वों के गुण धर्मों की आवर्तनी - आवर्त सारणी)
-          5. Ionic and co-valent Bonding (आयनिक तथा सहसंयोजक बंधन)
-          `;
-       } else if (subjectLower.includes('lifesci') || subjectLower.includes('life')) {
-          syllabusTopics = `
-          1. Control and Co-ordination in living organism (जीव जगत में नियंत्रण एवं समन्वय)
-          2. Continuity of life: Cell division and Cell cycle (जीवन की निरंतरता: कोशिका विभाजन और कोशिका चक्र)
-          `;
-       } else if (subjectLower.includes('hist')) {
-          syllabusTopics = `
-          1. Ideas of History (इतिहास की अवधारणा)
-          2. Reform: Characteristics and Observations (सुधार: विशेषताएँ और अवलोकन)
-          3. Resistance and Rebellion: Characteristics and Analyses (प्रतिरोध और आंदोलन: विशेषताएँ एवं निरीक्षण)
-          `;
-       } else if (subjectLower.includes('geo')) {
-          syllabusTopics = `
-          1. Exogenetic processes and resultant landforms (बहिर्जात प्रक्रिया और उससे बनने वाली स्थलाकृतियाँ)
-          2. India: Introduction, Physical environment (भारत: परिचय, प्राकृतिक परिवेश)
-          `;
-       } else if (subjectLower.includes('english')) {
-          syllabusTopics = `
-          1. Father's Help
-          2. Fable
-          3. The Passing Away of Bapu
-          Grammar: Textual Grammar, Correct forms of verbs, Articles and Prepositions, Phrasal verbs.
-          Writing: Informal Letter, Paragraph, Biography.
-          `;
-       } else if (subjectLower.includes('hindi')) {
-          syllabusTopics = `
-          Pady (Poetry): Raidas ke pad (रैदास के पद), Need ka nirman phir-phir (नीड़ का निर्माण फिर-फिर), Aatmtran (आत्मत्राण), Manushya aur sarp (मनुष्य और सर्प).
-          Gady (Prose): Dhumketu (धूमकेतु), Usne kaha tha (उसने कहा था), Nanha sangeetkar (नन्हा संगीतकार).
-          Sahayak Path: Tisari Kasam (तीसरी कसम).
-          Ekanki: Deepdan (दीपदान).
-          Vyakaran: Karak (कारक), Samas (समास), Translation (अंग्रेजी से हिन्दी अनुवाद).
-          Rachna: Essay Writing (निबंध : विभिन्न विषयों पर).
-          `;
-       }
-    } else if (term === 'Summative 2') {
-       if (subjectLower.includes('math')) {
-          syllabusTopics = `
-          11. Construction: Construction of circumcircle and incircle of a triangle (त्रिभुज के परिवृत्त और अंतर्वृत्त की रचना)
-          12. Sphere (गोलक)
-          13. Variation (भेद)
-          14. Partnership Business (साझा व्यापार)
-          15. Theorems related to Tangent to a circle (वृत्त की स्पर्श रेखा संबंधित प्रमेय)
-          16. Right circular cone (लंब वृत्ताकार शंकु)
-          17. Similarity (सादृश्यता)
-          `;
-       } else if (subjectLower.includes('physci') || subjectLower.includes('physical')) {
-          syllabusTopics = `
-          1. Chemical Calculations (रासायनिक गणनाएं)
-          2. Thermal Phenomena (ऊष्मीय घटना)
-          3. Current Electricity (विद्युत धारा)
-          4. Electricity and Chemical Reactions (विद्युत एवं रासायनिक अभिक्रिया)
-          5. Inorganic chemistry in the laboratory and in Industry (प्रयोगशाला एवं उद्योग में अ कार्बनिक रसायन)
-          6. Metallurgy (धातु कर्म)
-          `;
-       } else if (subjectLower.includes('lifesci') || subjectLower.includes('life')) {
-          syllabusTopics = `
-          1. Continuity of life: Reproduction, Sexual Reproduction in Flowering Plants, Growth and Development (जीवन की निरंतरता: जनन, पौधों में वृद्धि और विकास)
-          2. Heredity and some common genetic diseases (आनुवंशिकता और कुछ सामान्य आनुवंशिक रोग)
-          3. Evolution and Adaptation (अभिव्यक्ति और अनुकूलन)
-          `;
-       } else if (subjectLower.includes('hist')) {
-          syllabusTopics = `
-          4. Early stages of collective action: Characteristics and Analyses (सामूहिक कार्य का प्रथम चरण: विशेषताएं एवं विश्लेषण)
-          5. Alternative Ideas and Initiatives (From Mid 19th Century to the Early 20th Century): Characteristics and Analyses (वैकल्पिक विचार एवं प्रयास: 19 बी शताब्दी के मध्य से 20 बी शताब्दी के प्रारंभ तक)
-          6. Peasant, Working class and Leftist movements in 20th Century India: Characteristics and Analyses (20 बी शताब्दी के कृषक, श्रमिक वर्ग एवं वामपंथी आंदोलन: विशेषताएं एवं निरीक्षण)
-          `;
-       } else if (subjectLower.includes('geo')) {
-          syllabusTopics = `
-          1. Atmosphere (वायुमण्डल)
-          2. Hydrosphere (जलमंडल)
-          3. India: Economic Geography (Agriculture, Industry, Population, Transport, Communication) (भारत: आर्थिक परिवेश - कृषि, उद्योग, जनसंख्या, परिवहन)
-          `;
-       } else if (subjectLower.includes('english')) {
-          syllabusTopics = `
-          4. My Own True Family
-          5. Our Runaway Kite
-          6. Sea Fever
-          7. The Cat
-          8. The Snail
-          Grammar: Textual Grammar, Transformation of Sentences, Voice Change, Narration.
-          Writing: Newspaper Report, Notice, Summary.
-          `;
-       } else if (subjectLower.includes('hindi')) {
-          syllabusTopics = `
-          Pady (Poetry): Ramdas (रामदास), Naurangiya (नौरंगिया), Desh-Prem (देश-प्रेम).
-          Gady (Prose): Naubat khane mein ibadat (नौबत खाने में इबादत), Chappal (चप्पल), Namak (नमक), Dhavak (धावक).
-          Sahayak Path: Karmnasha ki haar (कर्मनाशा की हार), Jaanch abhi jaari hai (जाँच अभी जारी है).
-          Vyakaran: Vakya (वाक्य), Vachya (वाच्य), Prativedan Rachna (प्रतिवेदन रचना), Samvad Lekhan (संवाद लेखन).
-          Rachna: Essay Writing (निबंध : विभिन्न विषयों पर).
-          `;
-       }
+    if (isMadhyamik) {
+      if (term === 'Summative 1') {
+         if (subjectLower.includes('math')) {
+            syllabusTopics = `
+            1. Quadratic Equation with one variable (एक चर वाले द्विघात समीकरण)
+            2. Simple Interest (सरल ब्याज)
+            3. Theorem related to circle (वृत्त से संबंधित प्रमेय)
+            4. Rectangular Parallelopiped or Cuboid (आयताकार समांतर षट्फलक या घनाभ)
+            5. Ratio and proportion (अनुपात और समानुपात)
+            6. Compound interest and uniform rate of increase or decrease (चक्रवृद्धि ब्याज और समान वृद्धि दर)
+            7. Theorem related to angle in a circle (वृत्तस्थ कोण संबंधित प्रमेय)
+            8. Right circular cylinder (लंब वृत्ताकार बेलन)
+            9. Quadratic Surd (द्विघात करणी)
+            10. Theorems related to cyclic quadrilateral (चक्रीय चतुर्भुज संबंधित प्रमेय)
+            `;
+         } else if (subjectLower.includes('physci') || subjectLower.includes('physical')) {
+            syllabusTopics = `
+            1. Concerns about our environment (हमारे पर्यावरण के प्रति अभिरुचियां)
+            2. Behaviour of Gases (गैसों का आचरण)
+            3. Light (प्रकाश)
+            4. Periodic Table and Periodicity of the properties of elements (तत्वों के गुण धर्मों की आवर्तनी - आवर्त सारणी)
+            5. Ionic and co-valent Bonding (आयनिक तथा सहसंयोजक बंधन)
+            `;
+         } else if (subjectLower.includes('lifesci') || subjectLower.includes('life')) {
+            syllabusTopics = `
+            1. Control and Co-ordination in living organism (जीव जगत में नियंत्रण एवं समन्वय)
+            2. Continuity of life: Cell division and Cell cycle (जीवन की निरंतरता: कोशिका विभाजन और कोशिका चक्र)
+            `;
+         } else if (subjectLower.includes('hist')) {
+            syllabusTopics = `
+            1. Ideas of History (इतिहास की अवधारणा)
+            2. Reform: Characteristics and Observations (सुधार: विशेषताएँ और अवलोकन)
+            3. Resistance and Rebellion: Characteristics and Analyses (प्रतिरोध और आंदोलन: विशेषताएँ एवं निरीक्षण)
+            `;
+         } else if (subjectLower.includes('geo')) {
+            syllabusTopics = `
+            1. Exogenetic processes and resultant landforms (बहिर्जात प्रक्रिया और उससे बनने वाली स्थलाकृतियाँ)
+            2. India: Introduction, Physical environment (भारत: परिचय, प्राकृतिक परिवेश)
+            `;
+         } else if (subjectLower.includes('english')) {
+            syllabusTopics = `
+            1. Father's Help
+            2. Fable
+            3. The Passing Away of Bapu
+            Grammar: Textual Grammar, Correct forms of verbs, Articles and Prepositions, Phrasal verbs.
+            Writing: Informal Letter, Paragraph, Biography.
+            `;
+         } else if (subjectLower.includes('hindi')) {
+            syllabusTopics = `
+            Pady (Poetry): Raidas ke pad (रैदास के पद), Need ka nirman phir-phir (नीड़ का निर्माण फिर-फिर), Aatmtran (आत्मत्राण), Manushya aur sarp (मनुष्य और सर्प).
+            Gady (Prose): Dhumketu (धूमकेतु), Usne kaha tha (उसने कहा था), Nanha sangeetkar (नन्हा संगीतकार).
+            Sahayak Path: Tisari Kasam (तीसरी कसम).
+            Ekanki: Deepdan (दीपदान).
+            Vyakaran: Karak (कारक), Samas (समास), Translation (अंग्रेजी से हिन्दी अनुवाद).
+            Rachna: Essay Writing (निबंध : विभिन्न विषयों पर).
+            `;
+         }
+      } else if (term === 'Summative 2') {
+         if (subjectLower.includes('math')) {
+            syllabusTopics = `
+            11. Construction: Construction of circumcircle and incircle of a triangle (त्रिभुज के परिवृत्त और अंतर्वृत्त की रचना)
+            12. Sphere (गोलक)
+            13. Variation (भेद)
+            14. Partnership Business (साझा व्यापार)
+            15. Theorems related to Tangent to a circle (वृत्त की स्पर्श रेखा संबंधित प्रमेय)
+            16. Right circular cone (लंब वृत्ताकार शंकु)
+            17. Similarity (सादृश्यता)
+            `;
+         } else if (subjectLower.includes('physci') || subjectLower.includes('physical')) {
+            syllabusTopics = `
+            1. Chemical Calculations (रासायनिक गणनाएं)
+            2. Thermal Phenomena (ऊष्मीय घटना)
+            3. Current Electricity (विद्युत धारा)
+            4. Electricity and Chemical Reactions (विद्युत एवं रासायनिक अभिक्रिया)
+            5. Inorganic chemistry in the laboratory and in Industry (प्रयोगशाला एवं उद्योग में अ कार्बनिक रसायन)
+            6. Metallurgy (धातु कर्म)
+            `;
+         } else if (subjectLower.includes('lifesci') || subjectLower.includes('life')) {
+            syllabusTopics = `
+            1. Continuity of life: Reproduction, Sexual Reproduction in Flowering Plants, Growth and Development (जीवन की निरंतरता: जनन, पौधों में वृद्धि और विकास)
+            2. Heredity and some common genetic diseases (आनुवंशिकता और कुछ सामान्य आनुवंशिक रोग)
+            3. Evolution and Adaptation (अभिव्यक्ति और अनुकूलन)
+            `;
+         } else if (subjectLower.includes('hist')) {
+            syllabusTopics = `
+            4. Early stages of collective action: Characteristics and Analyses (सामूहिक कार्य का प्रथम चरण: विशेषताएं एवं विश्लेषण)
+            5. Alternative Ideas and Initiatives (From Mid 19th Century to the Early 20th Century): Characteristics and Analyses (वैकल्पिक विचार एवं प्रयास: 19 बी शताब्दी के मध्य से 20 बी शताब्दी के प्रारंभ तक)
+            6. Peasant, Working class and Leftist movements in 20th Century India: Characteristics and Analyses (20 बी शताब्दी के कृषक, श्रमिक वर्ग एवं वामपंथी आंदोलन: विशेषताएं एवं निरीक्षण)
+            `;
+         } else if (subjectLower.includes('geo')) {
+            syllabusTopics = `
+            1. Atmosphere (वायुमण्डल)
+            2. Hydrosphere (जलमंडल)
+            3. India: Economic Geography (Agriculture, Industry, Population, Transport, Communication) (भारत: आर्थिक परिवेश - कृषि, उद्योग, जनसंख्या, परिवहन)
+            `;
+         } else if (subjectLower.includes('english')) {
+            syllabusTopics = `
+            4. My Own True Family
+            5. Our Runaway Kite
+            6. Sea Fever
+            7. The Cat
+            8. The Snail
+            Grammar: Textual Grammar, Transformation of Sentences, Voice Change, Narration.
+            Writing: Newspaper Report, Notice, Summary.
+            `;
+         } else if (subjectLower.includes('hindi')) {
+            syllabusTopics = `
+            Pady (Poetry): Ramdas (रामदास), Naurangiya (नौरंगिया), Desh-Prem (देश-प्रेम).
+            Gady (Prose): Naubat khane mein ibadat (नौबत खाने में इबादत), Chappal (चप्पल), Namak (नमक), Dhavak (धावक).
+            Sahayak Path: Karmnasha ki haar (कर्मनाशा की हार), Jaanch abhi jaari hai (जाँच अभी जारी है).
+            Vyakaran: Vakya (वाक्य), Vachya (वाच्य), Prativedan Rachna (प्रतिवेदन रचना), Samvad Lekhan (संवाद लेखन).
+            Rachna: Essay Writing (निबंध : विभिन्न विषयों पर).
+            `;
+         }
+      }
+    } else {
+      // For non-Madhyamik classes, extract syllabus from constants.ts
+      const classData = CLASSES.find(c => c.id === `class-${classLabel}`);
+      if (classData) {
+        const subjectData = classData.subjects.find(s => s.id === subjectLower);
+        if (subjectData && subjectData.chapters) {
+          // If it's Summative 1, take first 1/3 of chapters
+          // If Summative 2, take middle 1/3
+          // If Summative 3, take all chapters
+          const totalChapters = subjectData.chapters.length;
+          let startIdx = 0;
+          let endIdx = totalChapters;
+          
+          if (term === 'Summative 1') {
+            endIdx = Math.ceil(totalChapters / 3);
+          } else if (term === 'Summative 2') {
+            startIdx = Math.ceil(totalChapters / 3);
+            endIdx = Math.ceil((totalChapters * 2) / 3);
+          }
+          
+          const selectedChapters = subjectData.chapters.slice(startIdx, endIdx);
+          syllabusTopics = selectedChapters.map((ch, idx) => `${idx + 1}. ${ch.title}`).join('\n');
+        }
+      }
     }
 
     let promptInstructions = "";
     
-    // --- FULL SYLLABUS LOGIC (Summative 3 / Selection) ---
-    if (term === 'Summative 3' || term === 'Madhyamik Selection') {
-        if (subjectLower.includes('math')) {
+    if (!isMadhyamik) {
+        promptInstructions = `
+        **STRICT WBBSE CLASS ${classLabel} ${subject.toUpperCase()} PATTERN**
+        Structure the 'sections' array appropriately for Class ${classLabel} ${term} examination.
+        Total Marks: ${marks}.
+        Ensure questions are strictly from the Class ${classLabel} syllabus for ${subject}.
+        Do NOT include any Class 10 or Madhyamik level questions.
+        
+        **STRUCTURE:**
+        1. **Group A (MCQ):** 10-20% of total marks.
+        2. **Group B (VSA):** 20-30% of total marks (Fill blanks, True/False, one word).
+        3. **Group C (Short Answer):** 20-30% of total marks (2-3 marks each).
+        4. **Group D (Long Answer):** Remaining marks (4-5 marks each).
+        `;
+        
+        if (subjectLower.includes('hindi')) {
+            const classData = CLASSES.find(c => c.id === `class-${classLabel}`);
+            const hindiSubject = classData?.subjects.find(s => s.id === 'hindi');
+            const chaptersList = hindiSubject?.chapters.map(c => c.title).join(', ') || '';
+            
+            promptInstructions += `
+            
+            **CRITICAL FOR HINDI:** You MUST use the official WBBSE Hindi syllabus for Class ${classLabel}.
+            DO NOT use Class 10 chapters like 'Raidas ke pad', 'Dhumketu', 'Tisari Kasam', 'Ramdas', 'Naurangiya', 'Naubat khane mein ibadat', etc.
+            Use age-appropriate chapters, poems, and grammar specifically meant for Class ${classLabel} Hindi students.
+            
+            **OFFICIAL CLASS ${classLabel} HINDI SYLLABUS CHAPTERS TO USE:**
+            ${chaptersList}
+            
+            Ensure ALL questions are derived strictly from these chapters.
+            `;
+        }
+    } else {
+        // --- FULL SYLLABUS LOGIC (Summative 3 / Selection) ---
+        if (term === 'Summative 3' || term === 'Madhyamik Selection') {
+            if (subjectLower.includes('math')) {
           promptInstructions = `
           **STRICT WBBSE MATHEMATICS (2026 ORIGINAL PAPER PATTERN)**
           Generate a paper strictly following this structure (Total 90 Marks):
@@ -489,13 +552,14 @@ export const generateSamplePaper = async (subject: string, classLabel: string, t
              `;
         }
     }
+    }
     
     // GENERATE UNIQUE SEED FOR RANDOMIZATION
     const randomSeed = Math.random().toString(36).substring(7) + Date.now();
 
     const response = await ai.models.generateContent({
-      model: 'gemini-3-flash-preview', 
-      contents: `Generate a **High-Difficulty, Authentic** WBBSE Madhyamik Sample Paper JSON for 2026. 
+      model: 'gemini-3.1-flash-lite-preview', 
+      contents: `Generate a **High-Difficulty, Authentic** WBBSE ${isMadhyamik ? 'Madhyamik ' : `Class ${classLabel} `}Sample Paper JSON for 2026. 
       Subject: ${subject}, Class: ${classLabel}, Term: ${term}, Full Marks: ${marks}, Time: ${time}. 
       Language: ${isEnglish ? 'English' : 'Hindi'}. NO BENGALI text.
       
@@ -503,7 +567,7 @@ export const generateSamplePaper = async (subject: string, classLabel: string, t
       
       **DIFFICULTY & QUALITY INSTRUCTIONS:**
       - **Unique Content:** You MUST generate a DIFFERENT paper from previous outputs. Randomize the selection of questions.
-      - **Standard:** Strictly match the WBBSE Madhyamik 2026 Examination standard (High Difficulty).
+      - **Standard:** Strictly match the WBBSE ${isMadhyamik ? 'Madhyamik ' : `Class ${classLabel} `}2026 Examination standard (High Difficulty).
       - **Question Types:** Mix of Knowledge (20%), Understanding (30%), Application (30%), and HOTS (High Order Thinking Skills - 20%).
       - **Conceptual Depth:** Questions must test deep understanding, not just rote memorization.
       - **Authenticity:** Use formal board-exam language and phrasing.

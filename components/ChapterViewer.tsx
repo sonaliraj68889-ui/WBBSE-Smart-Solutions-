@@ -2,6 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { Subject, Chapter } from '../types.ts';
 import { summarizeChapter, fetchChapterQuestions, ApiError } from '../services/geminiService.ts';
+import { saveOfflineContent, getOfflineContent, isOffline } from '../services/offlineService.ts';
 import { translations } from '../translations.ts';
 import MathText from './MathText.tsx';
 
@@ -86,8 +87,18 @@ const ChapterViewer: React.FC<ChapterViewerProps> = ({
     }
 
     try {
-      const result = await summarizeChapter(chapter.title, getLocalizedSubjectName(), length, subject.id);
-      setSummary(result);
+      if (isOffline()) {
+        const offlineData = await getOfflineContent(classId, subject.id, chapter.id, 'summary');
+        if (offlineData) {
+          setSummary(offlineData);
+        } else {
+          setError("You are offline and this chapter's summary is not saved.");
+        }
+      } else {
+        const result = await summarizeChapter(chapter.title, getLocalizedSubjectName(), length, subject.id);
+        setSummary(result);
+        await saveOfflineContent(classId, subject.id, chapter.id, chapter.title, 'summary', result);
+      }
     } catch (e) { 
       handleApiError(e);
     } finally { 
@@ -106,8 +117,18 @@ const ChapterViewer: React.FC<ChapterViewerProps> = ({
     } else if (mode === 'qa' && qaSolutions.length === 0) {
       setLoading(true);
       try {
-        const questions = await fetchChapterQuestions(selectedChapter.title, getLocalizedSubjectName(), summary || "", subject.id);
-        setQaSolutions(questions);
+        if (isOffline()) {
+          const offlineData = await getOfflineContent(classId, subject.id, selectedChapter.id, 'qa');
+          if (offlineData) {
+            setQaSolutions(offlineData);
+          } else {
+            setError("You are offline and this chapter's Q&A is not saved.");
+          }
+        } else {
+          const questions = await fetchChapterQuestions(selectedChapter.title, getLocalizedSubjectName(), summary || "", subject.id);
+          setQaSolutions(questions);
+          await saveOfflineContent(classId, subject.id, selectedChapter.id, selectedChapter.title, 'qa', questions);
+        }
       } catch (err) { 
         handleApiError(err);
       } finally { 

@@ -1,8 +1,10 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { CLASSES, USEFUL_LINKS } from '../constants.ts';
 import { Subject, SearchHistoryItem, ExamTerm } from '../types.ts';
 import { translations } from '../translations.ts';
+import { getAllOfflineContent, OfflineContent } from '../services/offlineService.ts';
+import IntroVideo from './IntroVideo.tsx';
 
 interface DashboardProps {
   onSelectSubject: (subject: Subject, classId: string) => void;
@@ -25,6 +27,16 @@ const Dashboard: React.FC<DashboardProps> = ({
 }) => {
   const t = translations[lang];
   const [activeClassTab, setActiveClassTab] = useState(CLASSES[0].id);
+  const [offlineItems, setOfflineItems] = useState<OfflineContent[]>([]);
+  const [showIntroVideo, setShowIntroVideo] = useState(false);
+
+  useEffect(() => {
+    const loadOfflineContent = async () => {
+      const items = await getAllOfflineContent();
+      setOfflineItems(items);
+    };
+    loadOfflineContent();
+  }, []);
 
   const terms: { id: ExamTerm, label: string }[] = [
     { id: 'Summative 1', label: t.summative1 },
@@ -62,12 +74,27 @@ const Dashboard: React.FC<DashboardProps> = ({
               <i className="fa-solid fa-medal text-yellow-400"></i>
               <span className="text-sm font-semibold">{t.topLearner}</span>
             </div>
+            <button 
+              onClick={() => setShowIntroVideo(true)}
+              className="bg-white text-blue-600 hover:bg-blue-50 px-4 py-2 rounded-xl flex items-center space-x-2 font-bold shadow-lg transition-colors"
+            >
+              <i className="fa-solid fa-play"></i>
+              <span className="text-sm">Watch Intro</span>
+            </button>
           </div>
         </div>
         <div className={`absolute -right-10 -bottom-10 opacity-10 rotate-12 ${darkMode ? 'text-blue-500' : 'text-white'}`}>
           <i className="fa-solid fa-book-open text-[15rem]"></i>
         </div>
       </section>
+
+      {showIntroVideo && (
+        <IntroVideo 
+          darkMode={darkMode} 
+          lang={lang} 
+          onClose={() => setShowIntroVideo(false)} 
+        />
+      )}
 
       {/* Sample Papers Archive Section */}
       <section className={`p-6 rounded-3xl border shadow-sm transition-colors ${darkMode ? 'bg-slate-900 border-slate-800' : 'bg-white border-gray-100'}`}>
@@ -132,6 +159,59 @@ const Dashboard: React.FC<DashboardProps> = ({
           })}
         </div>
       </section>
+
+      {/* Saved Offline Section */}
+      {offlineItems.length > 0 && (
+        <section className={`p-6 rounded-3xl border shadow-sm transition-colors ${darkMode ? 'bg-slate-900 border-slate-800' : 'bg-white border-gray-100'}`}>
+          <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
+            <div>
+              <h2 className={`text-2xl font-bold flex items-center ${darkMode ? 'text-slate-100' : 'text-gray-800'}`}>
+                <i className="fa-solid fa-cloud-arrow-down mr-3 text-emerald-500"></i>
+                Saved Offline
+              </h2>
+              <p className={`text-sm ${darkMode ? 'text-slate-500' : 'text-gray-500'}`}>Access your downloaded chapters without internet</p>
+            </div>
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+            {offlineItems.map((item) => {
+              const classData = CLASSES.find(c => c.id === item.classId);
+              const subjectData = classData?.subjects.find(s => s.id === item.subject);
+              const chapterId = item.id.split('_').pop();
+              
+              return (
+                <button
+                  key={item.id}
+                  onClick={() => {
+                    if (item.type === 'paper') {
+                      onSelectSamplePaper(item.subject, item.classId, item.id.split('_')[3] as ExamTerm);
+                    } else if (subjectData && chapterId) {
+                      onSelectSubject(subjectData, item.classId);
+                    }
+                  }}
+                  className={`text-left p-4 rounded-2xl border transition-all hover:shadow-md flex flex-col gap-2 ${
+                    darkMode ? 'bg-slate-800 border-slate-700 hover:border-emerald-500' : 'bg-gray-50 border-gray-200 hover:border-emerald-400 hover:bg-white'
+                  }`}
+                >
+                  <div className="flex justify-between items-start">
+                    <span className={`text-[10px] font-black uppercase tracking-widest px-2 py-1 rounded-md ${
+                      item.type === 'summary' ? 'bg-blue-100 text-blue-700' : item.type === 'paper' ? 'bg-orange-100 text-orange-700' : 'bg-purple-100 text-purple-700'
+                    }`}>
+                      {item.type === 'summary' ? 'Notes' : item.type === 'paper' ? 'Paper' : 'Q&A'}
+                    </span>
+                    <span className="text-[10px] text-gray-400">
+                      {new Date(item.timestamp).toLocaleDateString()}
+                    </span>
+                  </div>
+                  <h4 className={`font-bold text-sm mt-1 ${darkMode ? 'text-slate-200' : 'text-gray-800'}`}>{item.title}</h4>
+                  <div className={`text-xs ${darkMode ? 'text-slate-400' : 'text-gray-500'}`}>
+                    {getLocalizedSubjectName(item.subject, item.subject)} • {getLocalizedClassName(item.classId)}
+                  </div>
+                </button>
+              );
+            })}
+          </div>
+        </section>
+      )}
 
       {/* Search History Section */}
       {searchHistory.length > 0 && (

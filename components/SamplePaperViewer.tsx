@@ -9,9 +9,10 @@ interface SamplePaperViewerProps {
   darkMode: boolean;
   lang: 'en' | 'hi';
   onBack: () => void;
+  onRegenerate?: () => void;
 }
 
-const SamplePaperViewer: React.FC<SamplePaperViewerProps> = ({ paper, darkMode, lang, onBack }) => {
+const SamplePaperViewer: React.FC<SamplePaperViewerProps> = ({ paper, darkMode, lang, onBack, onRegenerate }) => {
   const t = translations[lang];
   const [showAnswers, setShowAnswers] = useState(false);
   const [showCopied, setShowCopied] = useState(false);
@@ -57,6 +58,12 @@ const SamplePaperViewer: React.FC<SamplePaperViewerProps> = ({ paper, darkMode, 
         </button>
         <div className="flex flex-wrap items-center gap-3">
           {showCopied && <span className="text-[10px] font-bold text-emerald-500">{t.copied}</span>}
+          {onRegenerate && (
+            <button onClick={onRegenerate} className={`px-5 py-2.5 rounded-2xl flex items-center space-x-2 font-black text-xs uppercase shadow-lg ${darkMode ? 'bg-slate-800 text-purple-400 hover:bg-slate-700' : 'bg-purple-50 text-purple-700 hover:bg-purple-100'}`}>
+              <i className="fa-solid fa-rotate-right"></i>
+              <span>{lang === 'hi' ? 'नया बनाएं' : 'Regenerate'}</span>
+            </button>
+          )}
           <button onClick={handleShare} className={`px-5 py-2.5 rounded-2xl flex items-center space-x-2 font-black text-xs uppercase shadow-lg ${darkMode ? 'bg-slate-800 text-blue-400' : 'bg-blue-50 text-blue-700'}`}>
             <i className="fa-solid fa-share-nodes"></i>
             <span>{t.share}</span>
@@ -94,7 +101,7 @@ const SamplePaperViewer: React.FC<SamplePaperViewerProps> = ({ paper, darkMode, 
               <p className="text-sm italic font-bold opacity-60">{section.instructions}</p>
               {section.passage && (
                 <div className={`p-10 rounded-[2rem] border-2 shadow-inner leading-relaxed text-lg font-serif italic ${darkMode ? 'bg-slate-950/50 border-slate-800' : 'bg-stone-50 border-stone-200'}`}>
-                  {(section.passage || '').split('\n').map((p, i) => <p key={i} className={i > 0 ? 'mt-4' : ''}><MathText text={p} isInline /></p>)}
+                  {(section.passage || '').split('\n').map((p, i) => <div key={i} className={i > 0 ? 'mt-4' : ''}><MathText text={p} isInline /></div>)}
                 </div>
               )}
               <div className="space-y-12">
@@ -103,7 +110,7 @@ const SamplePaperViewer: React.FC<SamplePaperViewerProps> = ({ paper, darkMode, 
                     <span className="absolute left-0 top-0 font-black text-2xl opacity-20">{qIdx + 1}.</span>
                     <div className="flex justify-between items-start gap-8">
                       <div className="flex-1">
-                        <p className="font-bold text-xl mb-6"><MathText text={q.text} /></p>
+                        <div className="font-bold text-xl mb-6"><MathText text={q.text} /></div>
                         {q.options && q.options.length > 0 && (
                           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-6">
                             {q.options.map((opt, o) => (

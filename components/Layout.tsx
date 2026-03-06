@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { translations } from '../translations.ts';
 import SearchBar from './SearchBar.tsx';
 import { Subject } from '../types.ts';
@@ -18,7 +18,19 @@ interface LayoutProps {
 const Layout: React.FC<LayoutProps> = ({ children, activeTab, setActiveTab, darkMode, setDarkMode, lang, setLang, onSearchSelect }) => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [isMobileSearchOpen, setIsMobileSearchOpen] = useState(false);
+  const [isOffline, setIsOffline] = useState(!navigator.onLine);
   const t = translations[lang];
+
+  useEffect(() => {
+    const handleOnline = () => setIsOffline(false);
+    const handleOffline = () => setIsOffline(true);
+    window.addEventListener('online', handleOnline);
+    window.addEventListener('offline', handleOffline);
+    return () => {
+      window.removeEventListener('online', handleOnline);
+      window.removeEventListener('offline', handleOffline);
+    };
+  }, []);
 
   const navItems = [
     { id: 'dashboard', label: t.dashboard, icon: 'fa-home' },
@@ -40,6 +52,11 @@ const Layout: React.FC<LayoutProps> = ({ children, activeTab, setActiveTab, dark
             </div>
           </div>
           <div className="flex items-center space-x-2">
+            {isOffline && (
+              <span className="text-xs font-bold bg-red-500 text-white px-2 py-1 rounded-full flex items-center">
+                <i className="fa-solid fa-wifi-slash mr-1"></i> Offline
+              </span>
+            )}
             <button 
               onClick={() => setIsMobileSearchOpen(!isMobileSearchOpen)}
               className={`p-2 rounded-lg transition-colors ${isMobileSearchOpen ? 'bg-white/20' : ''}`}
@@ -86,6 +103,11 @@ const Layout: React.FC<LayoutProps> = ({ children, activeTab, setActiveTab, dark
               </div>
               <span className="font-bold text-xl tracking-tight">WBBSE Smart</span>
             </div>
+            {isOffline && (
+              <div className="mt-4 text-xs font-bold bg-red-500/20 text-red-100 px-3 py-2 rounded-lg flex items-center">
+                <i className="fa-solid fa-wifi-slash mr-2"></i> Offline Mode Active
+              </div>
+            )}
           </div>
 
           <nav className="space-y-2 flex-1">

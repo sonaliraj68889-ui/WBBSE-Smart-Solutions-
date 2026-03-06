@@ -9,6 +9,7 @@ import PracticeMode from './components/PracticeMode.tsx';
 import { Subject, SearchHistoryItem, SamplePaper, ExamTerm } from './types.ts';
 import { translations } from './translations.ts';
 import { generateSamplePaper, ApiError } from './services/geminiService.ts';
+import { saveOfflineContent, getOfflineContent, isOffline } from './services/offlineService.ts';
 
 const App: React.FC = () => {
   const [activeTab, setActiveTab] = useState('dashboard');
@@ -67,9 +68,9 @@ const App: React.FC = () => {
 
   const handleSelectPaidApiKey = async () => {
     // Assuming window.aistudio and its methods are globally available as per coding guidelines.
-    if (window.aistudio && window.aistudio.openSelectKey) {
+    if ((window as any).aistudio && (window as any).aistudio.openSelectKey) {
       try {
-        await window.aistudio.openSelectKey();
+        await (window as any).aistudio.openSelectKey();
         setShowGlobalApiKeyPrompt(false); // Assume success as per guideline
         // The user can now manually retry the operation that failed.
       } catch (error) {
@@ -82,7 +83,7 @@ const App: React.FC = () => {
     }
   };
 
-  const handleSelectSamplePaper = async (subject: string, classId: string, term: ExamTerm) => {
+  const handleSelectSamplePaper = async (subject: string, classId: string, term: ExamTerm, forceNew: boolean = false) => {
     setActiveTab('papers');
     setSelectedSamplePaper(null); // Clear previous paper to show loading state for new generation
     setIsGeneratingPaper(true);
@@ -90,8 +91,23 @@ const App: React.FC = () => {
     setPaperGenerationStatus(0);
     try {
       const classLabel = (t.classLabels as any)[classId] || classId;
+      
+      if (!forceNew) {
+        const cachedPaper = await getOfflineContent(classId, subject, term, 'paper');
+        if (cachedPaper) {
+          setSelectedSamplePaper(cachedPaper);
+          setIsGeneratingPaper(false);
+          return;
+        }
+      }
+
+      if (isOffline()) {
+        throw new Error("You are offline and this sample paper is not saved.");
+      }
+
       const paper = await generateSamplePaper(subject, classLabel, term);
       setSelectedSamplePaper(paper);
+      await saveOfflineContent(classId, subject, term, `${subject} ${term}`, 'paper', paper);
     } catch (err: any) {
       if (err instanceof ApiError && err.code === 'QUOTA_EXCEEDED') {
         handleQuotaExceeded();
@@ -214,7 +230,18 @@ const App: React.FC = () => {
           );
         }
         if (selectedSamplePaper) {
-          return <SamplePaperViewer paper={selectedSamplePaper} darkMode={darkMode} lang={lang} onBack={handleGoHome} />;
+          return (
+            <SamplePaperViewer 
+              paper={selectedSamplePaper} 
+              darkMode={darkMode} 
+              lang={lang} 
+              onBack={handleGoHome} 
+              onRegenerate={() => {
+                const classId = Object.keys(t.classLabels).find(key => (t.classLabels as any)[key] === selectedSamplePaper.classLabel) || selectedSamplePaper.classLabel;
+                handleSelectSamplePaper(selectedSamplePaper.subject, classId, selectedSamplePaper.term as ExamTerm, true);
+              }}
+            />
+          );
         }
         return null;
       default:
