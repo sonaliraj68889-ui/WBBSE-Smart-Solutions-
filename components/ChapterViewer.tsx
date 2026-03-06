@@ -47,7 +47,53 @@ const ChapterViewer: React.FC<ChapterViewerProps> = ({
   const [error, setError] = useState<string | null>(null);
   const [errorDetails, setErrorDetails] = useState<string | null>(null);
   const [visibleAnswers, setVisibleAnswers] = useState<Record<string, boolean>>({});
+  const [savedChapters, setSavedChapters] = useState<Record<string, boolean>>({});
+  const [savingChapter, setSavingChapter] = useState<string | null>(null);
   const contentRef = React.useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const checkSavedStatus = async () => {
+      const status: Record<string, boolean> = {};
+      for (const chapter of subject.chapters) {
+        const summaryData = await getOfflineContent(classId, subject.id, chapter.id, 'summary');
+        const qaData = await getOfflineContent(classId, subject.id, chapter.id, 'qa');
+        if (summaryData && qaData) {
+          status[chapter.id] = true;
+        }
+      }
+      setSavedChapters(status);
+    };
+    checkSavedStatus();
+  }, [subject, classId]);
+
+  const saveEntireChapter = async (chapter: Chapter, e: React.MouseEvent) => {
+    e.stopPropagation();
+    setSavingChapter(chapter.id);
+    try {
+      let summaryData = await getOfflineContent(classId, subject.id, chapter.id, 'summary');
+      if (!summaryData) {
+        summaryData = await summarizeChapter(chapter.title, getLocalizedSubjectName(), 'medium', subject.id);
+        await saveOfflineContent(classId, subject.id, chapter.id, chapter.title, 'summary', summaryData);
+      }
+      
+      let qaData = await getOfflineContent(classId, subject.id, chapter.id, 'qa');
+      if (!qaData) {
+        qaData = await fetchChapterQuestions(chapter.title, getLocalizedSubjectName(), summaryData || "", subject.id);
+        await saveOfflineContent(classId, subject.id, chapter.id, chapter.title, 'qa', qaData);
+      }
+      
+      setSavedChapters(prev => ({ ...prev, [chapter.id]: true }));
+      
+      if (selectedChapter?.id === chapter.id) {
+         if (activeMode === 'summary' && !summary) setSummary(summaryData);
+         if (activeMode === 'qa' && qaSolutions.length === 0) setQaSolutions(qaData);
+      }
+    } catch (err) {
+      handleApiError(err);
+    } finally {
+      setSavingChapter(null);
+    }
+  };
 
   const getLocalizedSubjectName = () => t.subjects[subject.id as keyof typeof t.subjects] || subject.name;
   const getLocalizedClassName = () => (t.classLabels as any)[classId] || classId;
@@ -87,13 +133,11 @@ const ChapterViewer: React.FC<ChapterViewerProps> = ({
     }
 
     try {
-      if (isOffline()) {
-        const offlineData = await getOfflineContent(classId, subject.id, chapter.id, 'summary');
-        if (offlineData) {
-          setSummary(offlineData);
-        } else {
-          setError("You are offline and this chapter's summary is not saved.");
-        }
+      const offlineData = await getOfflineContent(classId, subject.id, chapter.id, 'summary');
+      if (offlineData) {
+        setSummary(offlineData);
+      } else if (isOffline()) {
+        setError("You are offline and this chapter's summary is not saved.");
       } else {
         const result = await summarizeChapter(chapter.title, getLocalizedSubjectName(), length, subject.id);
         setSummary(result);
@@ -117,13 +161,11 @@ const ChapterViewer: React.FC<ChapterViewerProps> = ({
     } else if (mode === 'qa' && qaSolutions.length === 0) {
       setLoading(true);
       try {
-        if (isOffline()) {
-          const offlineData = await getOfflineContent(classId, subject.id, selectedChapter.id, 'qa');
-          if (offlineData) {
-            setQaSolutions(offlineData);
-          } else {
-            setError("You are offline and this chapter's Q&A is not saved.");
-          }
+        const offlineData = await getOfflineContent(classId, subject.id, selectedChapter.id, 'qa');
+        if (offlineData) {
+          setQaSolutions(offlineData);
+        } else if (isOffline()) {
+          setError("You are offline and this chapter's Q&A is not saved.");
         } else {
           const questions = await fetchChapterQuestions(selectedChapter.title, getLocalizedSubjectName(), summary || "", subject.id);
           setQaSolutions(questions);
@@ -200,9 +242,24 @@ const ChapterViewer: React.FC<ChapterViewerProps> = ({
                     }`}>
                       {idx + 1}
                     </span>
-                    <div className="flex flex-col pt-1">
+                    <div className="flex flex-col pt-1 flex-1">
                       <span className={`font-bold text-sm leading-snug ${isSelected ? 'text-white' : ''}`}>{chapter.title}</span>
                       {isSelected && <span className="text-[9px] font-black uppercase tracking-widest text-blue-100 mt-2 flex items-center"><i className="fa-solid fa-bolt text-amber-300 mr-1.5"></i> Active</span>}
+                    </div>
+                    <div className="flex items-center justify-center shrink-0">
+                      {savedChapters[chapter.id] ? (
+                        <i className={`fa-solid fa-circle-check text-lg ${isSelected ? 'text-white' : 'text-green-500'}`} title="Saved for offline"></i>
+                      ) : savingChapter === chapter.id ? (
+                        <i className={`fa-solid fa-spinner fa-spin text-lg ${isSelected ? 'text-white' : 'text-blue-500'}`}></i>
+                      ) : (
+                        <button 
+                          onClick={(e) => saveEntireChapter(chapter, e)}
+                          className={`p-2 rounded-full transition-colors ${isSelected ? 'hover:bg-white/20 text-white/70 hover:text-white' : 'hover:bg-gray-200 text-gray-400 hover:text-gray-600'}`}
+                          title="Save for offline"
+                        >
+                          <i className="fa-solid fa-download"></i>
+                        </button>
+                      )}
                     </div>
                   </button>
                 );
