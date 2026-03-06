@@ -79,8 +79,8 @@ const ChapterViewer: React.FC<ChapterViewerProps> = ({
     setSelectedChapter(chapter);
     setActiveMode('summary');
     
-    // Scroll to content area on mobile/smaller screens
-    if (window.innerWidth < 1024 && contentRef.current) {
+    // Scroll to content area
+    if (contentRef.current) {
       setTimeout(() => {
         contentRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
       }, 100);
@@ -145,6 +145,9 @@ const ChapterViewer: React.FC<ChapterViewerProps> = ({
       if (chapter) loadSummary(chapter, summaryLength);
     }
   }, [initialChapterId]);
+
+  const currentIndex = selectedChapter ? subject.chapters.findIndex(c => c.id === selectedChapter.id) : -1;
+  const nextChapter = currentIndex >= 0 && currentIndex < subject.chapters.length - 1 ? subject.chapters[currentIndex + 1] : null;
 
   return (
     <div className="animate-fadeIn space-y-6 pb-20">
@@ -358,6 +361,27 @@ const ChapterViewer: React.FC<ChapterViewerProps> = ({
                              </button>
                           </div>
                         ))}
+                      </div>
+                    )}
+
+                    {nextChapter && (
+                      <div className="mt-12 pt-8 border-t-2 border-dashed border-current/10 flex justify-end">
+                        <button
+                          onClick={() => loadSummary(nextChapter)}
+                          className={`group flex items-center space-x-4 px-8 py-4 rounded-2xl transition-all shadow-md hover:shadow-xl ${
+                            darkMode ? 'bg-slate-800 hover:bg-slate-700 text-white' : 'bg-white hover:bg-gray-50 text-gray-900 border border-gray-100'
+                          }`}
+                        >
+                          <div className="text-right">
+                            <p className="text-[10px] font-black uppercase tracking-widest opacity-50 mb-1">Next Chapter</p>
+                            <p className="font-bold text-sm truncate max-w-[200px]">{nextChapter.title}</p>
+                          </div>
+                          <div className={`w-10 h-10 rounded-xl flex items-center justify-center transition-transform group-hover:translate-x-1 ${
+                            darkMode ? 'bg-slate-900 text-blue-400' : 'bg-blue-50 text-blue-600'
+                          }`}>
+                            <i className="fa-solid fa-arrow-right"></i>
+                          </div>
+                        </button>
                       </div>
                     )}
                   </div>
