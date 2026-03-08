@@ -167,20 +167,20 @@ export const fetchChapterQuestions = async (title: string, sub: string, sum: str
   });
 };
 
-export const generateSamplePaper = async (subject: string, classLabel: string, term: ExamTerm): Promise<SamplePaper> => {
+export const generateSamplePaper = async (subject: string, classLabel: string, classId: string, term: ExamTerm): Promise<SamplePaper> => {
   return withRetry(async () => {
     const ai = getAIClient();
     const subjectLower = subject.toLowerCase();
-    const isMadhyamik = classLabel.includes('10');
-    const isClass9 = classLabel.includes('9');
-    const isClass678 = classLabel.includes('6') || classLabel.includes('7') || classLabel.includes('8');
+    const isMadhyamik = classId === 'class-10';
+    const isClass9 = classId === 'class-9';
+    const isClass5678 = ['class-5', 'class-6', 'class-7', 'class-8'].includes(classId);
     const isEnglish = subjectLower.includes('english');
     
     let marks = 40;
     let time = "1 Hour 30 Minutes";
     let syllabusTopics = "";
 
-    if (isClass678) {
+    if (isClass5678) {
       if (term === 'Summative 1') { marks = 30; time = "1 Hour"; }
       else if (term === 'Summative 2') { marks = 50; time = "1 Hour 30 Minutes"; }
       else { marks = 70; time = "2 Hours 30 Minutes"; }
@@ -309,7 +309,7 @@ export const generateSamplePaper = async (subject: string, classLabel: string, t
       }
     } else {
       // For non-Madhyamik classes, extract syllabus from constants.ts
-      const classData = CLASSES.find(c => c.id === `class-${classLabel}`);
+      const classData = CLASSES.find(c => c.id === classId);
       if (classData) {
         const subjectData = classData.subjects.find(s => s.id === subjectLower);
         if (subjectData && subjectData.chapters) {
@@ -371,7 +371,7 @@ export const generateSamplePaper = async (subject: string, classLabel: string, t
 
     let promptInstructions = "";
     
-    if (isClass678) {
+    if (isClass5678) {
         let structureText = "";
         if (marks === 30) {
             structureText = `
@@ -426,7 +426,7 @@ export const generateSamplePaper = async (subject: string, classLabel: string, t
         if (term === 'Summative 3' || term === 'Madhyamik Selection') {
             if (subjectLower.includes('math')) {
           promptInstructions = `
-          **STRICT WBBSE MATHEMATICS (2026 ORIGINAL PAPER PATTERN)**
+          **STRICT WBBSE CLASS ${classLabel} MATHEMATICS (2026 ORIGINAL PAPER PATTERN)**
           Generate a paper strictly following this structure (Total 90 Marks):
           1. **Q1. MCQ:** 6 compulsory questions (1 mark each).
           2. **Q2. Fill in the blanks:** 5 questions to answer out of 6 provided (1 mark each).
@@ -446,7 +446,7 @@ export const generateSamplePaper = async (subject: string, classLabel: string, t
           `;
         } else if (subjectLower.includes('english')) {
           promptInstructions = `
-          **STRICT WBBSE ENGLISH (SECOND LANGUAGE) (2026 ORIGINAL PAPER PATTERN)**
+          **STRICT WBBSE CLASS ${classLabel} ENGLISH (SECOND LANGUAGE) (2026 ORIGINAL PAPER PATTERN)**
           **JSON STRUCTURE:** Create separate 'sections' array items for Prose, Poetry, Unseen, Grammar, and Writing to ensure passage text is near questions.
           
           **STRUCTURE (Total 90 Marks):**
@@ -481,7 +481,7 @@ export const generateSamplePaper = async (subject: string, classLabel: string, t
           `;
         } else if (subjectLower.includes('history')) {
           promptInstructions = `
-          **STRICT WBBSE HISTORY (2026 ORIGINAL PAPER PATTERN)**
+          **STRICT WBBSE CLASS ${classLabel} HISTORY (2026 ORIGINAL PAPER PATTERN)**
           Structure the 'sections' array exactly as follows (Total 90 Marks):
           1. **Group A (MCQ):** 20 compulsory questions (1x20=20).
           2. **Group B (VSA) (16 Marks):** Answer 16 out of 20 (taking at least one from each sub-group).
@@ -496,7 +496,7 @@ export const generateSamplePaper = async (subject: string, classLabel: string, t
           `;
         } else if (subjectLower.includes('geography')) {
           promptInstructions = `
-          **STRICT WBBSE GEOGRAPHY (2026 ORIGINAL PAPER PATTERN)**
+          **STRICT WBBSE CLASS ${classLabel} GEOGRAPHY (2026 ORIGINAL PAPER PATTERN)**
           Structure the 'sections' array exactly as follows (Total 90 Marks):
           1. **Group A (MCQ):** 14 compulsory questions (1x14=14).
           2. **Group B (VSA) (22 Marks):** Answer 22 out of 26.
@@ -513,7 +513,7 @@ export const generateSamplePaper = async (subject: string, classLabel: string, t
           `;
         } else if (subjectLower.includes('hindi')) {
           promptInstructions = `
-          **STRICT WBBSE HINDI (FIRST LANGUAGE) (2026 ORIGINAL PAPER PATTERN)**
+          **STRICT WBBSE CLASS ${classLabel} HINDI (FIRST LANGUAGE) (2026 ORIGINAL PAPER PATTERN)**
           Structure the 'sections' array exactly as follows (Total 90 Marks):
           1. **Q1. MCQ:** 17 compulsory questions (1x17=17). (Grammar & Literature mixed).
           2. **Q2. VSA:** Answer 19 questions (1x19=19). (Approx 20-25 words).
@@ -526,7 +526,7 @@ export const generateSamplePaper = async (subject: string, classLabel: string, t
           `;
         } else if (subjectLower.includes('life science') || subjectLower.includes('lifesci')) {
             promptInstructions = `
-            **STRICT WBBSE LIFE SCIENCE (2026 ORIGINAL PAPER PATTERN)**
+            **STRICT WBBSE CLASS ${classLabel} LIFE SCIENCE (2026 ORIGINAL PAPER PATTERN)**
             Structure the 'sections' array exactly as follows (Total 90 Marks):
             1. **Group A (MCQ):** 15 compulsory questions (1x15=15).
             2. **Group B (VSA) (21 Marks):** Answer 21 out of 26.
@@ -541,7 +541,7 @@ export const generateSamplePaper = async (subject: string, classLabel: string, t
             `;
         } else if (subjectLower.includes('physical science') || subjectLower.includes('physci')) {
             promptInstructions = `
-            **STRICT WBBSE PHYSICAL SCIENCE (2026 ORIGINAL PAPER PATTERN)**
+            **STRICT WBBSE CLASS ${classLabel} PHYSICAL SCIENCE (2026 ORIGINAL PAPER PATTERN)**
             Structure the 'sections' array exactly as follows (Total 90 Marks):
             1. **Group A (MCQ):** 15 compulsory questions (1x15=15).
             2. **Group B (VSA) (21 Marks):** Answer 21 questions.
@@ -559,7 +559,7 @@ export const generateSamplePaper = async (subject: string, classLabel: string, t
         // --- SUMMATIVE 1 & 2 (40 Marks Pattern) ---
         if (subjectLower.includes('english')) {
              promptInstructions = `
-             **STRICT WBBSE CLASS 10 ENGLISH UNIT TEST PATTERN (40 MARKS)**
+             **STRICT WBBSE CLASS ${classLabel} ENGLISH UNIT TEST PATTERN (40 MARKS)**
              **SYLLABUS:** ${syllabusTopics}
              
              **JSON STRUCTURE INSTRUCTIONS:**
@@ -601,7 +601,7 @@ export const generateSamplePaper = async (subject: string, classLabel: string, t
              `;
         } else if (subjectLower.includes('hindi')) {
              promptInstructions = `
-             **STRICT WBBSE HINDI UNIT TEST PATTERN (40 MARKS)**
+             **STRICT WBBSE CLASS ${classLabel} HINDI UNIT TEST PATTERN (40 MARKS)**
              **SYLLABUS:** Strictly generate questions ONLY from these topics: ${syllabusTopics}
              
              **STRUCTURE:**
@@ -615,7 +615,7 @@ export const generateSamplePaper = async (subject: string, classLabel: string, t
              `;
         } else {
              promptInstructions = `
-             **STRICT WBBSE UNIT TEST PATTERN (40 MARKS)**
+             **STRICT WBBSE CLASS ${classLabel} UNIT TEST PATTERN (40 MARKS)**
              **SYLLABUS:** Strictly generate questions ONLY from these topics: ${syllabusTopics}
              
              **STRUCTURE:**

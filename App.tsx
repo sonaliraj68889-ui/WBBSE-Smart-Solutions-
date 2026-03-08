@@ -106,7 +106,7 @@ const App: React.FC = () => {
         throw new Error("You are offline and this sample paper is not saved.");
       }
 
-      const paper = await generateSamplePaper(subject, classLabel, term);
+      const paper = await generateSamplePaper(subject, classLabel, classId, term);
       setSelectedSamplePaper(paper);
       await saveOfflineContent(classId, subject, term, `${subject} ${term}`, 'paper', paper);
     } catch (err: any) {
