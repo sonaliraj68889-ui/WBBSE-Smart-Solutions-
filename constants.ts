@@ -157,11 +157,34 @@ export const CLASSES: ClassLevel[] = [
         icon: 'fa-dna',
         color: 'bg-green-600',
         chapters: [
-          { id: '10-ls-1', title: 'जीव जगत में नियंत्रण एवं समन्वय (Control and Coordination in Living Organisms)' },
-          { id: '10-ls-2', title: 'जीवन की निरंतरता (Continuity of Life)' },
-          { id: '10-ls-3', title: 'वंशानुगति (Heredity)' },
-          { id: '10-ls-4', title: 'अभिव्यक्ति और अनुकूलन (Evolution and Adaptation)' },
-          { id: '10-ls-5', title: 'पर्यावरण और उसके संसाधन (Environment and its Resources)' }
+          { 
+            id: '10-ls-1', 
+            title: '1. जीव जगत में नियंत्रण एवं समन्वय (Control and Coordination in Living Organisms)',
+            parts: [
+              { id: '10-ls-1-a', title: 'A. पौधों में संवेदन शीलता तथा अनुक्रिया (Sensitivity and Response in Plant)' },
+              { id: '10-ls-1-bc', title: 'B & C. पादप हार्मोन तथा जन्तु हार्मोन (Plant Hormones & Animal Hormones)' },
+              { id: '10-ls-1-d', title: 'D. जन्तुओं में होने वाले प्रतिचार और भौतिक समन्वयः तंत्रिका तंत्र (Response and Physical Co-ordination in Animals: Nervous System)' },
+              { id: '10-ls-1-e', title: 'E. प्रचलन (Locomotion)' }
+            ]
+          },
+          { 
+            id: '10-ls-2', 
+            title: '2. जीवन की निरंतरता (Continuity of Life)',
+            parts: [
+              { id: '10-ls-2-a', title: 'A. कोशिका विभाजन (Cell Division)' },
+              { id: '10-ls-2-bc', title: 'B & C. प्रजनन तथा वृद्धि (Reproduction and Growth)' }
+            ]
+          },
+          { id: '10-ls-3', title: '3. वंशानुगति (Heredity)' },
+          { 
+            id: '10-ls-4', 
+            title: '4. अभिव्यक्ति और अनुकूलन (Evolution and Adaptation)',
+            parts: [
+              { id: '10-ls-4-a', title: 'A. क्रम विकास (Evolution)' },
+              { id: '10-ls-4-b', title: 'B. अनुकूलन (Adaptation)' }
+            ]
+          },
+          { id: '10-ls-5', title: '5. पर्यावरण और उसके संसाधन (Environment and its Resources)' }
         ]
       },
       {

@@ -1,8 +1,14 @@
 
+export interface ChapterPart {
+  id: string;
+  title: string;
+}
+
 export interface Chapter {
   id: string;
   title: string;
   description?: string;
+  parts?: ChapterPart[];
 }
 
 export interface Subject {

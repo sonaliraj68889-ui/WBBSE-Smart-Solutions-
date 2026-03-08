@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
-import { Subject, Chapter } from '../types.ts';
+import { Subject, Chapter, ChapterPart } from '../types.ts';
 import { summarizeChapter, fetchChapterQuestions, ApiError } from '../services/geminiService.ts';
 import { saveOfflineContent, getOfflineContent, isOffline } from '../services/offlineService.ts';
 import { translations } from '../translations.ts';
@@ -36,8 +36,9 @@ const ChapterViewer: React.FC<ChapterViewerProps> = ({
   onQuotaExceeded 
 }) => {
   const t = translations[lang];
-  const [selectedChapter, setSelectedChapter] = useState<Chapter | null>(null);
+  const [selectedChapter, setSelectedChapter] = useState<Chapter | ChapterPart | null>(null);
   const [activeMode, setActiveMode] = useState<ContentMode>('summary');
+  const [expandedChapters, setExpandedChapters] = useState<Record<string, boolean>>({});
   
   const [summary, setSummary] = useState<string | null>(null);
   const [qaSolutions, setQaSolutions] = useState<SolutionState[]>([]);
@@ -118,7 +119,7 @@ const ChapterViewer: React.FC<ChapterViewerProps> = ({
     }
   };
 
-  const loadSummary = async (chapter: Chapter, length: SummaryLength = 'medium') => {
+  const loadSummary = async (chapter: Chapter | ChapterPart, length: SummaryLength = 'medium') => {
     setLoading(true);
     setError(null);
     setErrorDetails(null);
@@ -183,10 +184,28 @@ const ChapterViewer: React.FC<ChapterViewerProps> = ({
   
   useEffect(() => {
     if (initialChapterId) {
-      const chapter = subject.chapters.find(c => c.id === initialChapterId);
-      if (chapter) loadSummary(chapter, summaryLength);
+      let foundChapter: Chapter | ChapterPart | undefined;
+      for (const c of subject.chapters) {
+        if (c.id === initialChapterId) {
+          foundChapter = c;
+          break;
+        }
+        if (c.parts) {
+          const part = c.parts.find(p => p.id === initialChapterId);
+          if (part) {
+            foundChapter = part;
+            setExpandedChapters(prev => ({ ...prev, [c.id]: true }));
+            break;
+          }
+        }
+      }
+      if (foundChapter) loadSummary(foundChapter, summaryLength);
     }
   }, [initialChapterId]);
+
+  const toggleExpand = (chapterId: string) => {
+    setExpandedChapters(prev => ({ ...prev, [chapterId]: !prev[chapterId] }));
+  };
 
   const currentIndex = selectedChapter ? subject.chapters.findIndex(c => c.id === selectedChapter.id) : -1;
   const nextChapter = currentIndex >= 0 && currentIndex < subject.chapters.length - 1 ? subject.chapters[currentIndex + 1] : null;
@@ -222,31 +241,68 @@ const ChapterViewer: React.FC<ChapterViewerProps> = ({
             <div className="space-y-3 max-h-[70vh] overflow-y-auto custom-scrollbar pr-2 flex-1">
               {subject.chapters.map((chapter, idx) => {
                 const isSelected = selectedChapter?.id === chapter.id;
+                const hasParts = chapter.parts && chapter.parts.length > 0;
+                const isPartSelected = hasParts && chapter.parts!.some(p => p.id === selectedChapter?.id);
+                const isExpanded = isSelected || isPartSelected || expandedChapters[chapter.id];
+
                 return (
-                  <button
-                    key={chapter.id}
-                    onClick={() => loadSummary(chapter)}
-                    className={`w-full text-left p-4 rounded-2xl transition-all duration-300 border flex items-start space-x-4 group relative overflow-hidden ${
-                      isSelected 
-                        ? (darkMode ? 'bg-gradient-to-br from-blue-600 to-indigo-700 border-blue-500 text-white shadow-[0_8px_30px_rgb(0,0,0,0.12)] shadow-blue-500/30 scale-[1.02]' : 'bg-gradient-to-br from-blue-500 to-indigo-600 border-blue-400 text-white shadow-[0_8px_30px_rgb(0,0,0,0.12)] shadow-blue-500/30 scale-[1.02]')
-                        : (darkMode ? 'bg-slate-800/50 border-slate-700/50 text-slate-400 hover:bg-slate-800 hover:border-slate-600 hover:text-slate-200' : 'bg-gray-50/50 border-gray-100 text-gray-600 hover:bg-white hover:border-gray-200 hover:shadow-md hover:text-gray-900')
-                    }`}
-                  >
-                    {isSelected && (
-                      <div className="absolute top-0 left-0 w-1.5 h-full bg-white/30 rounded-l-2xl"></div>
+                  <div key={chapter.id} className="space-y-2">
+                    <button
+                      onClick={() => {
+                        if (hasParts) {
+                          toggleExpand(chapter.id);
+                        } else {
+                          loadSummary(chapter);
+                        }
+                      }}
+                      className={`w-full text-left p-4 rounded-2xl transition-all duration-300 border flex items-start space-x-4 group relative overflow-hidden ${
+                        isSelected || isPartSelected
+                          ? (darkMode ? 'bg-gradient-to-br from-blue-600 to-indigo-700 border-blue-500 text-white shadow-[0_8px_30px_rgb(0,0,0,0.12)] shadow-blue-500/30 scale-[1.02]' : 'bg-gradient-to-br from-blue-500 to-indigo-600 border-blue-400 text-white shadow-[0_8px_30px_rgb(0,0,0,0.12)] shadow-blue-500/30 scale-[1.02]')
+                          : (darkMode ? 'bg-slate-800/50 border-slate-700/50 text-slate-400 hover:bg-slate-800 hover:border-slate-600 hover:text-slate-200' : 'bg-gray-50/50 border-gray-100 text-gray-600 hover:bg-white hover:border-gray-200 hover:shadow-md hover:text-gray-900')
+                      }`}
+                    >
+                      {(isSelected || isPartSelected) && (
+                        <div className="absolute top-0 left-0 w-1.5 h-full bg-white/30 rounded-l-2xl"></div>
+                      )}
+                      <span className={`w-8 h-8 shrink-0 rounded-xl flex items-center justify-center text-[11px] font-black transition-colors ${
+                        isSelected || isPartSelected
+                          ? 'bg-white/20 text-white shadow-inner' 
+                          : (darkMode ? 'bg-slate-900 text-slate-500 group-hover:bg-slate-700 group-hover:text-slate-300' : 'bg-white text-gray-400 shadow-sm group-hover:bg-blue-50 group-hover:text-blue-500')
+                      }`}>
+                        {idx + 1}
+                      </span>
+                      <div className="flex flex-col pt-1 flex-1">
+                        <span className={`font-bold text-sm leading-snug ${(isSelected || isPartSelected) ? 'text-white' : ''}`}>{chapter.title}</span>
+                        {isSelected && !hasParts && <span className="text-[9px] font-black uppercase tracking-widest text-blue-100 mt-2 flex items-center"><i className="fa-solid fa-bolt text-amber-300 mr-1.5"></i> Active</span>}
+                      </div>
+                      {hasParts && (
+                        <div className="flex items-center justify-center shrink-0">
+                          <i className={`fa-solid fa-chevron-${isExpanded ? 'up' : 'down'} text-sm ${(isSelected || isPartSelected) ? 'text-white/70' : 'text-gray-400'}`}></i>
+                        </div>
+                      )}
+                    </button>
+                    {hasParts && isExpanded && (
+                      <div className="pl-12 pr-2 space-y-2 mt-2">
+                        {chapter.parts!.map(part => {
+                          const isPartActive = selectedChapter?.id === part.id;
+                          return (
+                            <button
+                              key={part.id}
+                              onClick={() => loadSummary(part)}
+                              className={`w-full text-left p-3 rounded-xl transition-all duration-300 border flex items-start space-x-3 group ${
+                                isPartActive
+                                  ? (darkMode ? 'bg-blue-600/20 border-blue-500/50 text-blue-400' : 'bg-blue-50 border-blue-200 text-blue-600 shadow-sm')
+                                  : (darkMode ? 'bg-slate-800/30 border-slate-700/30 text-slate-400 hover:bg-slate-800/80 hover:text-slate-200' : 'bg-gray-50/30 border-gray-100 text-gray-500 hover:bg-white hover:border-gray-200 hover:text-gray-800')
+                              }`}
+                            >
+                              <div className={`w-1.5 h-1.5 rounded-full mt-1.5 shrink-0 ${isPartActive ? 'bg-blue-500' : 'bg-gray-300 dark:bg-slate-600'}`}></div>
+                              <span className={`font-semibold text-xs leading-relaxed ${isPartActive ? '' : ''}`}>{part.title}</span>
+                            </button>
+                          );
+                        })}
+                      </div>
                     )}
-                    <span className={`w-8 h-8 shrink-0 rounded-xl flex items-center justify-center text-[11px] font-black transition-colors ${
-                      isSelected 
-                        ? 'bg-white/20 text-white shadow-inner' 
-                        : (darkMode ? 'bg-slate-900 text-slate-500 group-hover:bg-slate-700 group-hover:text-slate-300' : 'bg-white text-gray-400 shadow-sm group-hover:bg-blue-50 group-hover:text-blue-500')
-                    }`}>
-                      {idx + 1}
-                    </span>
-                    <div className="flex flex-col pt-1">
-                      <span className={`font-bold text-sm leading-snug ${isSelected ? 'text-white' : ''}`}>{chapter.title}</span>
-                      {isSelected && <span className="text-[9px] font-black uppercase tracking-widest text-blue-100 mt-2 flex items-center"><i className="fa-solid fa-bolt text-amber-300 mr-1.5"></i> Active</span>}
-                    </div>
-                  </button>
+                  </div>
                 );
               })}
             </div>
