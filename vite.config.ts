@@ -21,13 +21,17 @@ export default defineConfig(({ mode }) => {
             name: 'WBBSE Smart Solutions',
             short_name: 'WBBSE',
             description: 'WBBSE Smart Solutions App',
-            theme_color: '#1d4ed8',
+            theme_color: '#ffffff',
             icons: [
               {
-                src: '/favicon.svg',
-                sizes: 'any',
-                type: 'image/svg+xml',
-                purpose: 'any maskable'
+                src: 'https://cdn-icons-png.flaticon.com/512/1048/1048956.png',
+                sizes: '192x192',
+                type: 'image/png'
+              },
+              {
+                src: 'https://cdn-icons-png.flaticon.com/512/1048/1048956.png',
+                sizes: '512x512',
+                type: 'image/png'
               }
             ]
           }

@@ -46,7 +46,7 @@ const Layout: React.FC<LayoutProps> = ({ children, activeTab, setActiveTab, dark
         <div className="flex justify-between items-center w-full">
           <div className="flex flex-col">
             <div className="flex items-center space-x-2">
-              <img src="/favicon.svg" alt="WBBSE Logo" className="w-8 h-8 shadow-sm rounded-lg" />
+              <i className="fa-solid fa-graduation-cap text-2xl"></i>
               <span className="font-bold text-xl tracking-tight">WBBSE Smart Solutions</span>
             </div>
           </div>
@@ -97,13 +97,10 @@ const Layout: React.FC<LayoutProps> = ({ children, activeTab, setActiveTab, dark
         <div className="p-6 h-full flex flex-col">
           <div className="hidden md:flex flex-col mb-10">
             <div className="flex items-center space-x-3">
-              <img src="/favicon.svg" alt="WBBSE Logo" className="w-12 h-12 shadow-lg rounded-xl" />
-              <div className="flex flex-col">
-                <span className="font-black text-2xl tracking-tight leading-none">WBBSE</span>
-                <span className="text-[10px] font-bold text-yellow-300 uppercase tracking-wider flex items-center mt-0.5">
-                  <i className="fa-solid fa-trophy mr-1 text-[9px]"></i> Smart Solutions
-                </span>
+              <div className={darkMode ? 'bg-blue-600 p-2 rounded-lg' : 'bg-white p-2 rounded-lg'}>
+                <i className={`fa-solid fa-graduation-cap ${darkMode ? 'text-white' : 'text-blue-800'} text-2xl`}></i>
               </div>
+              <span className="font-bold text-xl tracking-tight">WBBSE Smart</span>
             </div>
             {isOffline && (
               <div className="mt-4 text-xs font-bold bg-red-500/20 text-red-100 px-3 py-2 rounded-lg flex items-center">
