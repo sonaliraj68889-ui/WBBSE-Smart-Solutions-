@@ -46,11 +46,7 @@ const Layout: React.FC<LayoutProps> = ({ children, activeTab, setActiveTab, dark
         <div className="flex justify-between items-center w-full">
           <div className="flex flex-col">
             <div className="flex items-center space-x-2">
-              <div className="relative w-8 h-8 rounded-lg bg-gradient-to-br from-blue-400 to-blue-600 flex items-center justify-center shadow-sm overflow-hidden border border-blue-300/30">
-                <div className="absolute inset-0 bg-blue-500/20"></div>
-                <i className="fa-solid fa-graduation-cap text-white text-lg z-10 drop-shadow-md"></i>
-                <i className="fa-solid fa-sparkles text-yellow-300 text-[8px] absolute top-1 right-1 z-10"></i>
-              </div>
+              <img src="/favicon.svg" alt="WBBSE Logo" className="w-8 h-8 shadow-sm rounded-lg" />
               <span className="font-bold text-xl tracking-tight">WBBSE Smart Solutions</span>
             </div>
           </div>
@@ -101,11 +97,7 @@ const Layout: React.FC<LayoutProps> = ({ children, activeTab, setActiveTab, dark
         <div className="p-6 h-full flex flex-col">
           <div className="hidden md:flex flex-col mb-10">
             <div className="flex items-center space-x-3">
-              <div className="relative w-10 h-10 rounded-xl bg-gradient-to-br from-blue-400 to-blue-600 flex items-center justify-center shadow-lg overflow-hidden border border-blue-300/30">
-                <div className="absolute inset-0 bg-blue-500/20"></div>
-                <i className="fa-solid fa-graduation-cap text-white text-2xl z-10 drop-shadow-md"></i>
-                <i className="fa-solid fa-sparkles text-yellow-300 text-[10px] absolute top-1.5 right-1.5 z-10"></i>
-              </div>
+              <img src="/favicon.svg" alt="WBBSE Logo" className="w-12 h-12 shadow-lg rounded-xl" />
               <div className="flex flex-col">
                 <span className="font-black text-2xl tracking-tight leading-none">WBBSE</span>
                 <span className="text-[10px] font-bold text-yellow-300 uppercase tracking-wider flex items-center mt-0.5">
