@@ -102,7 +102,7 @@ export const solveProblem = async (problem: string, context?: string, fileData?:
       : problem;
 
     const response = await ai.models.generateContent({
-      model: 'gemini-3-flash-preview',
+      model: 'gemini-3.1-flash-lite-preview',
       contents,
       config: {
         systemInstruction: `You are an expert WBBSE (West Bengal Board of Secondary Education) Tutor for Class 5 to 10.
@@ -139,7 +139,7 @@ export const summarizeChapter = async (title: string, sub: string, len: string, 
     const targetLang = isEnglish ? 'English' : 'Hindi';
     
     const res = await ai.models.generateContent({
-      model: 'gemini-3-flash-preview', 
+      model: 'gemini-3.1-flash-lite-preview', 
       contents: `Provide a ${len} comprehensive board-standard solution for WBBSE chapter: "${title}" in ${sub}. Language: ${targetLang}. NO BENGALI. Focus on key concepts and logical explanations. ${MATH_NOTATION_RULE}`,
       config: {
         maxOutputTokens: 4096, 
@@ -156,7 +156,7 @@ export const fetchChapterQuestions = async (title: string, sub: string, sum: str
     const targetLang = isEnglish ? 'English' : 'Hindi';
     
     const res = await ai.models.generateContent({
-      model: 'gemini-3-flash-preview', 
+      model: 'gemini-3.1-flash-lite-preview', 
       contents: `Generate 5 important WBBSE Q&A for: ${title} (${sub}). Language: ${targetLang}. NO BENGALI. Return JSON array with "question" and "answer" properties. Ensure all mathematical expressions in questions and answers follow: ${MATH_NOTATION_RULE}`,
       config: { 
         responseMimeType: "application/json",
@@ -742,7 +742,7 @@ export const translateContent = async (text: string, lang: string) => {
   return withRetry(async () => {
     const ai = getAIClient();
     const res = await ai.models.generateContent({
-      model: 'gemini-3-flash-preview', 
+      model: 'gemini-3.1-flash-lite-preview', 
       contents: `Translate to ${lang}: ${text}`,
       config: {
         maxOutputTokens: 2000, 
@@ -796,7 +796,7 @@ export const fetchExamQuestions = async (sub: string, level: string, term: ExamT
     const isEnglish = sub.toLowerCase().includes('english');
     const targetLang = isEnglish ? 'English' : 'Hindi';
     const res = await ai.models.generateContent({
-      model: 'gemini-3-flash-preview', 
+      model: 'gemini-3.1-flash-lite-preview', 
       contents: `Generate 5 MCQs for WBBSE ${sub} Class ${level} ${term}. 
       Language: ${targetLang}. NO BENGALI. Return JSON array.
       
@@ -841,7 +841,7 @@ export const generatePracticeSet = async (subject: string, classLabel: string, c
     ${MATH_NOTATION_RULE}`;
 
     const res = await ai.models.generateContent({
-      model: 'gemini-3-flash-preview',
+      model: 'gemini-3.1-flash-lite-preview',
       contents,
       config: {
         responseMimeType: "application/json",

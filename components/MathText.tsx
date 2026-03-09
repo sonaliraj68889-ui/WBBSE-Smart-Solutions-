@@ -1,18 +1,11 @@
 
 import React, { useEffect, useRef } from 'react';
-import mermaid from 'mermaid';
 
 interface MathTextProps {
   text: string;
   className?: string;
   isInline?: boolean;
 }
-
-mermaid.initialize({
-  startOnLoad: false,
-  theme: 'default',
-  securityLevel: 'loose',
-});
 
 const MathText: React.FC<MathTextProps> = ({ text, className = '', isInline = false }) => {
   const containerRef = useRef<HTMLElement>(null);
@@ -42,6 +35,12 @@ const MathText: React.FC<MathTextProps> = ({ text, className = '', isInline = fa
           el.appendChild(div);
           
           try {
+            const mermaid = (await import('mermaid')).default;
+            mermaid.initialize({
+              startOnLoad: false,
+              theme: 'default',
+              securityLevel: 'loose',
+            });
             await mermaid.run({
               nodes: [div],
             });

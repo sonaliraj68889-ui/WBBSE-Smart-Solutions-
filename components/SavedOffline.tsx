@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { Subject, ExamTerm } from '../types.ts';
 import { translations } from '../translations.ts';
-import { getAllOfflineContent, OfflineContent, deleteOfflineContent } from '../services/offlineService.ts';
+import { getAllOfflineContent, OfflineContent } from '../services/offlineService.ts';
 import { CLASSES } from '../constants.ts';
 
 interface SavedOfflineProps {
@@ -16,9 +16,6 @@ const SavedOffline: React.FC<SavedOfflineProps> = ({ darkMode, lang, onSelectSub
   const t = translations[lang];
   const [offlineItems, setOfflineItems] = useState<OfflineContent[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
-  const [deleteConfirm, setDeleteConfirm] = useState<{ isOpen: boolean, type: 'single' | 'all' | 'bulk', id?: string }>({ isOpen: false, type: 'single' });
-  const [isSelectionMode, setIsSelectionMode] = useState(false);
-  const [selectedItems, setSelectedItems] = useState<Set<string>>(new Set());
 
   useEffect(() => {
     const loadOfflineContent = async () => {
@@ -34,59 +31,6 @@ const SavedOffline: React.FC<SavedOfflineProps> = ({ darkMode, lang, onSelectSub
 
   const getLocalizedClassName = (classId: string) => {
     return (t.classLabels as any)[classId] || classId;
-  };
-
-  const handleRemove = (e: React.MouseEvent, id: string) => {
-    e.stopPropagation();
-    setDeleteConfirm({ isOpen: true, type: 'single', id });
-  };
-
-  const handleClearAll = () => {
-    setDeleteConfirm({ isOpen: true, type: 'all' });
-  };
-
-  const handleBulkDelete = () => {
-    if (selectedItems.size > 0) {
-      setDeleteConfirm({ isOpen: true, type: 'bulk' });
-    }
-  };
-
-  const toggleSelectionMode = () => {
-    setIsSelectionMode(!isSelectionMode);
-    setSelectedItems(new Set());
-  };
-
-  const toggleItemSelection = (e: React.MouseEvent, id: string) => {
-    e.stopPropagation();
-    const newSelected = new Set(selectedItems);
-    if (newSelected.has(id)) {
-      newSelected.delete(id);
-    } else {
-      newSelected.add(id);
-    }
-    setSelectedItems(newSelected);
-  };
-
-  const confirmDelete = async () => {
-    if (deleteConfirm.type === 'single' && deleteConfirm.id) {
-      await deleteOfflineContent(deleteConfirm.id);
-      setOfflineItems(prev => prev.filter(item => item.id !== deleteConfirm.id));
-    } else if (deleteConfirm.type === 'all') {
-      for (const item of offlineItems) {
-        await deleteOfflineContent(item.id);
-      }
-      setOfflineItems([]);
-      setIsSelectionMode(false);
-      setSelectedItems(new Set());
-    } else if (deleteConfirm.type === 'bulk') {
-      for (const id of Array.from(selectedItems)) {
-        await deleteOfflineContent(id);
-      }
-      setOfflineItems(prev => prev.filter(item => !selectedItems.has(item.id)));
-      setSelectedItems(new Set());
-      setIsSelectionMode(false);
-    }
-    setDeleteConfirm({ isOpen: false, type: 'single' });
   };
 
   const filteredItems = useMemo(() => {
@@ -131,48 +75,9 @@ const SavedOffline: React.FC<SavedOfflineProps> = ({ darkMode, lang, onSelectSub
               {lang === 'hi' ? 'बिना इंटरनेट के अपने डाउनलोड किए गए अध्यायों और पेपरों तक पहुंचें' : 'Access your downloaded chapters and papers without internet'}
             </p>
           </div>
-          {offlineItems.length > 0 && (
-            <div className="flex items-center space-x-2">
-              <button
-                onClick={toggleSelectionMode}
-                className={`px-4 py-2 rounded-xl text-sm font-bold flex items-center space-x-2 transition-all ${
-                  isSelectionMode 
-                    ? (darkMode ? 'bg-emerald-500/20 text-emerald-400' : 'bg-emerald-100 text-emerald-600')
-                    : (darkMode ? 'bg-slate-800 text-slate-300 hover:bg-slate-700' : 'bg-gray-100 text-gray-600 hover:bg-gray-200')
-                }`}
-              >
-                <i className={`fa-solid ${isSelectionMode ? 'fa-check-double' : 'fa-list-check'}`}></i>
-                <span>{isSelectionMode ? (lang === 'hi' ? 'रद्द करें' : 'Cancel') : (lang === 'hi' ? 'चुनें' : 'Select')}</span>
-              </button>
-              
-              {isSelectionMode && selectedItems.size > 0 && (
-                <button
-                  onClick={handleBulkDelete}
-                  className={`px-4 py-2 rounded-xl text-sm font-bold flex items-center space-x-2 transition-all ${
-                    darkMode ? 'bg-red-500/20 text-red-400 hover:bg-red-500/30' : 'bg-red-100 text-red-600 hover:bg-red-200'
-                  }`}
-                >
-                  <i className="fa-solid fa-trash-can"></i>
-                  <span>{lang === 'hi' ? `हटाएं (${selectedItems.size})` : `Delete (${selectedItems.size})`}</span>
-                </button>
-              )}
-
-              {!isSelectionMode && (
-                <button
-                  onClick={handleClearAll}
-                  className={`px-4 py-2 rounded-xl text-sm font-bold flex items-center space-x-2 transition-all ${
-                    darkMode ? 'bg-red-500/10 text-red-400 hover:bg-red-500/20' : 'bg-red-50 text-red-600 hover:bg-red-100'
-                  }`}
-                >
-                  <i className="fa-solid fa-trash-can"></i>
-                  <span>{lang === 'hi' ? 'सभी हटाएं' : 'Clear All'}</span>
-                </button>
-              )}
-            </div>
-          )}
         </div>
 
-        {offlineItems.length > 0 && !isSelectionMode && (
+        {offlineItems.length > 0 && (
           <div className="mb-6 relative">
             <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
               <i className={`fa-solid fa-search ${darkMode ? 'text-slate-500' : 'text-gray-400'}`}></i>
@@ -235,38 +140,15 @@ const SavedOffline: React.FC<SavedOfflineProps> = ({ darkMode, lang, onSelectSub
                   key={item.id}
                   className={`text-left p-5 rounded-2xl border transition-all hover:shadow-md flex flex-col gap-3 relative group cursor-pointer ${
                     darkMode ? 'bg-slate-800 border-slate-700 hover:border-emerald-500' : 'bg-gray-50 border-gray-200 hover:border-emerald-400 hover:bg-white'
-                  } ${isSelectionMode && selectedItems.has(item.id) ? (darkMode ? 'ring-2 ring-emerald-500 bg-emerald-500/10' : 'ring-2 ring-emerald-400 bg-emerald-50') : ''}`}
+                  }`}
                   onClick={(e) => {
-                    if (isSelectionMode) {
-                      toggleItemSelection(e, item.id);
-                    } else {
-                      if (item.type === 'paper') {
-                        onSelectSamplePaper(item.subject, item.classId, item.id.split('_')[3] as ExamTerm);
-                      } else if (subjectData && chapterId) {
-                        onSelectSubject(subjectData, item.classId);
-                      }
+                    if (item.type === 'paper') {
+                      onSelectSamplePaper(item.subject, item.classId, item.id.split('_')[3] as ExamTerm);
+                    } else if (subjectData && chapterId) {
+                      onSelectSubject(subjectData, item.classId);
                     }
                   }}
                 >
-                  {isSelectionMode ? (
-                    <div className={`absolute top-4 right-4 w-6 h-6 rounded-md border-2 flex items-center justify-center transition-colors ${
-                      selectedItems.has(item.id) 
-                        ? 'bg-emerald-500 border-emerald-500 text-white' 
-                        : (darkMode ? 'border-slate-600 bg-slate-700' : 'border-gray-300 bg-white')
-                    }`}>
-                      {selectedItems.has(item.id) && <i className="fa-solid fa-check text-xs"></i>}
-                    </div>
-                  ) : (
-                    <button
-                      onClick={(e) => handleRemove(e, item.id)}
-                      className={`absolute top-4 right-4 p-2 rounded-full flex items-center justify-center transition-colors z-10 ${
-                        darkMode ? 'bg-slate-700 text-red-400 hover:bg-red-500/20 hover:text-red-300' : 'bg-gray-100 text-red-500 hover:bg-red-100 hover:text-red-600'
-                      }`}
-                      title={lang === 'hi' ? 'हटाएं' : 'Remove'}
-                    >
-                      <i className="fa-solid fa-trash"></i>
-                    </button>
-                  )}
                   <div className="flex justify-between items-start pr-10">
                     <span className={`text-[10px] font-black uppercase tracking-widest px-2.5 py-1 rounded-md ${
                       item.type === 'summary' ? 'bg-blue-100 text-blue-700' : item.type === 'paper' ? 'bg-orange-100 text-orange-700' : 'bg-purple-100 text-purple-700'
@@ -290,41 +172,6 @@ const SavedOffline: React.FC<SavedOfflineProps> = ({ darkMode, lang, onSelectSub
           </div>
         )}
       </section>
-
-      {/* Delete Confirmation Modal */}
-      {deleteConfirm.isOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-fadeIn">
-          <div className={`w-full max-w-sm rounded-3xl shadow-2xl p-6 ${darkMode ? 'bg-slate-800 border border-slate-700' : 'bg-white'}`}>
-            <div className="flex flex-col items-center text-center mb-6">
-              <div className={`w-16 h-16 rounded-full flex items-center justify-center text-3xl mb-4 ${darkMode ? 'bg-red-500/20 text-red-400' : 'bg-red-100 text-red-500'}`}>
-                <i className="fa-solid fa-triangle-exclamation"></i>
-              </div>
-              <h3 className={`text-xl font-bold mb-2 ${darkMode ? 'text-slate-100' : 'text-gray-800'}`}>
-                {lang === 'hi' ? 'हटाने की पुष्टि करें' : 'Confirm Deletion'}
-              </h3>
-              <p className={`text-sm ${darkMode ? 'text-slate-400' : 'text-gray-500'}`}>
-                {deleteConfirm.type === 'all' 
-                  ? (lang === 'hi' ? 'क्या आप वाकई सभी सहेजे गए आइटम हटाना चाहते हैं? यह क्रिया पूर्ववत नहीं की जा सकती।' : 'Are you sure you want to remove all saved items? This action cannot be undone.')
-                  : (lang === 'hi' ? 'क्या आप वाकई इस आइटम को हटाना चाहते हैं?' : 'Are you sure you want to remove this item?')}
-              </p>
-            </div>
-            <div className="flex gap-3">
-              <button 
-                onClick={() => setDeleteConfirm({ isOpen: false, type: 'single' })}
-                className={`flex-1 py-3 rounded-xl font-bold transition-colors ${darkMode ? 'bg-slate-700 text-slate-300 hover:bg-slate-600' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'}`}
-              >
-                {lang === 'hi' ? 'रद्द करें' : 'Cancel'}
-              </button>
-              <button 
-                onClick={confirmDelete}
-                className="flex-1 py-3 rounded-xl font-bold bg-red-500 text-white hover:bg-red-600 transition-colors shadow-lg shadow-red-500/20"
-              >
-                {lang === 'hi' ? 'हटाएं' : 'Delete'}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 };
