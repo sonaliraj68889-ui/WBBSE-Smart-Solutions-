@@ -171,9 +171,9 @@ export const generateSamplePaper = async (subject: string, classLabel: string, c
   return withRetry(async () => {
     const ai = getAIClient();
     const subjectLower = subject.toLowerCase();
-    const isMadhyamik = classId === 'class-10';
-    const isClass9 = classId === 'class-9';
-    const isClass5678 = ['class-5', 'class-6', 'class-7', 'class-8'].includes(classId);
+    const isMadhyamik = classId === 'class-10' || classLabel.includes('10');
+    const isClass9 = classId === 'class-9' || classLabel.includes('9');
+    const isClass5678 = ['class-5', 'class-6', 'class-7', 'class-8'].includes(classId) || !!classLabel.match(/[5-8]/);
     const isEnglish = subjectLower.includes('english');
     
     let marks = 40;
@@ -528,7 +528,7 @@ export const generateSamplePaper = async (subject: string, classLabel: string, c
           7. **Q7. Translation:** English to Hindi (4 Marks).
           8. **Q8. Report/Dialogue:** Answer 1 question out of 2 (5 Marks). (Max 150 words).
           
-          **OFFICIAL CLASS 10 HINDI SYLLABUS CHAPTERS TO USE:**
+          ${isMadhyamik ? `**OFFICIAL CLASS 10 HINDI SYLLABUS CHAPTERS TO USE:**
           - Pady (Poetry): Raidas ke pad, Need ka nirman phir-phir, Aatmtran, Manushya aur sarp, Ramdas, Naurangiya, Desh-Prem.
           - Gady (Prose): Dhumketu, Usne kaha tha, Nanha sangeetkar, Naubat khane mein ibadat, Chappal, Namak, Dhavak.
           - Sahayak Path: Tisari Kasam, Karmnasha ki haar, Jaanch abhi jaari hai.
@@ -536,7 +536,7 @@ export const generateSamplePaper = async (subject: string, classLabel: string, c
           - Vyakaran: Karak, Samas, Vakya, Vachya.
           - Rachna: Essay, Translation, Prativedan, Samvad.
           
-          Ensure ALL questions are derived strictly from these chapters.
+          Ensure ALL questions are derived strictly from these chapters.` : `**SYLLABUS TO USE:**\n${syllabusTopics}\nEnsure ALL questions are derived strictly from these chapters.`}
           `;
         } else if (subjectLower.includes('life science') || subjectLower.includes('lifesci')) {
             promptInstructions = `
@@ -665,7 +665,10 @@ export const generateSamplePaper = async (subject: string, classLabel: string, c
       model: 'gemini-3.1-flash-lite-preview', 
       contents: `Generate a **High-Difficulty, Authentic** WBBSE ${isMadhyamik ? 'Madhyamik ' : `Class ${classLabel} `}Sample Paper JSON for 2026. 
       Subject: ${subject}, Class: ${classLabel}, Term: ${term}, Full Marks: ${marks}, Time: ${time}. 
-      Language: ${isEnglish ? 'English' : 'Hindi'}. NO BENGALI text.
+      
+      **LANGUAGE INSTRUCTION:**
+      ${isEnglish ? 'Write the entire paper in English.' : subjectLower.includes('hindi') ? 'Write the ENTIRE paper strictly in Hindi. Do NOT use English words.' : 'Write the paper in Hindi. You may use some English words/terms where appropriate for clarity.'}
+      NO BENGALI text.
       
       **RANDOMIZATION SEED:** ${randomSeed}
       
