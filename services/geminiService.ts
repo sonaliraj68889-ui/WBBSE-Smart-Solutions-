@@ -191,7 +191,7 @@ export const generateSamplePaper = async (subject: string, classLabel: string, c
     }
 
     // --- SYLLABUS MAPPING FOR SUMMATIVE 1 & 2 (Based on WBBSE 2026 Images) ---
-    if (isMadhyamik || isClass9) {
+    if (isMadhyamik) {
       if (term === 'Summative 1') {
          if (subjectLower.includes('math')) {
             syllabusTopics = `
@@ -403,6 +403,11 @@ export const generateSamplePaper = async (subject: string, classLabel: string, c
         Ensure questions are strictly from the Class ${classLabel} syllabus for ${subject}.
         Do NOT include any Class 9, 10 or Madhyamik level questions.
         
+        **OFFICIAL CLASS ${classLabel} ${subject.toUpperCase()} SYLLABUS CHAPTERS TO USE FOR THIS TERM:**
+        ${syllabusTopics}
+        
+        Ensure ALL questions are derived strictly from these chapters.
+        
         **STRUCTURE:**
         ${structureText}
         `;
@@ -413,11 +418,6 @@ export const generateSamplePaper = async (subject: string, classLabel: string, c
             **CRITICAL FOR HINDI:** You MUST use the official WBBSE Hindi syllabus for Class ${classLabel}.
             DO NOT use Class 9 or 10 chapters like 'Raidas ke pad', 'Dhumketu', 'Tisari Kasam', 'Ramdas', 'Naurangiya', 'Naubat khane mein ibadat', etc.
             Use age-appropriate chapters, poems, and grammar specifically meant for Class ${classLabel} Hindi students.
-            
-            **OFFICIAL CLASS ${classLabel} HINDI SYLLABUS CHAPTERS TO USE FOR THIS TERM:**
-            ${syllabusTopics}
-            
-            Ensure ALL questions are derived strictly from these chapters.
             Make sure to include questions from all sections present in the syllabus for this term (e.g., पद्य खण्ड/काव्य-खण्ड, गद्य खण्ड/गद्य-खण्ड, एकांकी, सहायक पाठ, व्याकरण).
             `;
         }
@@ -553,6 +553,16 @@ export const generateSamplePaper = async (subject: string, classLabel: string, c
             4. **Group D (Long Answer - 3 Marks):** Answer 12 questions (3x12=36).
                - Questions can be split (e.g., 2+1).
                - Includes numerical problems.
+            `;
+        }
+        
+        if (isClass9 && syllabusTopics) {
+            promptInstructions += `
+            
+            **OFFICIAL CLASS ${classLabel} SYLLABUS CHAPTERS TO USE:**
+            ${syllabusTopics}
+            
+            Ensure ALL questions are derived strictly from these chapters. Do NOT include Class 10/Madhyamik questions.
             `;
         }
     } else {
