@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { Subject, ExamTerm } from '../types.ts';
 import { translations } from '../translations.ts';
 import { getAllOfflineContent, OfflineContent, deleteOfflineContent } from '../services/offlineService.ts';
@@ -15,6 +15,7 @@ interface SavedOfflineProps {
 const SavedOffline: React.FC<SavedOfflineProps> = ({ darkMode, lang, onSelectSubject, onSelectSamplePaper, onHome }) => {
   const t = translations[lang];
   const [offlineItems, setOfflineItems] = useState<OfflineContent[]>([]);
+  const [searchQuery, setSearchQuery] = useState('');
 
   useEffect(() => {
     const loadOfflineContent = async () => {
@@ -39,6 +40,32 @@ const SavedOffline: React.FC<SavedOfflineProps> = ({ darkMode, lang, onSelectSub
       setOfflineItems(prev => prev.filter(item => item.id !== id));
     }
   };
+
+  const handleClearAll = async () => {
+    if (window.confirm(lang === 'hi' ? 'क्या आप वाकई सभी सहेजे गए आइटम हटाना चाहते हैं?' : 'Are you sure you want to remove all saved items?')) {
+      for (const item of offlineItems) {
+        await deleteOfflineContent(item.id);
+      }
+      setOfflineItems([]);
+    }
+  };
+
+  const filteredItems = useMemo(() => {
+    if (!searchQuery.trim()) return offlineItems;
+    
+    const query = searchQuery.toLowerCase();
+    return offlineItems.filter(item => {
+      const classData = CLASSES.find(c => c.id === item.classId);
+      const subjectData = classData?.subjects.find(s => s.id === item.subject);
+      
+      const titleMatch = item.title.toLowerCase().includes(query);
+      const subjectMatch = (getLocalizedSubjectName(item.subject, subjectData?.name || '')).toLowerCase().includes(query);
+      const classMatch = (getLocalizedClassName(item.classId)).toLowerCase().includes(query);
+      const typeMatch = item.type.toLowerCase().includes(query);
+      
+      return titleMatch || subjectMatch || classMatch || typeMatch;
+    });
+  }, [offlineItems, searchQuery, lang]);
 
   return (
     <div className="space-y-8 animate-fadeIn pb-12">
@@ -65,7 +92,45 @@ const SavedOffline: React.FC<SavedOfflineProps> = ({ darkMode, lang, onSelectSub
               {lang === 'hi' ? 'बिना इंटरनेट के अपने डाउनलोड किए गए अध्यायों और पेपरों तक पहुंचें' : 'Access your downloaded chapters and papers without internet'}
             </p>
           </div>
+          {offlineItems.length > 0 && (
+            <button
+              onClick={handleClearAll}
+              className={`px-4 py-2 rounded-xl text-sm font-bold flex items-center space-x-2 transition-all ${
+                darkMode ? 'bg-red-500/10 text-red-400 hover:bg-red-500/20' : 'bg-red-50 text-red-600 hover:bg-red-100'
+              }`}
+            >
+              <i className="fa-solid fa-trash-can"></i>
+              <span>{lang === 'hi' ? 'सभी हटाएं' : 'Clear All'}</span>
+            </button>
+          )}
         </div>
+
+        {offlineItems.length > 0 && (
+          <div className="mb-6 relative">
+            <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+              <i className={`fa-solid fa-search ${darkMode ? 'text-slate-500' : 'text-gray-400'}`}></i>
+            </div>
+            <input
+              type="text"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              placeholder={lang === 'hi' ? 'शीर्षक, विषय या कक्षा से खोजें...' : 'Search by title, subject, or class...'}
+              className={`w-full pl-11 pr-4 py-3 rounded-xl border outline-none transition-all ${
+                darkMode 
+                  ? 'bg-slate-800 border-slate-700 text-slate-200 focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 placeholder-slate-500' 
+                  : 'bg-gray-50 border-gray-200 text-gray-800 focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 placeholder-gray-400'
+              }`}
+            />
+            {searchQuery && (
+              <button 
+                onClick={() => setSearchQuery('')}
+                className={`absolute inset-y-0 right-0 pr-4 flex items-center ${darkMode ? 'text-slate-400 hover:text-slate-200' : 'text-gray-400 hover:text-gray-600'}`}
+              >
+                <i className="fa-solid fa-xmark"></i>
+              </button>
+            )}
+          </div>
+        )}
 
         {offlineItems.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-16 text-center">
@@ -79,9 +144,21 @@ const SavedOffline: React.FC<SavedOfflineProps> = ({ darkMode, lang, onSelectSub
                {lang === 'hi' ? 'जब आप नोट्स या प्रश्न-उत्तर पढ़ते हैं, तो वे ऑफ़लाइन पढ़ने के लिए यहाँ अपने आप सहेज लिए जाते हैं।' : 'When you read notes or Q&A, they are automatically saved here for offline reading.'}
              </p>
           </div>
+        ) : filteredItems.length === 0 ? (
+          <div className="flex flex-col items-center justify-center py-12 text-center">
+             <div className="w-16 h-16 bg-gray-100 dark:bg-slate-800 text-gray-400 dark:text-slate-500 rounded-full flex items-center justify-center text-2xl mb-4">
+               <i className="fa-solid fa-search"></i>
+             </div>
+             <h3 className={`text-lg font-bold mb-2 ${darkMode ? 'text-slate-300' : 'text-gray-700'}`}>
+               {lang === 'hi' ? 'कोई परिणाम नहीं मिला' : 'No results found'}
+             </h3>
+             <p className={`text-sm ${darkMode ? 'text-slate-500' : 'text-gray-500'}`}>
+               {lang === 'hi' ? 'अपनी खोज को बदलने का प्रयास करें।' : 'Try adjusting your search.'}
+             </p>
+          </div>
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-            {offlineItems.map((item) => {
+            {filteredItems.map((item) => {
               const classData = CLASSES.find(c => c.id === item.classId);
               const subjectData = classData?.subjects.find(s => s.id === item.subject);
               const chapterId = item.id.split('_').pop();
@@ -102,12 +179,14 @@ const SavedOffline: React.FC<SavedOfflineProps> = ({ darkMode, lang, onSelectSub
                 >
                   <button
                     onClick={(e) => handleRemove(e, item.id)}
-                    className="absolute top-4 right-4 text-red-500 opacity-0 group-hover:opacity-100 transition-opacity hover:text-red-600 p-1"
+                    className={`absolute top-4 right-4 p-2 rounded-full flex items-center justify-center transition-colors z-10 ${
+                      darkMode ? 'bg-slate-700 text-red-400 hover:bg-red-500/20 hover:text-red-300' : 'bg-gray-100 text-red-500 hover:bg-red-100 hover:text-red-600'
+                    }`}
                     title={lang === 'hi' ? 'हटाएं' : 'Remove'}
                   >
                     <i className="fa-solid fa-trash"></i>
                   </button>
-                  <div className="flex justify-between items-start pr-6">
+                  <div className="flex justify-between items-start pr-10">
                     <span className={`text-[10px] font-black uppercase tracking-widest px-2.5 py-1 rounded-md ${
                       item.type === 'summary' ? 'bg-blue-100 text-blue-700' : item.type === 'paper' ? 'bg-orange-100 text-orange-700' : 'bg-purple-100 text-purple-700'
                     }`}>
