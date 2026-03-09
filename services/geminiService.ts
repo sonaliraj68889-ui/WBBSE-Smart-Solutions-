@@ -518,11 +518,25 @@ export const generateSamplePaper = async (subject: string, classLabel: string, c
           1. **Q1. MCQ:** 17 compulsory questions (1x17=17). (Grammar & Literature mixed).
           2. **Q2. VSA:** Answer 19 questions (1x19=19). (Approx 20-25 words).
           3. **Q3. Short Explanatory (3 Marks):** Answer 2 questions (1 Prose, 1 Poetry) (3x2=6). (Max 60 words).
-          4. **Q4. Long Answer (Literature - 5 Marks):** Answer 3 questions (5x3=15). (Max 150-200 words).
-          5. **Q5. Supplementary Long Answer (5 Marks):** Answer 2 questions (5x2=10). (Max 150 words).
+          4. **Q4. Long Answer (Literature):** 
+             - Khand-Ka (Poetry): Answer 1 out of 2 (5 Marks).
+             - Khand-Kha (Prose): Answer 1 out of 2 (5 Marks).
+             - Khand-Ga (Prose): Answer 1 out of 2 (5 Marks).
+             - Khand-Gha (Ekanki): Answer 1 out of 2 (4 Marks).
+          5. **Q5. Supplementary Long Answer (Sahayak Path - 5 Marks):** Answer 2 questions out of 3 (5x2=10). (Max 150 words).
           6. **Q6. Essay:** Write 1 essay (10 Marks). (Max 300 words).
           7. **Q7. Translation:** English to Hindi (4 Marks).
-          8. **Q8. Report/Dialogue:** Answer 1 question (5 Marks). (Max 150 words).
+          8. **Q8. Report/Dialogue:** Answer 1 question out of 2 (5 Marks). (Max 150 words).
+          
+          **OFFICIAL CLASS 10 HINDI SYLLABUS CHAPTERS TO USE:**
+          - Pady (Poetry): Raidas ke pad, Need ka nirman phir-phir, Aatmtran, Manushya aur sarp, Ramdas, Naurangiya, Desh-Prem.
+          - Gady (Prose): Dhumketu, Usne kaha tha, Nanha sangeetkar, Naubat khane mein ibadat, Chappal, Namak, Dhavak.
+          - Sahayak Path: Tisari Kasam, Karmnasha ki haar, Jaanch abhi jaari hai.
+          - Ekanki: Deepdan.
+          - Vyakaran: Karak, Samas, Vakya, Vachya.
+          - Rachna: Essay, Translation, Prativedan, Samvad.
+          
+          Ensure ALL questions are derived strictly from these chapters.
           `;
         } else if (subjectLower.includes('life science') || subjectLower.includes('lifesci')) {
             promptInstructions = `
