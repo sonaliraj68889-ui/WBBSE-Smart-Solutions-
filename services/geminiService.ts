@@ -626,14 +626,18 @@ export const generateSamplePaper = async (subject: string, classLabel: string, c
         } else if (subjectLower.includes('hindi')) {
              promptInstructions = `
              **STRICT WBBSE CLASS ${classLabel} HINDI UNIT TEST PATTERN (40 MARKS)**
-             **SYLLABUS:** Strictly generate questions ONLY from these topics: ${syllabusTopics}
              
-             **STRUCTURE:**
-             1. **Group A (MCQ):** 8 questions (1 mark each).
-             2. **Group B (VSA):** 8 questions (1 mark each).
+             **CRITICAL INSTRUCTION:** You MUST generate questions ONLY from the following specific chapters. DO NOT include questions from any other chapters.
+             
+             **SYLLABUS FOR THIS EXAM:**
+             ${syllabusTopics}
+             
+             **STRUCTURE (Total 40 Marks):**
+             1. **Group A (MCQ):** 8 questions (1 mark each). (Include questions from Pady, Gady, Sahayak Path, Ekanki, Vyakaran).
+             2. **Group B (VSA):** 8 questions (1 mark each). (Include questions from Pady, Gady, Sahayak Path, Ekanki, Vyakaran).
              3. **Group C (Short Answer):** 4 questions (2 marks each).
              4. **Group D (Long Answer):** 2 questions (5 marks each).
-             5. **Group E (Grammar/Translation):** 6 marks total.
+             5. **Group E (Grammar/Translation/Rachna):** 6 marks total.
              
              Ensure questions are balanced across the specified chapters.
              `;
