@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Subject, ExamTerm } from '../types.ts';
 import { translations } from '../translations.ts';
-import { getAllOfflineContent, OfflineContent } from '../services/offlineService.ts';
+import { getAllOfflineContent, OfflineContent, deleteOfflineContent } from '../services/offlineService.ts';
 import { CLASSES } from '../constants.ts';
 
 interface SavedOfflineProps {
@@ -30,6 +30,14 @@ const SavedOffline: React.FC<SavedOfflineProps> = ({ darkMode, lang, onSelectSub
 
   const getLocalizedClassName = (classId: string) => {
     return (t.classLabels as any)[classId] || classId;
+  };
+
+  const handleRemove = async (e: React.MouseEvent, id: string) => {
+    e.stopPropagation();
+    if (window.confirm(lang === 'hi' ? 'क्या आप वाकई इसे हटाना चाहते हैं?' : 'Are you sure you want to remove this?')) {
+      await deleteOfflineContent(id);
+      setOfflineItems(prev => prev.filter(item => item.id !== id));
+    }
   };
 
   return (
@@ -79,8 +87,11 @@ const SavedOffline: React.FC<SavedOfflineProps> = ({ darkMode, lang, onSelectSub
               const chapterId = item.id.split('_').pop();
               
               return (
-                <button
+                <div
                   key={item.id}
+                  className={`text-left p-5 rounded-2xl border transition-all hover:shadow-md flex flex-col gap-3 relative group cursor-pointer ${
+                    darkMode ? 'bg-slate-800 border-slate-700 hover:border-emerald-500' : 'bg-gray-50 border-gray-200 hover:border-emerald-400 hover:bg-white'
+                  }`}
                   onClick={() => {
                     if (item.type === 'paper') {
                       onSelectSamplePaper(item.subject, item.classId, item.id.split('_')[3] as ExamTerm);
@@ -88,11 +99,15 @@ const SavedOffline: React.FC<SavedOfflineProps> = ({ darkMode, lang, onSelectSub
                       onSelectSubject(subjectData, item.classId);
                     }
                   }}
-                  className={`text-left p-5 rounded-2xl border transition-all hover:shadow-md flex flex-col gap-3 ${
-                    darkMode ? 'bg-slate-800 border-slate-700 hover:border-emerald-500' : 'bg-gray-50 border-gray-200 hover:border-emerald-400 hover:bg-white'
-                  }`}
                 >
-                  <div className="flex justify-between items-start">
+                  <button
+                    onClick={(e) => handleRemove(e, item.id)}
+                    className="absolute top-4 right-4 text-red-500 opacity-0 group-hover:opacity-100 transition-opacity hover:text-red-600 p-1"
+                    title={lang === 'hi' ? 'हटाएं' : 'Remove'}
+                  >
+                    <i className="fa-solid fa-trash"></i>
+                  </button>
+                  <div className="flex justify-between items-start pr-6">
                     <span className={`text-[10px] font-black uppercase tracking-widest px-2.5 py-1 rounded-md ${
                       item.type === 'summary' ? 'bg-blue-100 text-blue-700' : item.type === 'paper' ? 'bg-orange-100 text-orange-700' : 'bg-purple-100 text-purple-700'
                     }`}>
@@ -109,7 +124,7 @@ const SavedOffline: React.FC<SavedOfflineProps> = ({ darkMode, lang, onSelectSub
                       {getLocalizedClassName(item.classId)} • {getLocalizedSubjectName(item.subject, subjectData?.name || '')}
                     </p>
                   </div>
-                </button>
+                </div>
               );
             })}
           </div>
