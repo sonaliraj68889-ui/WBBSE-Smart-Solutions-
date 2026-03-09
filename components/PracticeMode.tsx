@@ -18,6 +18,7 @@ const PracticeMode: React.FC<PracticeModeProps> = ({ darkMode, lang, onQuotaExce
   const [selectedClassId, setSelectedClassId] = useState<string | null>(null);
   const [selectedSubject, setSelectedSubject] = useState<Subject | null>(null);
   const [selectedChapter, setSelectedChapter] = useState<Chapter | null>(null);
+  const [difficulty, setDifficulty] = useState<'Easy' | 'Medium' | 'Hard'>('Medium');
   
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -52,7 +53,7 @@ const PracticeMode: React.FC<PracticeModeProps> = ({ darkMode, lang, onQuotaExce
       const classLabel = getLocalizedClassName(selectedClassId);
       const subjectName = getLocalizedSubjectName(selectedSubject.id, selectedSubject.name);
       
-      const generatedQuestions = await generatePracticeSet(subjectName, classLabel, chapter.title, lang);
+      const generatedQuestions = await generatePracticeSet(subjectName, classLabel, chapter.title, lang, difficulty);
       if (generatedQuestions.length === 0) throw new Error("No questions generated.");
       
       setQuestions(generatedQuestions);
@@ -185,6 +186,9 @@ const PracticeMode: React.FC<PracticeModeProps> = ({ darkMode, lang, onQuotaExce
         <div className="text-6xl font-black text-blue-600">
            {score} <span className="text-3xl opacity-30">/</span> {questions.length}
         </div>
+        <div className="text-sm font-bold uppercase tracking-widest opacity-50">
+           {lang === 'hi' ? (difficulty === 'Easy' ? 'सरल' : difficulty === 'Medium' ? 'मध्यम' : 'कठिन') : difficulty} {lang === 'hi' ? 'स्तर' : 'Level'}
+        </div>
         <div className="flex flex-wrap justify-center gap-4">
            <button onClick={() => setIsReviewing(true)} className="px-8 py-3 bg-indigo-600 text-white rounded-xl font-bold uppercase tracking-widest hover:bg-indigo-700 shadow-lg transition-all">
              Review Answers
@@ -216,7 +220,7 @@ const PracticeMode: React.FC<PracticeModeProps> = ({ darkMode, lang, onQuotaExce
         <div className="flex items-center justify-between mb-8">
            <div>
               <h2 className="text-xl font-black">{selectedChapter.title}</h2>
-              <p className="text-xs opacity-50 font-bold uppercase tracking-widest">{t.question} {currentIndex + 1} of {questions.length}</p>
+              <p className="text-xs opacity-50 font-bold uppercase tracking-widest">{t.question} {currentIndex + 1} of {questions.length} • {lang === 'hi' ? (difficulty === 'Easy' ? 'सरल' : difficulty === 'Medium' ? 'मध्यम' : 'कठिन') : difficulty}</p>
            </div>
            <div className="text-right">
               <p className="text-xs opacity-50 font-bold uppercase tracking-widest">{t.score}</p>
@@ -335,6 +339,27 @@ const PracticeMode: React.FC<PracticeModeProps> = ({ darkMode, lang, onQuotaExce
          <i className="fa-solid fa-chevron-right text-[10px]"></i>
          <span>Chapter</span>
       </div>
+
+      {/* Difficulty Selector */}
+      {!selectedChapter && (
+        <div className="flex justify-center mb-8">
+          <div className={`flex items-center p-1 rounded-xl border ${darkMode ? 'bg-slate-900 border-slate-800' : 'bg-gray-100 border-gray-200'}`}>
+            {(['Easy', 'Medium', 'Hard'] as const).map(level => (
+              <button
+                key={level}
+                onClick={() => setDifficulty(level)}
+                className={`px-6 py-2 rounded-lg text-sm font-bold transition-all ${
+                  difficulty === level 
+                    ? (darkMode ? 'bg-slate-700 text-white shadow-sm' : 'bg-white text-gray-900 shadow-sm') 
+                    : (darkMode ? 'text-slate-400 hover:text-slate-200' : 'text-gray-500 hover:text-gray-700')
+                }`}
+              >
+                {lang === 'hi' ? (level === 'Easy' ? 'सरल' : level === 'Medium' ? 'मध्यम' : 'कठिन') : level}
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
 
       {error && (
         <div className="max-w-3xl mx-auto p-6 bg-red-100 text-red-700 rounded-2xl flex items-center space-x-4 mb-8">

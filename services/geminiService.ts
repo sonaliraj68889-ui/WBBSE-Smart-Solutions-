@@ -816,7 +816,7 @@ export const fetchExamQuestions = async (sub: string, level: string, term: ExamT
   });
 };
 
-export const generatePracticeSet = async (subject: string, classLabel: string, chapter: string, lang: 'en' | 'hi'): Promise<ExamQuestion[]> => {
+export const generatePracticeSet = async (subject: string, classLabel: string, chapter: string, lang: 'en' | 'hi', difficulty: 'Easy' | 'Medium' | 'Hard' = 'Medium'): Promise<ExamQuestion[]> => {
   return withRetry(async () => {
     const ai = getAIClient();
     const targetLang = 'Hindi'; // FORCE Hindi for practice questions as requested.
@@ -835,7 +835,7 @@ export const generatePracticeSet = async (subject: string, classLabel: string, c
        - \`correctAnswer\` (number, index 0-3)
        - \`explanation\` (string, brief explanation of why the answer is correct)
     2. **Content:** Questions must be strictly from the specified chapter syllabus.
-    3. **Difficulty:** Mix of easy, medium, and hard.
+    3. **Difficulty:** ${difficulty} level questions.
     4. **Math/Science:** Use clear Unicode for expressions. NO LaTeX.
     
     ${MATH_NOTATION_RULE}`;
