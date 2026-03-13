@@ -2,6 +2,7 @@
 export interface ChapterPart {
   id: string;
   title: string;
+  parts?: ChapterPart[];
 }
 
 export interface Chapter {

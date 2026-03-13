@@ -197,6 +197,17 @@ const ChapterViewer: React.FC<ChapterViewerProps> = ({
             setExpandedChapters(prev => ({ ...prev, [c.id]: true }));
             break;
           }
+          for (const p of c.parts) {
+            if (p.parts) {
+              const subPart = p.parts.find(sp => sp.id === initialChapterId);
+              if (subPart) {
+                foundChapter = subPart;
+                setExpandedChapters(prev => ({ ...prev, [c.id]: true, [p.id]: true }));
+                break;
+              }
+            }
+          }
+          if (foundChapter) break;
         }
       }
       if (foundChapter) loadSummary(foundChapter, summaryLength);
@@ -242,7 +253,7 @@ const ChapterViewer: React.FC<ChapterViewerProps> = ({
               {subject.chapters.map((chapter, idx) => {
                 const isSelected = selectedChapter?.id === chapter.id;
                 const hasParts = chapter.parts && chapter.parts.length > 0;
-                const isPartSelected = hasParts && chapter.parts!.some(p => p.id === selectedChapter?.id);
+                const isPartSelected = hasParts && chapter.parts!.some(p => p.id === selectedChapter?.id || (p.parts && p.parts.some(sp => sp.id === selectedChapter?.id)));
                 const isExpanded = isSelected || isPartSelected || expandedChapters[chapter.id];
 
                 return (
@@ -285,19 +296,56 @@ const ChapterViewer: React.FC<ChapterViewerProps> = ({
                       <div className="pl-12 pr-2 space-y-2 mt-2">
                         {chapter.parts!.map(part => {
                           const isPartActive = selectedChapter?.id === part.id;
+                          const hasSubParts = part.parts && part.parts.length > 0;
+                          const isSubPartSelected = hasSubParts && part.parts!.some(p => p.id === selectedChapter?.id);
+                          const isPartExpanded = isPartActive || isSubPartSelected || expandedChapters[part.id];
+
                           return (
-                            <button
-                              key={part.id}
-                              onClick={() => loadSummary(part)}
-                              className={`w-full text-left p-3 rounded-xl transition-all duration-300 border flex items-start space-x-3 group ${
-                                isPartActive
-                                  ? (darkMode ? 'bg-blue-600/20 border-blue-500/50 text-blue-400' : 'bg-blue-50 border-blue-200 text-blue-600 shadow-sm')
-                                  : (darkMode ? 'bg-slate-800/30 border-slate-700/30 text-slate-400 hover:bg-slate-800/80 hover:text-slate-200' : 'bg-gray-50/30 border-gray-100 text-gray-500 hover:bg-white hover:border-gray-200 hover:text-gray-800')
-                              }`}
-                            >
-                              <div className={`w-1.5 h-1.5 rounded-full mt-1.5 shrink-0 ${isPartActive ? 'bg-blue-500' : 'bg-gray-300 dark:bg-slate-600'}`}></div>
-                              <span className={`font-semibold text-xs leading-relaxed ${isPartActive ? '' : ''}`}>{part.title}</span>
-                            </button>
+                            <div key={part.id} className="space-y-2">
+                              <button
+                                onClick={() => {
+                                  if (hasSubParts) {
+                                    toggleExpand(part.id);
+                                  } else {
+                                    loadSummary(part);
+                                  }
+                                }}
+                                className={`w-full text-left p-3 rounded-xl transition-all duration-300 border flex items-start space-x-3 group ${
+                                  isPartActive || isSubPartSelected
+                                    ? (darkMode ? 'bg-blue-600/20 border-blue-500/50 text-blue-400' : 'bg-blue-50 border-blue-200 text-blue-600 shadow-sm')
+                                    : (darkMode ? 'bg-slate-800/30 border-slate-700/30 text-slate-400 hover:bg-slate-800/80 hover:text-slate-200' : 'bg-gray-50/30 border-gray-100 text-gray-500 hover:bg-white hover:border-gray-200 hover:text-gray-800')
+                                }`}
+                              >
+                                <div className={`w-1.5 h-1.5 rounded-full mt-1.5 shrink-0 ${isPartActive || isSubPartSelected ? 'bg-blue-500' : 'bg-gray-300 dark:bg-slate-600'}`}></div>
+                                <span className={`font-semibold text-xs leading-relaxed flex-1 ${isPartActive ? '' : ''}`}>{part.title}</span>
+                                {hasSubParts && (
+                                  <div className="flex items-center justify-center shrink-0">
+                                    <i className={`fa-solid fa-chevron-${isPartExpanded ? 'up' : 'down'} text-xs ${(isPartActive || isSubPartSelected) ? 'text-blue-400' : 'text-gray-400'}`}></i>
+                                  </div>
+                                )}
+                              </button>
+                              {hasSubParts && isPartExpanded && (
+                                <div className="pl-8 pr-2 space-y-2 mt-2">
+                                  {part.parts!.map(subPart => {
+                                    const isSubPartActive = selectedChapter?.id === subPart.id;
+                                    return (
+                                      <button
+                                        key={subPart.id}
+                                        onClick={() => loadSummary(subPart)}
+                                        className={`w-full text-left p-2.5 rounded-lg transition-all duration-300 border flex items-start space-x-3 group ${
+                                          isSubPartActive
+                                            ? (darkMode ? 'bg-indigo-600/20 border-indigo-500/50 text-indigo-400' : 'bg-indigo-50 border-indigo-200 text-indigo-600 shadow-sm')
+                                            : (darkMode ? 'bg-slate-800/20 border-slate-700/20 text-slate-500 hover:bg-slate-800/60 hover:text-slate-300' : 'bg-gray-50/20 border-gray-100 text-gray-400 hover:bg-gray-50 hover:border-gray-200 hover:text-gray-700')
+                                        }`}
+                                      >
+                                        <div className={`w-1 h-1 rounded-full mt-1.5 shrink-0 ${isSubPartActive ? 'bg-indigo-500' : 'bg-gray-300 dark:bg-slate-600'}`}></div>
+                                        <span className={`font-medium text-[11px] leading-relaxed ${isSubPartActive ? '' : ''}`}>{subPart.title}</span>
+                                      </button>
+                                    );
+                                  })}
+                                </div>
+                              )}
+                            </div>
                           );
                         })}
                       </div>

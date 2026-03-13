@@ -213,7 +213,34 @@ export const CLASSES: ClassLevel[] = [
           { id: '10-g-2', title: 'वायुमंडल (Atmosphere)' },
           { id: '10-g-3', title: 'जलमंडल (Hydrosphere)' },
           { id: '10-g-4', title: 'अपशिष्ट प्रबंधन (Waste Management)' },
-          { id: '10-g-5', title: 'भारत: प्राकृतिक और आर्थिक (India: Physical and Economic)' },
+          { 
+            id: '10-g-5', 
+            title: 'भारत : भौतिक तथा आर्थिक वातावरण (India: Physical and Economic Environment)',
+            parts: [
+              {
+                id: '10-g-5-physical',
+                title: 'भारत : भौतिक वातावरण',
+                parts: [
+                  { id: '10-g-5-1', title: 'भारत की स्थिति एवं प्रशासनिक विभाग (India: Location and Administrative Divisions)' },
+                  { id: '10-g-5-2', title: 'भारत की भू-प्रकृति (India: Physiography)' },
+                  { id: '10-g-5-3', title: 'भारत की जल संसाधन (India: Water Resources)' },
+                  { id: '10-g-5-4', title: 'भारत की जलवायु (India: Climate)' },
+                  { id: '10-g-5-5', title: 'भारत की मिट्टियाँ (India: Soils)' },
+                  { id: '10-g-5-6', title: 'भारत की प्राकृतिक वनस्पति (India: Natural Vegetation)' }
+                ]
+              },
+              {
+                id: '10-g-5-economic',
+                title: 'भारत : आर्थिक वातावरण',
+                parts: [
+                  { id: '10-g-5-7', title: 'भारत की कृषि (India: Agriculture)' },
+                  { id: '10-g-5-8', title: 'भारत की उद्योग (India: Industry)' },
+                  { id: '10-g-5-9', title: 'भारत की जनसंख्या (India: Population)' },
+                  { id: '10-g-5-10', title: 'भारत की परिवहन एवं संचार पद्धति (India: Transport and Communication System)' }
+                ]
+              }
+            ]
+          },
           { id: '10-g-6', title: 'उपग्रह चित्र और स्थलाकृतिक मानचित्र (Satellite Imagery and Topographical Maps)' }
         ]
       }
