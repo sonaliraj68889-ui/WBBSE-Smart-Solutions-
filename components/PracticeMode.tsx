@@ -408,17 +408,63 @@ const PracticeMode: React.FC<PracticeModeProps> = ({ darkMode, lang, onQuotaExce
 
       {selectedClassId && selectedSubject && !selectedChapter && (
          <div className="max-w-3xl mx-auto animate-fadeIn space-y-4">
-            {selectedSubject.chapters.map((chap, i) => (
-               <button
-                  key={chap.id}
-                  onClick={() => handleStartPractice(chap)}
-                  className={`w-full p-5 rounded-2xl border text-left flex items-center space-x-4 transition-all group ${darkMode ? 'bg-slate-900 border-slate-800 hover:bg-slate-800' : 'bg-white border-gray-100 hover:bg-blue-50/50 hover:border-blue-200 shadow-sm'}`}
-               >
-                  <span className="w-8 h-8 rounded-lg bg-gray-100 dark:bg-slate-800 flex items-center justify-center text-xs font-black opacity-50 group-hover:bg-blue-600 group-hover:text-white group-hover:opacity-100 transition-all">{i + 1}</span>
-                  <span className="font-bold text-base flex-1">{chap.title}</span>
-                  <i className="fa-solid fa-play text-blue-500 opacity-0 group-hover:opacity-100 transition-all transform translate-x-[-10px] group-hover:translate-x-0"></i>
-               </button>
-            ))}
+            {selectedSubject.chapters.map((chap, i) => {
+              const hasParts = chap.parts && chap.parts.length > 0;
+              return (
+                <div key={chap.id} className="space-y-2">
+                  <button
+                    onClick={() => {
+                      if (!hasParts) {
+                        handleStartPractice(chap);
+                      }
+                    }}
+                    className={`w-full p-5 rounded-2xl border text-left flex items-center space-x-4 transition-all group ${darkMode ? 'bg-slate-900 border-slate-800 hover:bg-slate-800' : 'bg-white border-gray-100 hover:bg-blue-50/50 hover:border-blue-200 shadow-sm'} ${hasParts ? 'cursor-default hover:bg-transparent hover:border-gray-100 dark:hover:bg-slate-900 dark:hover:border-slate-800' : ''}`}
+                  >
+                    <span className={`w-8 h-8 rounded-lg flex items-center justify-center text-xs font-black transition-all ${hasParts ? 'bg-blue-100 text-blue-600 dark:bg-blue-900/30 dark:text-blue-400' : 'bg-gray-100 dark:bg-slate-800 opacity-50 group-hover:bg-blue-600 group-hover:text-white group-hover:opacity-100'}`}>{i + 1}</span>
+                    <span className="font-bold text-base flex-1">{chap.title}</span>
+                    {!hasParts && <i className="fa-solid fa-play text-blue-500 opacity-0 group-hover:opacity-100 transition-all transform translate-x-[-10px] group-hover:translate-x-0"></i>}
+                  </button>
+                  {hasParts && (
+                    <div className="pl-12 pr-2 space-y-2 mt-2">
+                      {chap.parts!.map(part => {
+                        const hasSubParts = part.parts && part.parts.length > 0;
+                        return (
+                          <div key={part.id} className="space-y-2">
+                            <button
+                              onClick={() => {
+                                if (!hasSubParts) {
+                                  handleStartPractice(part);
+                                }
+                              }}
+                              className={`w-full p-4 rounded-xl border text-left flex items-center space-x-3 transition-all group ${darkMode ? 'bg-slate-800/50 border-slate-700/50 hover:bg-slate-800' : 'bg-gray-50/50 border-gray-100 hover:bg-blue-50/50 hover:border-blue-200 shadow-sm'} ${hasSubParts ? 'cursor-default hover:bg-transparent hover:border-gray-100 dark:hover:bg-slate-800/50 dark:hover:border-slate-700/50' : ''}`}
+                            >
+                              <div className={`w-1.5 h-1.5 rounded-full shrink-0 ${hasSubParts ? 'bg-blue-400' : 'bg-gray-300 dark:bg-slate-600'}`}></div>
+                              <span className="font-semibold text-sm flex-1">{part.title}</span>
+                              {!hasSubParts && <i className="fa-solid fa-play text-blue-400 opacity-0 group-hover:opacity-100 transition-all transform translate-x-[-5px] group-hover:translate-x-0 text-xs"></i>}
+                            </button>
+                            {hasSubParts && (
+                              <div className="pl-8 pr-2 space-y-2 mt-2">
+                                {part.parts!.map(subPart => (
+                                  <button
+                                    key={subPart.id}
+                                    onClick={() => handleStartPractice(subPart)}
+                                    className={`w-full p-3 rounded-lg border text-left flex items-center space-x-3 transition-all group ${darkMode ? 'bg-slate-800/30 border-slate-700/30 hover:bg-slate-800/80' : 'bg-gray-50/30 border-gray-100 hover:bg-blue-50/30 hover:border-blue-100 shadow-sm'}`}
+                                  >
+                                    <div className="w-1 h-1 rounded-full bg-gray-300 dark:bg-slate-600 shrink-0 group-hover:bg-blue-400 transition-colors"></div>
+                                    <span className="font-medium text-xs flex-1">{subPart.title}</span>
+                                    <i className="fa-solid fa-play text-blue-400 opacity-0 group-hover:opacity-100 transition-all transform translate-x-[-5px] group-hover:translate-x-0 text-[10px]"></i>
+                                  </button>
+                                ))}
+                              </div>
+                            )}
+                          </div>
+                        );
+                      })}
+                    </div>
+                  )}
+                </div>
+              );
+            })}
          </div>
       )}
 

@@ -125,4 +125,4 @@ const MathText: React.FC<MathTextProps> = ({ text, className = '', isInline = fa
   return <div ref={containerRef as any} className={className} />;
 };
 
-export default MathText;
+export default React.memo(MathText);
