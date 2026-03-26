@@ -209,10 +209,6 @@ export const CLASSES: ClassLevel[] = [
         icon: 'fa-earth-europe',
         color: 'bg-teal-600',
         chapters: [
-          { id: '10-g-1', title: 'बहिर्जात प्रक्रियाएं (Exogenetic Processes)' },
-          { id: '10-g-2', title: 'वायुमंडल (Atmosphere)' },
-          { id: '10-g-3', title: 'जलमंडल (Hydrosphere)' },
-          { id: '10-g-4', title: 'अपशिष्ट प्रबंधन (Waste Management)' },
           { 
             id: '10-g-5', 
             title: 'भारत : भौतिक तथा आर्थिक वातावरण (India: Physical and Economic Environment)',
@@ -240,8 +236,7 @@ export const CLASSES: ClassLevel[] = [
                 ]
               }
             ]
-          },
-          { id: '10-g-6', title: 'उपग्रह चित्र और स्थलाकृतिक मानचित्र (Satellite Imagery and Topographical Maps)' }
+          }
         ]
       }
     ],

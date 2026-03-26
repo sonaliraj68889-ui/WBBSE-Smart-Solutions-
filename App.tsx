@@ -1,16 +1,23 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, Suspense } from 'react';
 import Layout from './components/Layout.tsx';
 import Dashboard from './components/Dashboard.tsx';
-import SmartTutor from './components/SmartTutor.tsx';
-import ChapterViewer from './components/ChapterViewer.tsx';
-import SamplePaperViewer from './components/SamplePaperViewer.tsx';
-import PracticeMode from './components/PracticeMode.tsx';
-import SavedOffline from './components/SavedOffline.tsx';
 import { Subject, SearchHistoryItem, SamplePaper, ExamTerm } from './types.ts';
 import { translations } from './translations.ts';
 import { generateSamplePaper, ApiError } from './services/geminiService.ts';
 import { saveOfflineContent, getOfflineContent, isOffline } from './services/offlineService.ts';
+
+const SmartTutor = React.lazy(() => import('./components/SmartTutor.tsx'));
+const ChapterViewer = React.lazy(() => import('./components/ChapterViewer.tsx'));
+const SamplePaperViewer = React.lazy(() => import('./components/SamplePaperViewer.tsx'));
+const PracticeMode = React.lazy(() => import('./components/PracticeMode.tsx'));
+const SavedOffline = React.lazy(() => import('./components/SavedOffline.tsx'));
+
+const LoadingFallback = () => (
+  <div className="flex items-center justify-center h-64">
+    <div className="w-8 h-8 border-4 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
+  </div>
+);
 
 const App: React.FC = () => {
   const [activeTab, setActiveTab] = useState('dashboard');
@@ -148,9 +155,10 @@ const App: React.FC = () => {
   };
 
   const renderContent = () => {
+    let content = null;
     switch (activeTab) {
       case 'dashboard':
-        return (
+        content = (
           <Dashboard 
             onSelectSubject={handleSearchSelect} 
             onSearchHistoryClick={q => { setPendingQuery(q); setActiveTab('tutor'); }} 
@@ -161,8 +169,9 @@ const App: React.FC = () => {
             lang={lang} 
           />
         );
+        break;
       case 'tutor':
-        return (
+        content = (
           <SmartTutor 
             darkMode={darkMode} 
             lang={lang} 
@@ -173,8 +182,9 @@ const App: React.FC = () => {
             onQuotaExceeded={handleQuotaExceeded}
           />
         );
+        break;
       case 'practice':
-        return (
+        content = (
           <PracticeMode 
             darkMode={darkMode} 
             lang={lang} 
@@ -182,8 +192,9 @@ const App: React.FC = () => {
             onHome={handleGoHome}
           />
         );
+        break;
       case 'curriculum':
-        return selectedSubject ? (
+        content = selectedSubject ? (
           <ChapterViewer 
             subject={selectedSubject.subject} 
             classId={selectedSubject.classId} 
@@ -195,8 +206,9 @@ const App: React.FC = () => {
             onQuotaExceeded={handleQuotaExceeded}
           />
         ) : null;
+        break;
       case 'offline':
-        return (
+        content = (
           <SavedOffline 
             darkMode={darkMode} 
             lang={lang} 
@@ -208,9 +220,10 @@ const App: React.FC = () => {
             onHome={handleGoHome}
           />
         );
+        break;
       case 'papers':
         if (isGeneratingPaper) {
-          return (
+          content = (
             <div className="flex flex-col items-center justify-center h-[70vh] space-y-8 max-w-lg mx-auto text-center px-6 animate-fadeIn">
               <div className="relative">
                 <div className="w-20 h-20 border-8 border-blue-600/10 border-t-blue-500 rounded-full animate-spin"></div>
@@ -226,9 +239,8 @@ const App: React.FC = () => {
               </div>
             </div>
           );
-        }
-        if (paperGenerationError) {
-          return (
+        } else if (paperGenerationError) {
+          content = (
             <div className="flex flex-col items-center justify-center h-[60vh] text-center space-y-8 px-8 animate-fadeIn">
               <div className="w-24 h-24 bg-red-100 text-red-600 rounded-[2.5rem] flex items-center justify-center text-4xl shadow-xl shadow-red-500/10"><i className="fa-solid fa-triangle-exclamation"></i></div>
               <div className="max-w-md">
@@ -242,9 +254,8 @@ const App: React.FC = () => {
               </div>
             </div>
           );
-        }
-        if (selectedSamplePaper) {
-          return (
+        } else if (selectedSamplePaper) {
+          content = (
             <SamplePaperViewer 
               paper={selectedSamplePaper} 
               darkMode={darkMode} 
@@ -257,10 +268,16 @@ const App: React.FC = () => {
             />
           );
         }
-        return null;
+        break;
       default:
-        return null;
+        content = null;
     }
+
+    return (
+      <Suspense fallback={<LoadingFallback />}>
+        {content}
+      </Suspense>
+    );
   };
 
   return (

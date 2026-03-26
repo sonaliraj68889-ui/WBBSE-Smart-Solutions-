@@ -102,7 +102,7 @@ export const solveProblem = async (problem: string, context?: string, fileData?:
       : problem;
 
     const response = await ai.models.generateContent({
-      model: 'gemini-3.1-pro-preview',
+      model: 'gemini-3-flash-preview',
       contents,
       config: {
         systemInstruction: `You are an expert WBBSE (West Bengal Board of Secondary Education) Tutor for Class 5 to 10.
@@ -662,7 +662,7 @@ export const generateSamplePaper = async (subject: string, classLabel: string, c
     const randomSeed = Math.random().toString(36).substring(7) + Date.now();
 
     const response = await ai.models.generateContent({
-      model: 'gemini-3.1-pro-preview', 
+      model: 'gemini-3-flash-preview', 
       contents: `Generate a **High-Difficulty, Authentic** WBBSE ${isMadhyamik ? 'Madhyamik ' : `Class ${classLabel} `}Sample Paper JSON for 2026. 
       Subject: ${subject}, Class: ${classLabel}, Term: ${term}, Full Marks: ${marks}, Time: ${time}. 
       

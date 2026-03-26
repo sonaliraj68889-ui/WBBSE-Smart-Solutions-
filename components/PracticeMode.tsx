@@ -18,6 +18,7 @@ const PracticeMode: React.FC<PracticeModeProps> = ({ darkMode, lang, onQuotaExce
   const [selectedClassId, setSelectedClassId] = useState<string | null>(null);
   const [selectedSubject, setSelectedSubject] = useState<Subject | null>(null);
   const [selectedChapter, setSelectedChapter] = useState<Chapter | null>(null);
+  const [expandedChapters, setExpandedChapters] = useState<Record<string, boolean>>({});
   const [difficulty, setDifficulty] = useState<'Easy' | 'Medium' | 'Hard'>('Medium');
   
   const [loading, setLoading] = useState(false);
@@ -35,6 +36,10 @@ const PracticeMode: React.FC<PracticeModeProps> = ({ darkMode, lang, onQuotaExce
   // Helper to get localized names
   const getLocalizedClassName = (id: string) => (t.classLabels as any)[id] || id;
   const getLocalizedSubjectName = (id: string, name: string) => (t.subjects as any)[id] || name;
+
+  const toggleExpand = (id: string) => {
+    setExpandedChapters(prev => ({ ...prev, [id]: !prev[id] }));
+  };
 
   const handleStartPractice = async (chapter: Chapter) => {
     if (!selectedClassId || !selectedSubject) return;
@@ -410,39 +415,53 @@ const PracticeMode: React.FC<PracticeModeProps> = ({ darkMode, lang, onQuotaExce
          <div className="max-w-3xl mx-auto animate-fadeIn space-y-4">
             {selectedSubject.chapters.map((chap, i) => {
               const hasParts = chap.parts && chap.parts.length > 0;
+              const isExpanded = expandedChapters[chap.id];
               return (
                 <div key={chap.id} className="space-y-2">
                   <button
                     onClick={() => {
-                      if (!hasParts) {
+                      if (hasParts) {
+                        toggleExpand(chap.id);
+                      } else {
                         handleStartPractice(chap);
                       }
                     }}
-                    className={`w-full p-5 rounded-2xl border text-left flex items-center space-x-4 transition-all group ${darkMode ? 'bg-slate-900 border-slate-800 hover:bg-slate-800' : 'bg-white border-gray-100 hover:bg-blue-50/50 hover:border-blue-200 shadow-sm'} ${hasParts ? 'cursor-default hover:bg-transparent hover:border-gray-100 dark:hover:bg-slate-900 dark:hover:border-slate-800' : ''}`}
+                    className={`w-full p-5 rounded-2xl border text-left flex items-center space-x-4 transition-all group ${darkMode ? 'bg-slate-900 border-slate-800 hover:bg-slate-800' : 'bg-white border-gray-100 hover:bg-blue-50/50 hover:border-blue-200 shadow-sm'} ${hasParts ? 'cursor-pointer' : ''}`}
                   >
                     <span className={`w-8 h-8 rounded-lg flex items-center justify-center text-xs font-black transition-all ${hasParts ? 'bg-blue-100 text-blue-600 dark:bg-blue-900/30 dark:text-blue-400' : 'bg-gray-100 dark:bg-slate-800 opacity-50 group-hover:bg-blue-600 group-hover:text-white group-hover:opacity-100'}`}>{i + 1}</span>
                     <span className="font-bold text-base flex-1">{chap.title}</span>
-                    {!hasParts && <i className="fa-solid fa-play text-blue-500 opacity-0 group-hover:opacity-100 transition-all transform translate-x-[-10px] group-hover:translate-x-0"></i>}
+                    {hasParts ? (
+                      <i className={`fa-solid fa-chevron-${isExpanded ? 'up' : 'down'} text-gray-400`}></i>
+                    ) : (
+                      <i className="fa-solid fa-play text-blue-500 opacity-0 group-hover:opacity-100 transition-all transform translate-x-[-10px] group-hover:translate-x-0"></i>
+                    )}
                   </button>
-                  {hasParts && (
+                  {hasParts && isExpanded && (
                     <div className="pl-12 pr-2 space-y-2 mt-2">
                       {chap.parts!.map(part => {
                         const hasSubParts = part.parts && part.parts.length > 0;
+                        const isPartExpanded = expandedChapters[part.id];
                         return (
                           <div key={part.id} className="space-y-2">
                             <button
                               onClick={() => {
-                                if (!hasSubParts) {
+                                if (hasSubParts) {
+                                  toggleExpand(part.id);
+                                } else {
                                   handleStartPractice(part);
                                 }
                               }}
-                              className={`w-full p-4 rounded-xl border text-left flex items-center space-x-3 transition-all group ${darkMode ? 'bg-slate-800/50 border-slate-700/50 hover:bg-slate-800' : 'bg-gray-50/50 border-gray-100 hover:bg-blue-50/50 hover:border-blue-200 shadow-sm'} ${hasSubParts ? 'cursor-default hover:bg-transparent hover:border-gray-100 dark:hover:bg-slate-800/50 dark:hover:border-slate-700/50' : ''}`}
+                              className={`w-full p-4 rounded-xl border text-left flex items-center space-x-3 transition-all group ${darkMode ? 'bg-slate-800/50 border-slate-700/50 hover:bg-slate-800' : 'bg-gray-50/50 border-gray-100 hover:bg-blue-50/50 hover:border-blue-200 shadow-sm'} ${hasSubParts ? 'cursor-pointer' : ''}`}
                             >
                               <div className={`w-1.5 h-1.5 rounded-full shrink-0 ${hasSubParts ? 'bg-blue-400' : 'bg-gray-300 dark:bg-slate-600'}`}></div>
                               <span className="font-semibold text-sm flex-1">{part.title}</span>
-                              {!hasSubParts && <i className="fa-solid fa-play text-blue-400 opacity-0 group-hover:opacity-100 transition-all transform translate-x-[-5px] group-hover:translate-x-0 text-xs"></i>}
+                              {hasSubParts ? (
+                                <i className={`fa-solid fa-chevron-${isPartExpanded ? 'up' : 'down'} text-gray-400 text-xs`}></i>
+                              ) : (
+                                <i className="fa-solid fa-play text-blue-400 opacity-0 group-hover:opacity-100 transition-all transform translate-x-[-5px] group-hover:translate-x-0 text-xs"></i>
+                              )}
                             </button>
-                            {hasSubParts && (
+                            {hasSubParts && isPartExpanded && (
                               <div className="pl-8 pr-2 space-y-2 mt-2">
                                 {part.parts!.map(subPart => (
                                   <button
