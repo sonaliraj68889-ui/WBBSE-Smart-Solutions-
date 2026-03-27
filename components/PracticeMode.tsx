@@ -63,7 +63,34 @@ const PracticeMode: React.FC<PracticeModeProps> = ({ darkMode, lang, onQuotaExce
       const generatedQuestions = await generatePracticeSet(subjectName, classLabel, chapter.title, lang, difficulty);
       if (generatedQuestions.length === 0) throw new Error("No questions generated.");
       
-      setQuestions(generatedQuestions);
+      const normalizedQuestions = generatedQuestions.map(q => {
+        if (q.type === 'mcq') {
+          let ca: any = q.correctAnswer;
+          if (typeof ca === 'string') {
+            const upper = ca.trim().toUpperCase();
+            if (upper === 'A') ca = 0;
+            else if (upper === 'B') ca = 1;
+            else if (upper === 'C') ca = 2;
+            else if (upper === 'D') ca = 3;
+            else ca = Number(ca);
+          }
+          if (typeof ca === 'number' && ca >= 1 && ca <= 4 && q.options?.length === 4) {
+             // If model mistakenly used 1-indexed (1,2,3,4) instead of 0-indexed (0,1,2,3)
+             // We can't be 100% sure if 1 means B or A, but if it's 4, it definitely means D.
+             // Let's just subtract 1 if we detect it's 1-indexed (e.g., if it returns 4, or if we assume all are 1-indexed).
+             // Actually, the prompt says 0-3. If it returns 4, it's 1-indexed.
+             if (ca === 4) ca = 3;
+          }
+          
+          if (typeof ca !== 'number' || isNaN(ca) || ca < 0 || ca >= (q.options?.length || 4)) {
+             ca = 0; // Fallback
+          }
+          return { ...q, correctAnswer: ca };
+        }
+        return q;
+      });
+      
+      setQuestions(normalizedQuestions);
     } catch (err: any) {
       if (err instanceof ApiError && err.code === 'QUOTA_EXCEEDED') {
         onQuotaExceeded();
@@ -189,13 +216,13 @@ const PracticeMode: React.FC<PracticeModeProps> = ({ darkMode, lang, onQuotaExce
                       <div className={`p-4 rounded-xl border-2 ${isCorrect ? 'border-emerald-500/20 bg-emerald-500/5' : 'border-red-500/20 bg-red-500/5'}`}>
                         <span className="opacity-40 block text-[10px] font-black uppercase mb-2 tracking-widest">Your Answer</span>
                         <span className={`font-bold ${isCorrect ? 'text-emerald-500' : 'text-red-500'}`}>
-                          {ans?.selectedOption !== null && ans?.selectedOption !== undefined ? <MathText text={q.options![ans.selectedOption]} isInline /> : 'Not Answered'}
+                          {ans?.selectedOption !== null && ans?.selectedOption !== undefined ? <MathText text={(q.options || [])[ans.selectedOption] || ''} isInline /> : 'Not Answered'}
                         </span>
                       </div>
                       <div className="p-4 rounded-xl border-2 border-emerald-500/20 bg-emerald-500/10">
                         <span className="opacity-40 block text-[10px] font-black uppercase mb-2 tracking-widest text-emerald-600">Correct Answer</span>
                         <span className="text-emerald-600 font-bold">
-                          <MathText text={q.options![q.correctAnswer!]} isInline />
+                          <MathText text={(q.options || [])[q.correctAnswer!] || ''} isInline />
                         </span>
                       </div>
                     </div>

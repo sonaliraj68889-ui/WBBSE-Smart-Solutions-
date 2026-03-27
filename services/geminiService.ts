@@ -924,7 +924,7 @@ export const generatePracticeSet = async (subject: string, classLabel: string, c
        - \`type\` (string: "mcq", "short", or "long")
        - \`question\` (string)
        - \`options\` (array of 4 strings, ONLY for "mcq" type)
-       - \`correctAnswer\` (number, index 0-3, ONLY for "mcq" type)
+       - \`correctAnswer\` (integer, MUST be 0, 1, 2, or 3 representing the correct option index, ONLY for "mcq" type)
        - \`idealAnswer\` (string, the correct answer, ONLY for "short" and "long" types)
        - \`explanation\` (string, brief explanation of why the answer is correct or key points to include)
     2. **Content:** Questions must be strictly from the specified chapter syllabus.
