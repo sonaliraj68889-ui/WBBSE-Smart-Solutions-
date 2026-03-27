@@ -27,10 +27,12 @@ const PracticeMode: React.FC<PracticeModeProps> = ({ darkMode, lang, onQuotaExce
   const [questions, setQuestions] = useState<ExamQuestion[]>([]);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [selectedOption, setSelectedOption] = useState<number | null>(null);
+  const [textAnswer, setTextAnswer] = useState<string>("");
   const [showAnswer, setShowAnswer] = useState(false);
+  const [selfGraded, setSelfGraded] = useState<boolean | null>(null);
   const [score, setScore] = useState(0);
   const [isFinished, setIsFinished] = useState(false);
-  const [userAnswers, setUserAnswers] = useState<(number | null)[]>([]);
+  const [userAnswers, setUserAnswers] = useState<any[]>([]);
   const [isReviewing, setIsReviewing] = useState(false);
 
   // Helper to get localized names
@@ -74,22 +76,42 @@ const PracticeMode: React.FC<PracticeModeProps> = ({ darkMode, lang, onQuotaExce
     }
   };
 
-  const handleOptionSelect = (idx: number) => {
+    const handleOptionSelect = (idx: number) => {
     if (showAnswer) return;
     setSelectedOption(idx);
   };
 
   const handleCheckAnswer = () => {
-    if (selectedOption === null) return;
-    setShowAnswer(true);
+    const currentQ = questions[currentIndex];
     
+    if (currentQ.type === 'mcq') {
+      if (selectedOption === null) return;
+      setShowAnswer(true);
+      
+      const isCorrect = selectedOption === currentQ.correctAnswer;
+      setUserAnswers(prev => {
+        const newAnswers = [...prev];
+        newAnswers[currentIndex] = { type: 'mcq', selectedOption, isCorrect };
+        return newAnswers;
+      });
+
+      if (isCorrect) {
+        setScore(prev => prev + 1);
+      }
+    } else {
+      if (!textAnswer.trim()) return;
+      setShowAnswer(true);
+    }
+  };
+
+  const handleSelfGrade = (isCorrect: boolean) => {
+    setSelfGraded(isCorrect);
     setUserAnswers(prev => {
       const newAnswers = [...prev];
-      newAnswers[currentIndex] = selectedOption;
+      newAnswers[currentIndex] = { type: questions[currentIndex].type, textAnswer, isCorrect };
       return newAnswers;
     });
-
-    if (selectedOption === questions[currentIndex].correctAnswer) {
+    if (isCorrect) {
       setScore(prev => prev + 1);
     }
   };
@@ -98,7 +120,9 @@ const PracticeMode: React.FC<PracticeModeProps> = ({ darkMode, lang, onQuotaExce
     if (currentIndex < questions.length - 1) {
       setCurrentIndex(prev => prev + 1);
       setSelectedOption(null);
+      setTextAnswer("");
       setShowAnswer(false);
+      setSelfGraded(null);
     } else {
       setIsFinished(true);
     }
@@ -143,32 +167,54 @@ const PracticeMode: React.FC<PracticeModeProps> = ({ darkMode, lang, onQuotaExce
           </div>
           <div className="space-y-8">
             {questions.map((q, idx) => {
-              const userAnswer = userAnswers[idx];
-              const isCorrect = userAnswer === q.correctAnswer;
+              const ans = userAnswers[idx];
+              const isCorrect = ans?.isCorrect;
               return (
                 <div key={idx} className={`p-6 md:p-8 rounded-[2rem] border transition-all ${darkMode ? 'bg-slate-900 border-slate-800' : 'bg-white border-gray-100 shadow-lg'}`}>
                   <div className="flex items-start justify-between mb-6">
-                    <span className="w-8 h-8 rounded-lg bg-blue-600 text-white flex-shrink-0 flex items-center justify-center font-black text-xs shadow-md">Q{idx + 1}</span>
+                    <div className="flex items-center space-x-3">
+                      <span className="w-8 h-8 rounded-lg bg-blue-600 text-white flex-shrink-0 flex items-center justify-center font-black text-xs shadow-md">Q{idx + 1}</span>
+                      <span className="px-2 py-1 bg-gray-100 dark:bg-slate-800 rounded text-[10px] font-bold uppercase tracking-widest opacity-60">
+                        {q.type === 'mcq' ? 'MCQ' : q.type === 'short' ? 'Short Answer' : 'Long Answer'}
+                      </span>
+                    </div>
                     <span className={`text-[10px] font-black uppercase tracking-widest px-4 py-1.5 rounded-full border ${isCorrect ? 'text-emerald-500 bg-emerald-500/10 border-emerald-500/20' : 'text-red-500 bg-red-500/10 border-red-500/20'}`}>
                       {isCorrect ? 'Correct' : 'Incorrect'}
                     </span>
                   </div>
                   <h5 className="text-lg md:text-xl font-bold leading-snug mb-6"><MathText text={q.question} /></h5>
                   
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
-                    <div className={`p-4 rounded-xl border-2 ${isCorrect ? 'border-emerald-500/20 bg-emerald-500/5' : 'border-red-500/20 bg-red-500/5'}`}>
-                      <span className="opacity-40 block text-[10px] font-black uppercase mb-2 tracking-widest">Your Answer</span>
-                      <span className={`font-bold ${isCorrect ? 'text-emerald-500' : 'text-red-500'}`}>
-                        {userAnswer !== null && userAnswer !== undefined ? <MathText text={q.options[userAnswer]} isInline /> : 'Not Answered'}
-                      </span>
+                  {q.type === 'mcq' ? (
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+                      <div className={`p-4 rounded-xl border-2 ${isCorrect ? 'border-emerald-500/20 bg-emerald-500/5' : 'border-red-500/20 bg-red-500/5'}`}>
+                        <span className="opacity-40 block text-[10px] font-black uppercase mb-2 tracking-widest">Your Answer</span>
+                        <span className={`font-bold ${isCorrect ? 'text-emerald-500' : 'text-red-500'}`}>
+                          {ans?.selectedOption !== null && ans?.selectedOption !== undefined ? <MathText text={q.options![ans.selectedOption]} isInline /> : 'Not Answered'}
+                        </span>
+                      </div>
+                      <div className="p-4 rounded-xl border-2 border-emerald-500/20 bg-emerald-500/10">
+                        <span className="opacity-40 block text-[10px] font-black uppercase mb-2 tracking-widest text-emerald-600">Correct Answer</span>
+                        <span className="text-emerald-600 font-bold">
+                          <MathText text={q.options![q.correctAnswer!]} isInline />
+                        </span>
+                      </div>
                     </div>
-                    <div className="p-4 rounded-xl border-2 border-emerald-500/20 bg-emerald-500/10">
-                      <span className="opacity-40 block text-[10px] font-black uppercase mb-2 tracking-widest text-emerald-600">Correct Answer</span>
-                      <span className="text-emerald-600 font-bold">
-                        <MathText text={q.options[q.correctAnswer]} isInline />
-                      </span>
+                  ) : (
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+                      <div className={`p-4 rounded-xl border-2 ${isCorrect ? 'border-emerald-500/20 bg-emerald-500/5' : 'border-red-500/20 bg-red-500/5'}`}>
+                        <span className="opacity-40 block text-[10px] font-black uppercase mb-2 tracking-widest">Your Answer</span>
+                        <div className={`font-medium text-sm ${isCorrect ? 'text-emerald-600 dark:text-emerald-400' : 'text-red-600 dark:text-red-400'}`}>
+                          {ans?.textAnswer ? <MathText text={ans.textAnswer} /> : 'Not Answered'}
+                        </div>
+                      </div>
+                      <div className="p-4 rounded-xl border-2 border-emerald-500/20 bg-emerald-500/10">
+                        <span className="opacity-40 block text-[10px] font-black uppercase mb-2 tracking-widest text-emerald-600">Ideal Answer</span>
+                        <div className="text-emerald-600 dark:text-emerald-400 font-medium text-sm">
+                          <MathText text={q.idealAnswer || ''} />
+                        </div>
+                      </div>
                     </div>
-                  </div>
+                  )}
                   
                   <div className={`p-4 rounded-xl ${darkMode ? 'bg-slate-800/50' : 'bg-gray-50'} border border-current/5`}>
                     <p className="text-[10px] font-bold uppercase tracking-widest opacity-40 mb-2">Explanation</p>
@@ -235,51 +281,105 @@ const PracticeMode: React.FC<PracticeModeProps> = ({ darkMode, lang, onQuotaExce
 
         {/* Question Card */}
         <div className={`p-8 md:p-10 rounded-[2rem] shadow-xl border relative transition-colors ${darkMode ? 'bg-slate-900 border-slate-800' : 'bg-white border-gray-100'}`}>
+           <div className="flex items-center space-x-3 mb-6">
+             <span className="px-3 py-1 bg-blue-100 text-blue-600 dark:bg-blue-900/30 dark:text-blue-400 rounded-lg text-xs font-bold uppercase tracking-widest">
+               {currentQ.type === 'mcq' ? 'Multiple Choice' : currentQ.type === 'short' ? 'Short Answer' : 'Long Answer'}
+             </span>
+           </div>
            <h3 className="text-xl md:text-2xl font-bold mb-8 leading-snug">
              <MathText text={currentQ.question} />
            </h3>
 
-           <div className="space-y-3">
-             {currentQ.options.map((opt, idx) => {
-               let optionClass = "";
-               if (showAnswer) {
-                 if (idx === currentQ.correctAnswer) optionClass = "bg-emerald-500 text-white border-emerald-500";
-                 else if (idx === selectedOption && idx !== currentQ.correctAnswer) optionClass = "bg-red-500 text-white border-red-500";
-                 else optionClass = darkMode ? "bg-slate-800 opacity-50" : "bg-gray-100 opacity-50";
-               } else {
-                 if (selectedOption === idx) optionClass = "bg-blue-600 text-white border-blue-600 shadow-lg scale-[1.02]";
-                 else optionClass = darkMode ? "bg-slate-800 hover:bg-slate-700 border-slate-700" : "bg-white border-gray-200 hover:border-blue-300 hover:bg-blue-50";
-               }
+           {currentQ.type === 'mcq' ? (
+             <div className="space-y-3">
+               {currentQ.options?.map((opt, idx) => {
+                 let optionClass = "";
+                 if (showAnswer) {
+                   if (idx === currentQ.correctAnswer) optionClass = "bg-emerald-500 text-white border-emerald-500";
+                   else if (idx === selectedOption && idx !== currentQ.correctAnswer) optionClass = "bg-red-500 text-white border-red-500";
+                   else optionClass = darkMode ? "bg-slate-800 opacity-50" : "bg-gray-100 opacity-50";
+                 } else {
+                   if (selectedOption === idx) optionClass = "bg-blue-600 text-white border-blue-600 shadow-lg scale-[1.02]";
+                   else optionClass = darkMode ? "bg-slate-800 hover:bg-slate-700 border-slate-700" : "bg-white border-gray-200 hover:border-blue-300 hover:bg-blue-50";
+                 }
 
-               return (
-                 <button
-                   key={idx}
-                   onClick={() => handleOptionSelect(idx)}
-                   disabled={showAnswer}
-                   className={`w-full text-left p-4 md:p-5 rounded-xl border-2 transition-all flex items-center group ${optionClass}`}
-                 >
-                   <div className={`w-8 h-8 rounded-lg flex items-center justify-center font-black text-sm mr-4 transition-colors ${
-                     selectedOption === idx || (showAnswer && idx === currentQ.correctAnswer) ? 'bg-white/20' : 'bg-gray-200 dark:bg-slate-700 text-gray-500'
-                   }`}>
-                     {String.fromCharCode(65 + idx)}
-                   </div>
-                   <span className="font-bold flex-1"><MathText text={opt} isInline /></span>
-                   {showAnswer && idx === currentQ.correctAnswer && <i className="fa-solid fa-check-circle text-xl"></i>}
-                   {showAnswer && idx === selectedOption && idx !== currentQ.correctAnswer && <i className="fa-solid fa-circle-xmark text-xl"></i>}
-                 </button>
-               );
-             })}
-           </div>
+                 return (
+                   <button
+                     key={idx}
+                     onClick={() => handleOptionSelect(idx)}
+                     disabled={showAnswer}
+                     className={`w-full text-left p-4 md:p-5 rounded-xl border-2 transition-all flex items-center group ${optionClass}`}
+                   >
+                     <div className={`w-8 h-8 rounded-lg flex items-center justify-center font-black text-sm mr-4 transition-colors ${
+                       selectedOption === idx || (showAnswer && idx === currentQ.correctAnswer) ? 'bg-white/20' : 'bg-gray-200 dark:bg-slate-700 text-gray-500'
+                     }`}>
+                       {String.fromCharCode(65 + idx)}
+                     </div>
+                     <span className="font-bold flex-1"><MathText text={opt} isInline /></span>
+                     {showAnswer && idx === currentQ.correctAnswer && <i className="fa-solid fa-check-circle text-xl"></i>}
+                     {showAnswer && idx === selectedOption && idx !== currentQ.correctAnswer && <i className="fa-solid fa-circle-xmark text-xl"></i>}
+                   </button>
+                 );
+               })}
+             </div>
+           ) : (
+             <div className="space-y-4">
+               <textarea
+                 value={textAnswer}
+                 onChange={(e) => setTextAnswer(e.target.value)}
+                 disabled={showAnswer}
+                 placeholder="Type your answer here..."
+                 className={`w-full p-4 rounded-xl border-2 transition-all min-h-[120px] resize-y ${darkMode ? 'bg-slate-800 border-slate-700 text-white' : 'bg-gray-50 border-gray-200 text-gray-900'} focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20`}
+               />
+             </div>
+           )}
 
            {/* Feedback Area */}
            {showAnswer && (
              <div className="mt-8 pt-6 border-t border-dashed border-current/20 animate-fadeIn">
-               <p className={`font-black uppercase tracking-widest text-xs mb-2 ${selectedOption === currentQ.correctAnswer ? 'text-emerald-500' : 'text-red-500'}`}>
-                 {selectedOption === currentQ.correctAnswer ? t.correct : t.incorrect}
-               </p>
-               <div className="opacity-80 text-sm font-medium leading-relaxed">
-                 <MathText text={currentQ.explanation} />
-               </div>
+               {currentQ.type === 'mcq' ? (
+                 <>
+                   <p className={`font-black uppercase tracking-widest text-xs mb-2 ${selectedOption === currentQ.correctAnswer ? 'text-emerald-500' : 'text-red-500'}`}>
+                     {selectedOption === currentQ.correctAnswer ? t.correct : t.incorrect}
+                   </p>
+                   <div className="opacity-80 text-sm font-medium leading-relaxed">
+                     <MathText text={currentQ.explanation} />
+                   </div>
+                 </>
+               ) : (
+                 <div className="space-y-6">
+                   <div>
+                     <p className="font-black uppercase tracking-widest text-xs mb-2 text-blue-500">Ideal Answer</p>
+                     <div className="p-4 rounded-xl bg-blue-50 dark:bg-blue-900/20 border border-blue-100 dark:border-blue-800/50">
+                       <MathText text={currentQ.idealAnswer || ''} />
+                     </div>
+                   </div>
+                   <div>
+                     <p className="font-black uppercase tracking-widest text-xs mb-2 opacity-50">Explanation</p>
+                     <div className="opacity-80 text-sm font-medium leading-relaxed">
+                       <MathText text={currentQ.explanation} />
+                     </div>
+                   </div>
+                   
+                   {selfGraded === null ? (
+                     <div className="pt-4 flex flex-col items-center space-y-3">
+                       <p className="font-bold text-sm">Did you get it right?</p>
+                       <div className="flex space-x-4">
+                         <button onClick={() => handleSelfGrade(true)} className="px-6 py-2 bg-emerald-500 text-white rounded-xl font-bold hover:bg-emerald-600 transition-all flex items-center space-x-2">
+                           <i className="fa-solid fa-check"></i> <span>Yes, I got it</span>
+                         </button>
+                         <button onClick={() => handleSelfGrade(false)} className="px-6 py-2 bg-red-500 text-white rounded-xl font-bold hover:bg-red-600 transition-all flex items-center space-x-2">
+                           <i className="fa-solid fa-xmark"></i> <span>No, I missed it</span>
+                         </button>
+                       </div>
+                     </div>
+                   ) : (
+                     <div className={`p-3 rounded-xl text-center font-bold ${selfGraded ? 'bg-emerald-500/10 text-emerald-600' : 'bg-red-500/10 text-red-600'}`}>
+                       {selfGraded ? 'Marked as Correct' : 'Marked as Incorrect'}
+                     </div>
+                   )}
+                 </div>
+               )}
              </div>
            )}
         </div>
@@ -293,7 +393,7 @@ const PracticeMode: React.FC<PracticeModeProps> = ({ darkMode, lang, onQuotaExce
            {!showAnswer ? (
              <button 
                onClick={handleCheckAnswer} 
-               disabled={selectedOption === null}
+               disabled={(currentQ.type === 'mcq' && selectedOption === null) || (currentQ.type !== 'mcq' && !textAnswer.trim())}
                className="px-10 py-4 bg-blue-600 text-white rounded-2xl font-black uppercase tracking-widest shadow-xl hover:bg-blue-700 active:scale-95 transition-all disabled:opacity-50 disabled:shadow-none"
              >
                {t.checkAnswer}
@@ -301,7 +401,8 @@ const PracticeMode: React.FC<PracticeModeProps> = ({ darkMode, lang, onQuotaExce
            ) : (
              <button 
                onClick={handleNext}
-               className="px-10 py-4 bg-blue-600 text-white rounded-2xl font-black uppercase tracking-widest shadow-xl hover:bg-blue-700 active:scale-95 transition-all"
+               disabled={currentQ.type !== 'mcq' && selfGraded === null}
+               className={`px-10 py-4 text-white rounded-2xl font-black uppercase tracking-widest shadow-xl transition-all ${currentQ.type !== 'mcq' && selfGraded === null ? 'bg-gray-400 cursor-not-allowed' : 'bg-blue-600 hover:bg-blue-700 active:scale-95'}`}
              >
                {currentIndex < questions.length - 1 ? t.nextQuestion : t.finishPractice} <i className="fa-solid fa-arrow-right ml-2"></i>
              </button>
@@ -438,7 +539,7 @@ const PracticeMode: React.FC<PracticeModeProps> = ({ darkMode, lang, onQuotaExce
                   </button>
                   {hasParts && isExpanded && (
                     <div className="pl-12 pr-2 space-y-2 mt-2">
-                      {chap.parts!.map(part => {
+                      {chap.parts?.map(part => {
                         const hasSubParts = part.parts && part.parts.length > 0;
                         const isPartExpanded = expandedChapters[part.id];
                         return (
@@ -463,7 +564,7 @@ const PracticeMode: React.FC<PracticeModeProps> = ({ darkMode, lang, onQuotaExce
                             </button>
                             {hasSubParts && isPartExpanded && (
                               <div className="pl-8 pr-2 space-y-2 mt-2">
-                                {part.parts!.map(subPart => (
+                                {part.parts?.map(subPart => (
                                   <button
                                     key={subPart.id}
                                     onClick={() => handleStartPractice(subPart)}

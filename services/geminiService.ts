@@ -1,7 +1,7 @@
 
 import { GoogleGenAI, Type, Modality } from "@google/genai";
 import { SamplePaper, ExamTerm, ExamQuestion } from "../types.ts";
-import { CLASSES } from "../constants";
+import { CLASSES } from "../constants.ts";
 
 export type ApiErrorCode = 'QUOTA_EXCEEDED' | 'SAFETY_BLOCKED' | 'SERVER_ERROR' | 'INVALID_KEY' | 'UNKNOWN';
 
@@ -136,11 +136,12 @@ export const summarizeChapter = async (title: string, sub: string, len: string, 
   return withRetry(async () => {
     const ai = getAIClient();
     const isEnglish = id === 'english' || sub.toLowerCase().includes('english');
-    const targetLang = isEnglish ? 'English' : 'Hindi';
+    const isHindi = id === 'hindi' || sub.toLowerCase().includes('hindi');
+    const targetLang = isEnglish ? 'English' : isHindi ? 'strictly Hindi (Devanagari script)' : 'Hindi';
     
     const res = await ai.models.generateContent({
       model: 'gemini-3-flash-preview', 
-      contents: `Provide a ${len} comprehensive board-standard solution for WBBSE chapter: "${title}" in ${sub}. Language: ${targetLang}. NO BENGALI. Focus on key concepts and logical explanations. ${MATH_NOTATION_RULE}`,
+      contents: `Provide a ${len} comprehensive board-standard solution for WBBSE chapter: "${title}" in ${sub}. Language: ${targetLang}. NO BENGALI. ${isHindi ? 'DO NOT use any English words or Roman script.' : ''} Focus on key concepts and logical explanations. ${MATH_NOTATION_RULE}`,
       config: {
         maxOutputTokens: 4096, 
       }
@@ -152,12 +153,13 @@ export const summarizeChapter = async (title: string, sub: string, len: string, 
 export const fetchChapterQuestions = async (title: string, sub: string, sum: string, id: string) => {
   return withRetry(async () => {
     const ai = getAIClient();
-    const isEnglish = id === 'english';
-    const targetLang = isEnglish ? 'English' : 'Hindi';
+    const isEnglish = id === 'english' || sub.toLowerCase().includes('english');
+    const isHindi = id === 'hindi' || sub.toLowerCase().includes('hindi');
+    const targetLang = isEnglish ? 'English' : isHindi ? 'strictly Hindi (Devanagari script)' : 'Hindi';
     
     const res = await ai.models.generateContent({
       model: 'gemini-3-flash-preview', 
-      contents: `Generate 5 important WBBSE Q&A for: ${title} (${sub}). Language: ${targetLang}. NO BENGALI. Return JSON array with "question" and "answer" properties. Ensure all mathematical expressions in questions and answers follow: ${MATH_NOTATION_RULE}`,
+      contents: `Generate 5 important WBBSE Q&A for: ${title} (${sub}). Language: ${targetLang}. NO BENGALI. ${isHindi ? 'DO NOT use any English words or Roman script.' : ''} Return JSON array with "question" and "answer" properties. Ensure all mathematical expressions in questions and answers follow: ${MATH_NOTATION_RULE}`,
       config: { 
         responseMimeType: "application/json",
         maxOutputTokens: 4096, 
@@ -191,7 +193,86 @@ export const generateSamplePaper = async (subject: string, classLabel: string, c
     }
 
     // --- SYLLABUS MAPPING FOR SUMMATIVE 1 & 2 (Based on WBBSE 2026 Images) ---
-    if (isMadhyamik) {
+    if (isClass9) {
+      if (term === 'Summative 1') {
+         if (subjectLower.includes('math')) {
+            syllabusTopics = `
+            1. वास्तविक संख्या (Real Numbers)
+            2. घातांक के नियम (Laws of Indices)
+            3. लेखाचित्र (Graph)
+            4. स्थानांक ज्यामिति: दूरी निकालने का सूत्र (Coordinate Geometry: Distance Formula)
+            5. सरल युगपत समीकरण (Linear Simultaneous Equations)
+            6. समांतर चतुर्भुज के गुण (Properties of Parallelogram)
+            7. बहुपदी व्यंजक (Polynomials)
+            `;
+         } else if (subjectLower.includes('physci') || subjectLower.includes('physical')) {
+            syllabusTopics = `
+            1. मापन (Measurement)
+            2. बल एवं गति (Force and Motion)
+            3. परमाणु संरचना (Atomic Structure)
+            `;
+         } else if (subjectLower.includes('english')) {
+            syllabusTopics = `
+            Lesson -- Chapter 1 to 4
+            Grammar -- Textual Grammar, Article and Preposition, Voice change, Forms of Verbs, Sentences -- Simple, Compound, Complex.
+            Writing Skill -- Dialogue Writing, Story Writing, Process Writing, Biography Writing.
+            `;
+         }
+      } else if (term === 'Summative 2') {
+         if (subjectLower.includes('math')) {
+            syllabusTopics = `
+            8) गुणनखंड करना (Factorisation)
+            9. तिर्यक और मध्य बिन्दु युक्त प्रमेय (Transversal and Mid-Point Theorem)
+            10. लाभ और हानि (Profit and Loss)
+            11. सांख्यिकी (Statistics)
+            12. क्षेत्रफल वाले प्रमेय (Theorems on Area)
+            13. निर्मेय (Construction)
+            14. निर्मेय- एक चतुर्भुज के क्षेत्रफल के बराबर त्रिभुज का निर्माण (Construction of a triangle equal in area to a quadrilateral)
+            15. त्रिभुज और चतुर्भुज की परिसीमा (Perimeter and Area of Triangle and Quadrilateral)
+            `;
+         } else if (subjectLower.includes('physci') || subjectLower.includes('physical')) {
+            syllabusTopics = `
+            1. मोल धरना (Mole Concept)
+            2. पदार्थ गठन तथा अनु (Matter, Structure and Properties)
+            3. घोल (Solution)
+            4. अम्ल क्षार और लवण (Acids, Bases and Salts)
+            5. कार्य शक्ति तथा ऊर्जा (Work, Power and Energy)
+            `;
+         } else if (subjectLower.includes('english')) {
+            syllabusTopics = `
+            Lesson -- Chapter 5 to 8
+            Grammar -- Textual Grammar, Transformation of Sentences, Adverb, Phrasal Verb, Clauses.
+            Writing Skill -- Report Writing, Summary Writing, Story Writing, Letter Writing (Formal), Paragraph Writing.
+            `;
+         }
+      } else if (term === 'Summative 3') {
+         if (subjectLower.includes('math')) {
+            syllabusTopics = `
+            16.) वृत्त की परिधि (Circumference of Circle)
+            17) संगामी रेखाओं वाले प्रमेय (Theorems on Concurrence)
+            18) वृत्त का क्षेत्रफल (Area of Circle)
+            19) स्थानांक ज्यामिति : सरल रेखा खंड का आंतरिक और वहीं विभाजन (Coordinate Geometry: Internal and External Division of Straight Line Segment)
+            20) स्थानांक ज्यामिति : त्रिभुजाकृति क्षेत्र का क्षेत्रफल (Coordinate Geometry: Area of Triangular Region)
+            21) Logarithm.
+            NOTE:- 3rd Summative Evaluation में 1st Summative एव 2nd summative के सारे Chapter को जोड़ा जाएगा।
+            `;
+         } else if (subjectLower.includes('physci') || subjectLower.includes('physical')) {
+            syllabusTopics = `
+            1. ध्वनि (Sound)
+            2. ऊष्मा (Heat)
+            3. मिजीवों के अवयबो का पृथक करना (Separation of Components of Mixtures)
+            4. जल (Water).
+            Note : जो विषय प्रथम तथा द्वितीय परीक्षा में दिया गया है तृतीय परीक्षा में भी शामिल है
+            `;
+         } else if (subjectLower.includes('english')) {
+            syllabusTopics = `
+            Lesson -- chapter 9 to 12 (Whole Book).
+            Grammar -- Same as 1st Unit Test and 2nd Unit Test.
+            Writing Skill -- Same as 1st Unit Test and 2nd Unit Test.
+            `;
+         }
+      }
+    } else if (isMadhyamik) {
       if (term === 'Summative 1') {
          if (subjectLower.includes('math')) {
             syllabusTopics = `
@@ -240,12 +321,12 @@ export const generateSamplePaper = async (subject: string, classLabel: string, c
             `;
          } else if (subjectLower.includes('hindi')) {
             syllabusTopics = `
-            Pady (Poetry): Raidas ke pad (रैदास के पद), Need ka nirman phir-phir (नीड़ का निर्माण फिर-फिर), Aatmtran (आत्मत्राण), Manushya aur sarp (मनुष्य और सर्प).
-            Gady (Prose): Dhumketu (धूमकेतु), Usne kaha tha (उसने कहा था), Nanha sangeetkar (नन्हा संगीतकार).
-            Sahayak Path: Tisari Kasam (तीसरी कसम).
-            Ekanki: Deepdan (दीपदान).
-            Vyakaran: Karak (कारक), Samas (समास), Translation (अंग्रेजी से हिन्दी अनुवाद).
-            Rachna: Essay Writing (निबंध : विभिन्न विषयों पर).
+            पद्य खण्ड: रैदास के पद, नीड़ का निर्माण फिर-फिर, आत्मत्राण, मनुष्य और सर्प.
+            गद्य खण्ड: धूमकेतु, उसने कहा था, नन्हा संगीतकार.
+            सहायक पाठ: तीसरी कसम.
+            एकांकी: दीपदान.
+            व्याकरण: कारक, समास, अंग्रेजी से हिन्दी अनुवाद.
+            रचना: निबंध : विभिन्न विषयों पर.
             `;
          }
       } else if (term === 'Summative 2') {
@@ -299,11 +380,11 @@ export const generateSamplePaper = async (subject: string, classLabel: string, c
             `;
          } else if (subjectLower.includes('hindi')) {
             syllabusTopics = `
-            Pady (Poetry): Ramdas (रामदास), Naurangiya (नौरंगिया), Desh-Prem (देश-प्रेम).
-            Gady (Prose): Naubat khane mein ibadat (नौबत खाने में इबादत), Chappal (चप्पल), Namak (नमक), Dhavak (धावक).
-            Sahayak Path: Karmnasha ki haar (कर्मनाशा की हार), Jaanch abhi jaari hai (जाँच अभी जारी है).
-            Vyakaran: Vakya (वाक्य), Vachya (वाच्य), Prativedan Rachna (प्रतिवेदन रचना), Samvad Lekhan (संवाद लेखन).
-            Rachna: Essay Writing (निबंध : विभिन्न विषयों पर).
+            पद्य खण्ड: रामदास, नौरंगिया, देश-प्रेम.
+            गद्य खण्ड: नौबत खाने में इबादत, चप्पल, नमक, धावक.
+            सहायक पाठ: कर्मनाशा की हार, जाँच अभी जारी है.
+            व्याकरण: वाक्य, वाच्य, प्रतिवेदन रचना, संवाद लेखन.
+            रचना: निबंध : विभिन्न विषयों पर.
             `;
          }
       }
@@ -419,6 +500,8 @@ export const generateSamplePaper = async (subject: string, classLabel: string, c
             DO NOT use Class 9 or 10 chapters like 'Raidas ke pad', 'Dhumketu', 'Tisari Kasam', 'Ramdas', 'Naurangiya', 'Naubat khane mein ibadat', etc.
             Use age-appropriate chapters, poems, and grammar specifically meant for Class ${classLabel} Hindi students.
             Make sure to include questions from all sections present in the syllabus for this term (e.g., पद्य खण्ड/काव्य-खण्ड, गद्य खण्ड/गद्य-खण्ड, एकांकी, सहायक पाठ, व्याकरण).
+            
+            **CRITICAL LANGUAGE INSTRUCTION:** The ENTIRE JSON output (including section titles, question text, options, and answers) MUST be in Hindi (Devanagari script). DO NOT use any English words or Roman script.
             `;
         }
     } else {
@@ -515,28 +598,30 @@ export const generateSamplePaper = async (subject: string, classLabel: string, c
           promptInstructions = `
           **STRICT WBBSE CLASS ${classLabel} HINDI (FIRST LANGUAGE) (2026 ORIGINAL PAPER PATTERN)**
           Structure the 'sections' array exactly as follows (Total 90 Marks):
-          1. **Q1. MCQ:** 17 compulsory questions (1x17=17). (Grammar & Literature mixed).
-          2. **Q2. VSA:** Answer 19 questions (1x19=19). (Approx 20-25 words).
-          3. **Q3. Short Explanatory (3 Marks):** Answer 2 questions (1 Prose, 1 Poetry) (3x2=6). (Max 60 words).
-          4. **Q4. Long Answer (Literature):** 
-             - Khand-Ka (Poetry): Answer 1 out of 2 (5 Marks).
-             - Khand-Kha (Prose): Answer 1 out of 2 (5 Marks).
-             - Khand-Ga (Prose): Answer 1 out of 2 (5 Marks).
-             - Khand-Gha (Ekanki): Answer 1 out of 2 (4 Marks).
-          5. **Q5. Supplementary Long Answer (Sahayak Path - 5 Marks):** Answer 2 questions out of 3 (5x2=10). (Max 150 words).
-          6. **Q6. Essay:** Write 1 essay (10 Marks). (Max 300 words).
-          7. **Q7. Translation:** English to Hindi (4 Marks).
-          8. **Q8. Report/Dialogue:** Answer 1 question out of 2 (5 Marks). (Max 150 words).
+          1. **खंड क (बहुविकल्पीय प्रश्न):** 17 अनिवार्य प्रश्न (1x17=17). (व्याकरण और साहित्य मिश्रित).
+          2. **खंड ख (अति लघु उत्तरीय प्रश्न):** 19 प्रश्नों के उत्तर दें (1x19=19). (लगभग 20-25 शब्द).
+          3. **खंड ग (लघु व्याख्यात्मक प्रश्न - 3 अंक):** 2 प्रश्नों के उत्तर दें (1 गद्य, 1 पद्य) (3x2=6). (अधिकतम 60 शब्द).
+          4. **खंड घ (दीर्घ उत्तरीय प्रश्न - साहित्य):** 
+             - पद्य खण्ड: 2 में से 1 का उत्तर दें (5 अंक).
+             - गद्य खण्ड: 2 में से 1 का उत्तर दें (5 अंक).
+             - गद्य खण्ड: 2 में से 1 का उत्तर दें (5 अंक).
+             - एकांकी: 2 में से 1 का उत्तर दें (4 अंक).
+          5. **खंड ङ (सहायक पाठ - 5 अंक):** 3 में से 2 प्रश्नों के उत्तर दें (5x2=10). (अधिकतम 150 शब्द).
+          6. **खंड च (निबंध):** 1 निबंध लिखें (10 अंक). (अधिकतम 300 शब्द).
+          7. **खंड छ (अनुवाद):** अंग्रेजी से हिंदी (4 अंक). (एक अंग्रेजी वाक्य दें और हिंदी अनुवाद पूछें).
+          8. **खंड ज (प्रतिवेदन/संवाद):** 2 में से 1 प्रश्न का उत्तर दें (5 अंक). (अधिकतम 150 शब्द).
           
           ${isMadhyamik ? `**OFFICIAL CLASS 10 HINDI SYLLABUS CHAPTERS TO USE:**
-          - Pady (Poetry): Raidas ke pad, Need ka nirman phir-phir, Aatmtran, Manushya aur sarp, Ramdas, Naurangiya, Desh-Prem.
-          - Gady (Prose): Dhumketu, Usne kaha tha, Nanha sangeetkar, Naubat khane mein ibadat, Chappal, Namak, Dhavak.
-          - Sahayak Path: Tisari Kasam, Karmnasha ki haar, Jaanch abhi jaari hai.
-          - Ekanki: Deepdan.
-          - Vyakaran: Karak, Samas, Vakya, Vachya.
-          - Rachna: Essay, Translation, Prativedan, Samvad.
+          - पद्य खण्ड: रैदास के पद, नीड़ का निर्माण फिर-फिर, आत्मत्राण, मनुष्य और सर्प, रामदास, नौरंगिया, देश-प्रेम.
+          - गद्य खण्ड: धूमकेतु, उसने कहा था, नन्हा संगीतकार, नौबत खाने में इबादत, चप्पल, नमक, धावक.
+          - सहायक पाठ: तीसरी कसम, कर्मनाशा की हार, जाँच अभी जारी है.
+          - एकांकी: दीपदान.
+          - व्याकरण: कारक, समास, वाक्य, वाच्य.
+          - रचना: निबंध, अनुवाद, प्रतिवेदन, संवाद.
           
           Ensure ALL questions are derived strictly from these chapters.` : `**SYLLABUS TO USE:**\n${syllabusTopics}\nEnsure ALL questions are derived strictly from these chapters.`}
+          
+          **CRITICAL LANGUAGE INSTRUCTION:** The ENTIRE JSON output (including section titles, question text, options, and answers) MUST be in Hindi (Devanagari script). DO NOT use any English words or Roman script, except for the English sentence to be translated in Khand Chha.
           `;
         } else if (subjectLower.includes('life science') || subjectLower.includes('lifesci')) {
             promptInstructions = `
@@ -633,11 +718,13 @@ export const generateSamplePaper = async (subject: string, classLabel: string, c
              ${syllabusTopics}
              
              **STRUCTURE (Total 40 Marks):**
-             1. **Group A (MCQ):** 8 questions (1 mark each). (Include questions from Pady, Gady, Sahayak Path, Ekanki, Vyakaran).
-             2. **Group B (VSA):** 8 questions (1 mark each). (Include questions from Pady, Gady, Sahayak Path, Ekanki, Vyakaran).
-             3. **Group C (Short Answer):** 4 questions (2 marks each).
-             4. **Group D (Long Answer):** 2 questions (5 marks each).
-             5. **Group E (Grammar/Translation/Rachna):** 6 marks total.
+             1. **खंड क (बहुविकल्पीय प्रश्न):** 8 प्रश्न (प्रत्येक 1 अंक). (पद्य, गद्य, सहायक पाठ, एकांकी, व्याकरण से प्रश्न शामिल करें).
+             2. **खंड ख (अति लघु उत्तरीय प्रश्न):** 8 प्रश्न (प्रत्येक 1 अंक). (पद्य, गद्य, सहायक पाठ, एकांकी, व्याकरण से प्रश्न शामिल करें).
+             3. **खंड ग (लघु उत्तरीय प्रश्न):** 4 प्रश्न (प्रत्येक 2 अंक).
+             4. **खंड घ (दीर्घ उत्तरीय प्रश्न):** 2 प्रश्न (प्रत्येक 5 अंक).
+             5. **खंड ङ (व्याकरण/रचना):** कुल 6 अंक.
+             
+             **CRITICAL LANGUAGE INSTRUCTION:** The ENTIRE JSON output (including section titles, question text, options, and answers) MUST be in Hindi (Devanagari script). DO NOT use any English words or Roman script.
              
              Ensure questions are balanced across the specified chapters.
              `;
@@ -667,7 +754,7 @@ export const generateSamplePaper = async (subject: string, classLabel: string, c
       Subject: ${subject}, Class: ${classLabel}, Term: ${term}, Full Marks: ${marks}, Time: ${time}. 
       
       **LANGUAGE INSTRUCTION:**
-      ${isEnglish ? 'Write the entire paper in English.' : subjectLower.includes('hindi') ? 'Write the ENTIRE paper strictly in Hindi. Do NOT use English words.' : 'Write the paper in Hindi. You may use some English words/terms where appropriate for clarity.'}
+      ${isEnglish ? 'Write the entire paper in English.' : subjectLower.includes('hindi') ? 'Write the ENTIRE paper strictly in Hindi (Devanagari script). DO NOT use any English words or Roman script anywhere in the output.' : 'Write the paper in Hindi. You may use some English words/terms where appropriate for clarity.'}
       NO BENGALI text.
       
       **RANDOMIZATION SEED:** ${randomSeed}
@@ -794,11 +881,12 @@ export const fetchExamQuestions = async (sub: string, level: string, term: ExamT
   return withRetry(async () => {
     const ai = getAIClient();
     const isEnglish = sub.toLowerCase().includes('english');
-    const targetLang = isEnglish ? 'English' : 'Hindi';
+    const isHindi = sub.toLowerCase().includes('hindi');
+    const targetLang = isEnglish ? 'English' : isHindi ? 'strictly Hindi (Devanagari script)' : 'Hindi';
     const res = await ai.models.generateContent({
       model: 'gemini-3-flash-preview', 
       contents: `Generate 5 MCQs for WBBSE ${sub} Class ${level} ${term}. 
-      Language: ${targetLang}. NO BENGALI. Return JSON array.
+      Language: ${targetLang}. NO BENGALI. ${isHindi ? 'DO NOT use any English words or Roman script.' : ''} Return JSON array.
       
       **IMPORTANT:**
       1. Keep questions **CONCISE** and short. 
@@ -819,21 +907,26 @@ export const fetchExamQuestions = async (sub: string, level: string, term: ExamT
 export const generatePracticeSet = async (subject: string, classLabel: string, chapter: string, lang: 'en' | 'hi', difficulty: 'Easy' | 'Medium' | 'Hard' = 'Medium'): Promise<ExamQuestion[]> => {
   return withRetry(async () => {
     const ai = getAIClient();
-    const targetLang = 'Hindi'; // FORCE Hindi for practice questions as requested.
+    const isHindiSubject = subject.toLowerCase().includes('hindi');
+    const targetLang = isHindiSubject ? 'strictly Hindi (Devanagari script)' : 'Hindi'; // FORCE Hindi for practice questions as requested.
 
     const randomSeed = Math.random().toString(36).substring(7) + Date.now();
 
-    const contents = `Generate 10 High-Quality Multiple Choice Questions (MCQs) for WBBSE ${classLabel}, Subject: ${subject}, Chapter: ${chapter}.
+    const contents = `Generate a set of 10 High-Quality exam-style questions for WBBSE ${classLabel}, Subject: ${subject}, Chapter: ${chapter}.
+    The set should include a mix of Multiple Choice Questions (MCQs), Short Answer Questions, and Long Answer Questions.
     Language: ${targetLang}. NO BENGALI.
+    ${isHindiSubject ? '\n    **CRITICAL LANGUAGE INSTRUCTION:** The ENTIRE JSON output (including question text, options, and explanation) MUST be in Hindi (Devanagari script). DO NOT use any English words or Roman script.' : ''}
     
     **RANDOMIZATION SEED:** ${randomSeed}
 
     **Requirements:**
     1. **Format:** JSON array of objects with keys: 
+       - \`type\` (string: "mcq", "short", or "long")
        - \`question\` (string)
-       - \`options\` (array of 4 strings)
-       - \`correctAnswer\` (number, index 0-3)
-       - \`explanation\` (string, brief explanation of why the answer is correct)
+       - \`options\` (array of 4 strings, ONLY for "mcq" type)
+       - \`correctAnswer\` (number, index 0-3, ONLY for "mcq" type)
+       - \`idealAnswer\` (string, the correct answer, ONLY for "short" and "long" types)
+       - \`explanation\` (string, brief explanation of why the answer is correct or key points to include)
     2. **Content:** Questions must be strictly from the specified chapter syllabus.
     3. **Difficulty:** ${difficulty} level questions.
     4. **Math/Science:** Use clear Unicode for expressions. NO LaTeX.
@@ -850,15 +943,17 @@ export const generatePracticeSet = async (subject: string, classLabel: string, c
           items: {
             type: Type.OBJECT,
             properties: {
+              type: { type: Type.STRING },
               question: { type: Type.STRING },
               options: { 
                 type: Type.ARRAY,
                 items: { type: Type.STRING }
               },
               correctAnswer: { type: Type.INTEGER },
+              idealAnswer: { type: Type.STRING },
               explanation: { type: Type.STRING }
             },
-            required: ["question", "options", "correctAnswer", "explanation"]
+            required: ["type", "question", "explanation"]
           }
         },
         maxOutputTokens: 8192,

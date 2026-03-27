@@ -46,9 +46,11 @@ export interface SearchHistoryItem {
 }
 
 export interface ExamQuestion {
+  type: 'mcq' | 'short' | 'long';
   question: string;
-  options: string[];
-  correctAnswer: number;
+  options?: string[];
+  correctAnswer?: number;
+  idealAnswer?: string;
   explanation: string;
 }
 
