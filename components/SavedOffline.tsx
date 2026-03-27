@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { Subject, ExamTerm } from '../types.ts';
 import { translations } from '../translations.ts';
-import { getAllOfflineContent, OfflineContent } from '../services/offlineService.ts';
+import { getAllOfflineContent, OfflineContent, deleteOfflineContent } from '../services/offlineService.ts';
 import { CLASSES } from '../constants.ts';
 
 interface SavedOfflineProps {
@@ -16,14 +16,23 @@ const SavedOffline: React.FC<SavedOfflineProps> = ({ darkMode, lang, onSelectSub
   const t = translations[lang];
   const [offlineItems, setOfflineItems] = useState<OfflineContent[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState<string | null>(null);
+
+  const loadOfflineContent = async () => {
+    const items = await getAllOfflineContent();
+    setOfflineItems(items.sort((a, b) => b.timestamp - a.timestamp));
+  };
 
   useEffect(() => {
-    const loadOfflineContent = async () => {
-      const items = await getAllOfflineContent();
-      setOfflineItems(items.sort((a, b) => b.timestamp - a.timestamp));
-    };
     loadOfflineContent();
   }, []);
+
+  const handleDelete = async (id: string, e: React.MouseEvent) => {
+    e.stopPropagation();
+    await deleteOfflineContent(id);
+    setShowDeleteConfirm(null);
+    loadOfflineContent();
+  };
 
   const getLocalizedSubjectName = (subjectId: string, defaultName: string) => {
     return t.subjects[subjectId as keyof typeof t.subjects] || defaultName;
@@ -159,6 +168,49 @@ const SavedOffline: React.FC<SavedOfflineProps> = ({ darkMode, lang, onSelectSub
                       {new Date(item.timestamp).toLocaleDateString()}
                     </span>
                   </div>
+                  
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setShowDeleteConfirm(item.id);
+                    }}
+                    className={`absolute top-4 right-4 w-8 h-8 rounded-full flex items-center justify-center transition-all opacity-0 group-hover:opacity-100 focus:opacity-100 ${
+                      darkMode ? 'bg-slate-700 hover:bg-red-500/20 text-slate-400 hover:text-red-400' : 'bg-gray-100 hover:bg-red-50 text-gray-400 hover:text-red-500'
+                    }`}
+                    title={lang === 'hi' ? 'हटाएं' : 'Delete'}
+                  >
+                    <i className="fa-solid fa-trash-can text-sm"></i>
+                  </button>
+
+                  {showDeleteConfirm === item.id && (
+                    <div className={`absolute inset-0 z-10 p-4 rounded-2xl flex flex-col items-center justify-center text-center ${
+                      darkMode ? 'bg-slate-800/95 backdrop-blur-sm' : 'bg-white/95 backdrop-blur-sm'
+                    }`}>
+                      <p className={`text-sm font-bold mb-4 ${darkMode ? 'text-slate-200' : 'text-gray-800'}`}>
+                        {lang === 'hi' ? 'क्या आप वाकई इसे हटाना चाहते हैं?' : 'Are you sure you want to delete this?'}
+                      </p>
+                      <div className="flex space-x-3">
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setShowDeleteConfirm(null);
+                          }}
+                          className={`px-4 py-2 rounded-lg text-xs font-bold transition-colors ${
+                            darkMode ? 'bg-slate-700 hover:bg-slate-600 text-slate-300' : 'bg-gray-100 hover:bg-gray-200 text-gray-600'
+                          }`}
+                        >
+                          {lang === 'hi' ? 'रद्द करें' : 'Cancel'}
+                        </button>
+                        <button
+                          onClick={(e) => handleDelete(item.id, e)}
+                          className="px-4 py-2 rounded-lg text-xs font-bold bg-red-500 hover:bg-red-600 text-white transition-colors"
+                        >
+                          {lang === 'hi' ? 'हटाएं' : 'Delete'}
+                        </button>
+                      </div>
+                    </div>
+                  )}
+
                   <div>
                     <h4 className={`font-bold text-base line-clamp-2 leading-tight mt-1 ${darkMode ? 'text-slate-200' : 'text-gray-800'}`}>{item.title}</h4>
                     <p className="text-[10px] font-bold uppercase tracking-widest opacity-50 mt-3 flex items-center">
