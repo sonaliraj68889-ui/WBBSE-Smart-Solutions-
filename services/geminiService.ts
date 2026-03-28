@@ -3,7 +3,7 @@ import { GoogleGenAI, Type, Modality } from "@google/genai";
 import { SamplePaper, ExamTerm, ExamQuestion } from "../types.ts";
 import { CLASSES } from "../constants.ts";
 
-export type ApiErrorCode = 'QUOTA_EXCEEDED' | 'SAFETY_BLOCKED' | 'SERVER_ERROR' | 'INVALID_KEY' | 'UNKNOWN';
+export type ApiErrorCode = 'QUOTA_EXCEEDED' | 'SAFETY_BLOCKED' | 'SERVER_ERROR' | 'INVALID_KEY' | 'UNKNOWN' | 'NETWORK_ERROR' | 'PARSE_ERROR';
 
 export class ApiError extends Error {
   constructor(public message: string, public code: ApiErrorCode, public originalError?: any) {
@@ -37,7 +37,7 @@ async function withRetry<T>(fn: () => Promise<T>, maxRetries = 3): Promise<T> {
       });
 
       // Handle Quota
-      if (status === 429 || errorStr.includes('429') || errorStr.includes('quota')) {
+      if (status === 429 || errorStr.includes('429') || errorStr.includes('quota') || errorStr.includes('exhausted')) {
         if (i === maxRetries - 1) throw new ApiError("Daily usage limit reached.", "QUOTA_EXCEEDED", error);
         const delay = 2000 * Math.pow(2, i) + Math.random() * 1000;
         await new Promise(resolve => setTimeout(resolve, delay));
@@ -45,12 +45,12 @@ async function withRetry<T>(fn: () => Promise<T>, maxRetries = 3): Promise<T> {
       }
 
       // Handle Invalid Key
-      if (status === 400 || status === 403 || errorStr.includes('400') || errorStr.includes('403') || errorStr.includes('API key')) {
+      if (status === 400 || status === 401 || status === 403 || errorStr.includes('400') || errorStr.includes('401') || errorStr.includes('403') || errorStr.includes('API key')) {
          throw new ApiError("Invalid or missing API Key.", "INVALID_KEY", error);
       }
       
       // Handle Server Errors
-      if (status >= 500 || errorStr.includes('500')) {
+      if (status >= 500 || errorStr.includes('500') || errorStr.includes('503') || errorStr.includes('504') || errorStr.includes('overloaded') || errorStr.includes('404') || errorStr.includes('408') || errorStr.includes('413') || errorStr.includes('422')) {
         if (i === maxRetries - 1) throw new ApiError("AI service is currently busy.", "SERVER_ERROR", error);
         const delay = 1000 * Math.pow(2, i);
         await new Promise(resolve => setTimeout(resolve, delay));
@@ -61,9 +61,27 @@ async function withRetry<T>(fn: () => Promise<T>, maxRetries = 3): Promise<T> {
       if (errorStr.includes('safety') || errorStr.includes('blocked') || errorStr.includes('candidate')) {
          throw new ApiError("Content blocked by safety filters.", "SAFETY_BLOCKED", error);
       }
+
+      // Handle Network and Parsing Errors (Retryable)
+      if (errorStr.includes('Failed to fetch') || errorStr.includes('fetch failed') || errorStr.includes('NetworkError') || errorStr.includes('AbortError') || errorStr.includes('TimeoutError') || errorStr.includes('timeout') || errorStr.includes('network') || errorStr.includes('connection') || errorStr.includes('Failed to parse') || errorStr.includes('Invalid sample paper') || errorStr.includes('JSON')) {
+        if (i === maxRetries - 1) {
+           if (errorStr.includes('Failed to fetch') || errorStr.includes('fetch failed') || errorStr.includes('NetworkError') || errorStr.includes('AbortError') || errorStr.includes('TimeoutError') || errorStr.includes('timeout') || errorStr.includes('network') || errorStr.includes('connection')) {
+              throw new ApiError("Network error. Please check your connection.", "NETWORK_ERROR", error);
+           } else {
+              throw new ApiError("Failed to parse AI response.", "PARSE_ERROR", error);
+           }
+        }
+        const delay = 1000 * Math.pow(2, i);
+        await new Promise(resolve => setTimeout(resolve, delay));
+        continue;
+      }
       
       // Other unrecoverable errors
-      break;
+      if (i === maxRetries - 1) {
+        throw new ApiError(errorStr || "An unexpected error occurred", "UNKNOWN", error);
+      }
+      const delay = 1000 * Math.pow(2, i);
+      await new Promise(resolve => setTimeout(resolve, delay));
     }
   }
   
@@ -71,7 +89,7 @@ async function withRetry<T>(fn: () => Promise<T>, maxRetries = 3): Promise<T> {
 }
 
 export const getAIClient = () => {
-  let apiKey = import.meta.env.VITE_GEMINI_API_KEY || localStorage.getItem('user_provided_api_key');
+  let apiKey = (import.meta as any).env.VITE_GEMINI_API_KEY || localStorage.getItem('user_provided_api_key');
   if (!apiKey && typeof process !== 'undefined' && process.env) {
     apiKey = process.env.GEMINI_API_KEY || process.env.API_KEY;
   }
@@ -92,6 +110,43 @@ const MATH_NOTATION_RULE = `
 - **DO NOT** use MathML or any other markup language.
 - Ensure all mathematical expressions are easily readable without a math renderer.
 `;
+
+const parseJSONResponse = (text: string | undefined, defaultVal: any = {}) => {
+  if (!text) return defaultVal;
+  try {
+    // Try parsing directly first
+    return JSON.parse(text);
+  } catch (e) {
+    // If it fails, try to extract JSON from markdown code blocks
+    const match = text.match(/```(?:json)?\s*([\s\S]*?)\s*```/);
+    if (match && match[1]) {
+      try {
+        return JSON.parse(match[1]);
+      } catch (e2) {
+        // Ignore and fall through
+      }
+    }
+    // If still failing, try to find the first { or [ and last } or ]
+    const firstBrace = text.indexOf('{');
+    const lastBrace = text.lastIndexOf('}');
+    const firstBracket = text.indexOf('[');
+    const lastBracket = text.lastIndexOf(']');
+    
+    let jsonStr = text;
+    if (firstBrace !== -1 && lastBrace !== -1 && (firstBracket === -1 || firstBrace < firstBracket)) {
+      jsonStr = text.substring(firstBrace, lastBrace + 1);
+    } else if (firstBracket !== -1 && lastBracket !== -1) {
+      jsonStr = text.substring(firstBracket, lastBracket + 1);
+    }
+    
+    try {
+      return JSON.parse(jsonStr);
+    } catch (e3) {
+      console.error("Failed to parse JSON response:", text.substring(0, 100) + "...");
+      throw new Error("Failed to parse AI response as JSON.");
+    }
+  }
+};
 
 export const solveProblem = async (problem: string, context?: string, fileData?: { data: string, mimeType: string }) => {
   return withRetry(async () => {
@@ -165,7 +220,7 @@ export const fetchChapterQuestions = async (title: string, sub: string, sum: str
         maxOutputTokens: 4096, 
       }
     });
-    return JSON.parse(res.text || "[]");
+    return parseJSONResponse(res.text, []);
   });
 };
 
@@ -478,13 +533,13 @@ export const generateSamplePaper = async (subjectId: string, subjectName: string
         }
 
         promptInstructions = `
-        **STRICT WBBSE CLASS ${classLabel} ${subject.toUpperCase()} PATTERN**
+        **STRICT WBBSE CLASS ${classLabel} ${subjectName.toUpperCase()} PATTERN**
         Structure the 'sections' array appropriately for Class ${classLabel} ${term} examination.
         Total Marks: ${marks}.
-        Ensure questions are strictly from the Class ${classLabel} syllabus for ${subject}.
+        Ensure questions are strictly from the Class ${classLabel} syllabus for ${subjectName}.
         Do NOT include any Class 9, 10 or Madhyamik level questions.
         
-        **OFFICIAL CLASS ${classLabel} ${subject.toUpperCase()} SYLLABUS CHAPTERS TO USE FOR THIS TERM:**
+        **OFFICIAL CLASS ${classLabel} ${subjectName.toUpperCase()} SYLLABUS CHAPTERS TO USE FOR THIS TERM:**
         ${syllabusTopics}
         
         Ensure ALL questions are derived strictly from these chapters.
@@ -751,7 +806,7 @@ export const generateSamplePaper = async (subjectId: string, subjectName: string
     const response = await ai.models.generateContent({
       model: 'gemini-3-flash-preview', 
       contents: `Generate a **High-Difficulty, Authentic** WBBSE ${isMadhyamik ? 'Madhyamik ' : `Class ${classLabel} `}Sample Paper JSON for 2026. 
-      Subject: ${subject}, Class: ${classLabel}, Term: ${term}, Full Marks: ${marks}, Time: ${time}. 
+      Subject: ${subjectName}, Class: ${classLabel}, Term: ${term}, Full Marks: ${marks}, Time: ${time}. 
       
       **LANGUAGE INSTRUCTION:**
       ${isEnglish ? 'Write the entire paper in English.' : subjectLower.includes('hindi') ? 'Write the ENTIRE paper strictly in Hindi (Devanagari script). DO NOT use any English words or Roman script anywhere in the output.' : 'Write the paper in Hindi. You may use some English words/terms where appropriate for clarity.'}
@@ -768,10 +823,11 @@ export const generateSamplePaper = async (subjectId: string, subjectName: string
       - **Conciseness:** Keep individual question text concise and direct.
       
       **ANSWER GENERATION RULES:**
-      - **CRITICAL:** You MUST provide a **FULL, DETAILED, STEP-BY-STEP SOLUTION** for every single question in the 'answer' field.
-      - **MCQs:** Provide the correct option AND a brief explanation of *why* it is correct.
-      - **Math:** Show formulas, steps, substitution, and final calculation.
-      - **Long Answer:** Write the full model answer as a student should write in the exam (e.g., 5 points for 5 marks).
+      - **CRITICAL TOKEN LIMIT:** You MUST complete the entire JSON within the token limit. Keep answers concise.
+      - **CRITICAL:** Provide a concise but complete solution for every question in the 'answer' field.
+      - **MCQs:** Provide the correct option and a 1-sentence explanation.
+      - **Math:** Show key steps and final calculation.
+      - **Long Answer:** Write the core points of the model answer (bullet points preferred).
       
       **INSTRUCTIONS:**
       ${promptInstructions} 
@@ -821,7 +877,7 @@ export const generateSamplePaper = async (subjectId: string, subjectName: string
         }
       }
     });
-    const parsed = JSON.parse(response.text || "{}");
+    const parsed = parseJSONResponse(response.text, {});
     if (!parsed.title || !parsed.sections || parsed.sections.length === 0) {
       throw new Error("Invalid sample paper generated by AI. Missing title or sections.");
     }
@@ -904,7 +960,7 @@ export const fetchExamQuestions = async (sub: string, level: string, term: ExamT
         maxOutputTokens: 2048, 
       }
     });
-    return JSON.parse(res.text || "[]");
+    return parseJSONResponse(res.text, []);
   });
 };
 
@@ -964,6 +1020,6 @@ export const generatePracticeSet = async (subject: string, classLabel: string, c
         temperature: 0.8,
       }
     });
-    return JSON.parse(res.text || "[]");
+    return parseJSONResponse(res.text, []);
   });
 };

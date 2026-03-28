@@ -165,10 +165,13 @@ const SmartTutor: React.FC<SmartTutorProps> = ({ darkMode, lang, initialQuery, i
         case 'INVALID_KEY': return t.errorInvalidKey;
         case 'SAFETY_BLOCKED': return t.errorSafety;
         case 'SERVER_ERROR': return t.errorServer;
-        default: return t.errorGeneric;
+        case 'NETWORK_ERROR': return "Network error. Please check your internet connection.";
+        case 'PARSE_ERROR': return "Failed to parse the response. Please try again.";
+        case 'UNKNOWN': return err.message || t.errorGeneric;
+        default: return err.message || t.errorGeneric;
       }
     }
-    return t.errorGeneric;
+    return err instanceof Error ? err.message : t.errorGeneric;
   };
 
   const handleSend = async (overrideInput?: string) => {

@@ -3,6 +3,7 @@ import React, { useState, useEffect, Suspense } from 'react';
 import Layout from './components/Layout.tsx';
 import Dashboard from './components/Dashboard.tsx';
 import { Subject, SearchHistoryItem, SamplePaper, ExamTerm } from './types.ts';
+import { CLASSES } from './constants.ts';
 import { translations } from './translations.ts';
 import { generateSamplePaper, ApiError } from './services/geminiService.ts';
 import { saveOfflineContent, getOfflineContent, isOffline } from './services/offlineService.ts';
@@ -151,12 +152,15 @@ const App: React.FC = () => {
         handleQuotaExceeded();
         setPaperGenerationError(null); // Clear local error if global prompt takes over
       } else {
-        let friendlyMsg = t.errorGeneric;
+        let friendlyMsg = err instanceof Error ? err.message : t.errorGeneric;
         if (err instanceof ApiError) {
           switch (err.code) {
             case 'SAFETY_BLOCKED': friendlyMsg = t.errorSafety; break;
             case 'SERVER_ERROR': friendlyMsg = t.errorServer; break;
             case 'INVALID_KEY': friendlyMsg = t.errorInvalidKey; break;
+            case 'NETWORK_ERROR': friendlyMsg = "Network error. Please check your internet connection."; break;
+            case 'PARSE_ERROR': friendlyMsg = "Failed to generate a complete paper. Please try again."; break;
+            case 'UNKNOWN': friendlyMsg = err.message || t.errorGeneric; break;
           }
         }
         setPaperGenerationError({ 
@@ -339,7 +343,7 @@ const App: React.FC = () => {
             <p className={`text-sm mb-8 leading-relaxed ${darkMode ? 'text-slate-400' : 'text-gray-600'}`}>
               {t.apiKeyQuotaMessage}
             </p>
-            {window.aistudio ? (
+            {(window as any).aistudio ? (
               <button 
                 onClick={handleSelectPaidApiKey} 
                 className="w-full px-8 py-4 bg-blue-600 text-white rounded-[1.5rem] font-black uppercase tracking-widest text-sm shadow-xl shadow-blue-500/30 hover:bg-blue-700 transition-all hover:-translate-y-1 active:scale-95"

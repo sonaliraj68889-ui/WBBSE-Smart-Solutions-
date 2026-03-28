@@ -94,8 +94,17 @@ const PracticeMode: React.FC<PracticeModeProps> = ({ darkMode, lang, onQuotaExce
     } catch (err: any) {
       if (err instanceof ApiError && err.code === 'QUOTA_EXCEEDED') {
         onQuotaExceeded();
+      } else if (err instanceof ApiError) {
+        switch (err.code) {
+          case 'SAFETY_BLOCKED': setError(t.errorSafety); break;
+          case 'SERVER_ERROR': setError(t.errorServer); break;
+          case 'NETWORK_ERROR': setError("Network error. Please check your internet connection."); break;
+          case 'PARSE_ERROR': setError("Failed to generate a complete practice set. Please try again."); break;
+          case 'UNKNOWN': setError(err.message || t.errorGeneric); break;
+          default: setError(err.message || t.errorGeneric); break;
+        }
       } else {
-        setError(t.errorGeneric);
+        setError(err instanceof Error ? err.message : t.errorGeneric);
       }
       setSelectedChapter(null); // Go back to selection
     } finally {

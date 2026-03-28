@@ -109,13 +109,16 @@ const ChapterViewer: React.FC<ChapterViewerProps> = ({
           break;
         case 'SAFETY_BLOCKED': setError(t.errorSafety); break;
         case 'SERVER_ERROR': setError(t.errorServer); break;
-        default: setError(t.errorGeneric); break;
+        case 'NETWORK_ERROR': setError("Network error. Please check your internet connection."); break;
+        case 'PARSE_ERROR': setError("Failed to parse the response. Please try again."); break;
+        case 'UNKNOWN': setError(err.message || t.errorGeneric); break;
+        default: setError(err.message || t.errorGeneric); break;
       }
       if (err.code !== 'QUOTA_EXCEEDED') { 
         setErrorDetails(err.message);
       }
     } else {
-      setError(t.errorGeneric);
+      setError(err instanceof Error ? err.message : t.errorGeneric);
     }
   };
 
