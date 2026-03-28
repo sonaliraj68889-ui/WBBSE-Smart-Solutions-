@@ -91,7 +91,7 @@ const App: React.FC = () => {
     }
   };
 
-  const handleSelectSamplePaper = async (subject: string, classId: string, term: ExamTerm, forceNew: boolean = false) => {
+  const handleSelectSamplePaper = async (subjectIdOrName: string, classId: string, term: ExamTerm, forceNew: boolean = false) => {
     setActiveTab('papers');
     setSelectedSamplePaper(null); // Clear previous paper to show loading state for new generation
     setIsGeneratingPaper(true);
@@ -100,12 +100,42 @@ const App: React.FC = () => {
     try {
       const classLabel = (t.classLabels as any)[classId] || classId;
       
+      let subjectId = subjectIdOrName;
+      let subjectName = subjectIdOrName;
+      
+      const classData = CLASSES.find(c => c.id === classId);
+      if (classData) {
+        const subById = classData.subjects.find(s => s.id === subjectIdOrName);
+        if (subById) {
+          subjectId = subById.id;
+          subjectName = (t.subjects as any)[subById.id] || subById.name;
+        } else {
+          for (const sub of classData.subjects) {
+            const locName = (t.subjects as any)[sub.id] || sub.name;
+            if (locName === subjectIdOrName || sub.name === subjectIdOrName) {
+              subjectId = sub.id;
+              subjectName = locName;
+              break;
+            }
+          }
+        }
+      }
+      
       if (!forceNew) {
-        const cachedPaper = await getOfflineContent(classId, subject, term, 'paper');
-        if (cachedPaper) {
+        const cachedPaper = await getOfflineContent(classId, subjectId, term, 'paper');
+        if (cachedPaper && cachedPaper.title && cachedPaper.sections && cachedPaper.sections.length > 0) {
           setSelectedSamplePaper(cachedPaper);
           setIsGeneratingPaper(false);
           return;
+        }
+        // Also try with localized name for backwards compatibility
+        if (subjectId !== subjectName) {
+          const cachedPaperOld = await getOfflineContent(classId, subjectName, term, 'paper');
+          if (cachedPaperOld && cachedPaperOld.title && cachedPaperOld.sections && cachedPaperOld.sections.length > 0) {
+            setSelectedSamplePaper(cachedPaperOld);
+            setIsGeneratingPaper(false);
+            return;
+          }
         }
       }
 
@@ -113,9 +143,9 @@ const App: React.FC = () => {
         throw new Error("You are offline and this sample paper is not saved.");
       }
 
-      const paper = await generateSamplePaper(subject, classLabel, classId, term);
+      const paper = await generateSamplePaper(subjectId, subjectName, classLabel, classId, term);
       setSelectedSamplePaper(paper);
-      await saveOfflineContent(classId, subject, term, `${subject} ${term}`, 'paper', paper);
+      await saveOfflineContent(classId, subjectId, term, `${subjectName} ${term}`, 'paper', paper);
     } catch (err: any) {
       if (err instanceof ApiError && err.code === 'QUOTA_EXCEEDED') {
         handleQuotaExceeded();
@@ -130,7 +160,7 @@ const App: React.FC = () => {
           }
         }
         setPaperGenerationError({ 
-          subject, 
+          subject: subjectIdOrName, 
           classId, 
           term, 
           msg: friendlyMsg, 

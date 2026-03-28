@@ -125,7 +125,7 @@ const Dashboard: React.FC<DashboardProps> = ({
                   {currentClass.subjects.map(sub => (
                     <button 
                       key={sub.id}
-                      onClick={() => onSelectSamplePaper(getLocalizedSubjectName(sub.id, sub.name), currentClass.id, term.id)}
+                      onClick={() => onSelectSamplePaper(sub.id, currentClass.id, term.id)}
                       className={`text-left px-3 py-2.5 rounded-xl text-[11px] font-black uppercase tracking-tight transition-all flex items-center justify-between group/btn ${
                         darkMode 
                           ? 'bg-slate-900 text-slate-400 hover:bg-blue-600 hover:text-white' 
