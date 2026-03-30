@@ -272,6 +272,14 @@ export const generateSamplePaper = async (subjectId: string, subjectName: string
             Grammar -- Textual Grammar, Article and Preposition, Voice change, Forms of Verbs, Sentences -- Simple, Compound, Complex.
             Writing Skill -- Dialogue Writing, Story Writing, Process Writing, Biography Writing.
             `;
+         } else if (subjectLower.includes('hindi')) {
+            syllabusTopics = `
+            1.) पद्य: विनय के पद, धीरे-धीरे उत्तर क्षितिज से
+            2.) गद्य: स्त्री शिक्षा के विरोधी कुतर्कों का खण्डन, हिंसा परमो धर्म
+            3.) सहायक पाठ: गुरुनानक, आचार्य जगदीश चन्द्र बोस
+            4.) व्याकरण: उच्चारण स्थान के आधार पर ध्वनियों का वर्गीकरण, ध्वनि तथा परिवर्तन के कारण, ध्वनि परिवर्तन के रीतियों, दिशाएँ, संधि
+            5.) रचना - भावार्थ
+            `;
          }
       } else if (term === 'Summative 2') {
          if (subjectLower.includes('math')) {
@@ -299,6 +307,14 @@ export const generateSamplePaper = async (subjectId: string, subjectName: string
             Grammar -- Textual Grammar, Transformation of Sentences, Adverb, Phrasal Verb, Clauses.
             Writing Skill -- Report Writing, Summary Writing, Story Writing, Letter Writing (Formal), Paragraph Writing.
             `;
+         } else if (subjectLower.includes('hindi')) {
+            syllabusTopics = `
+            1.) पद्य: पेड़ का दर्द, जरूरतों के नाम पर
+            2.) गद्य: संस्कृति है क्या, ठेले पर हिमालय
+            3) सहायक पाठक: गोपाल कृष्ण गोखले, लाला लाजपत राय
+            4) व्याकरण: व्युत्पत्ति के आधार पर शब्दों का वर्गीकरण, उपसर्ग, प्रत्यय, शब्द एवं पद विचार, संज्ञा
+            5.) निबंध - विभिन्न विषयों पर
+            `;
          }
       } else if (term === 'Summative 3') {
          if (subjectLower.includes('math')) {
@@ -324,6 +340,16 @@ export const generateSamplePaper = async (subjectId: string, subjectName: string
             Lesson -- chapter 9 to 12 (Whole Book).
             Grammar -- Same as 1st Unit Test and 2nd Unit Test.
             Writing Skill -- Same as 1st Unit Test and 2nd Unit Test.
+            `;
+         } else if (subjectLower.includes('hindi')) {
+            syllabusTopics = `
+            1.) पद्य: कलकत्ता, सबसे खतरनाक, यमराज की दिशा, कर चले हम फिदा
+            2.) गद्य: भोलाराम का जीव, वापसी, पर्यावरण संरक्षण, गिरगिट
+            3.) एकांकी: बहु की विदा
+            4.) सहायक पाठ: डॉ. राजेन्द्र प्रसाद, मौलाना अबुल कलाम आजाद
+            5.) व्याकरण: सर्वनाम, विशेषण, क्रिया, अव्यय
+            6.) रचना: निबंध (विभिन्न विषयों पर)
+            (नोट: वार्षिक परीक्षा में प्रथम एवं द्वितीय पर्यायक्रमिक जाँच के सभी पाठ सम्मिलित हैं।)
             `;
          }
       }
