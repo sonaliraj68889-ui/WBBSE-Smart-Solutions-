@@ -588,8 +588,8 @@ export const generateSamplePaper = async (subjectId: string, subjectName: string
             `;
         }
     } else {
-        // --- FULL SYLLABUS LOGIC (Summative 3 / Selection) ---
-        if (term === 'Summative 3' || term === 'Madhyamik Selection') {
+        // --- FULL SYLLABUS LOGIC (Summative 3 / Selection / Madhyamik) ---
+        if (isMadhyamik || term === 'Summative 3' || term === 'Madhyamik Selection') {
             if (subjectLower.includes('math')) {
           promptInstructions = `
           **STRICT WBBSE CLASS ${classLabel} MATHEMATICS (2026 ORIGINAL PAPER PATTERN)**
@@ -851,11 +851,16 @@ export const generateSamplePaper = async (subjectId: string, subjectName: string
       - **Conciseness:** Keep individual question text concise and direct.
       
       **ANSWER GENERATION RULES:**
-      - **CRITICAL TOKEN LIMIT:** You MUST complete the entire JSON within the token limit. Keep answers concise.
-      - **CRITICAL:** Provide a concise but complete solution for every question in the 'answer' field.
+      - **CRITICAL TOKEN LIMIT:** You MUST complete the entire JSON within the output limit.
+      - **CRITICAL:** Provide a concise but complete solution for every question in the 'answer' field. For long answers, provide ONLY the main headings or 2-3 bullet points.
       - **MCQs:** Provide the correct option and a 1-sentence explanation.
-      - **Math:** Show key steps and final calculation.
-      - **Long Answer:** Write the core points of the model answer (bullet points preferred).
+      - **Math:** Show key steps and final calculation only. Do not write lengthy paragraphs.
+      
+      **CRITICAL MARKS & COMPLETENESS REQUIREMENT:**
+      - You MUST generate the EXACT number of questions and sections as requested in the Structure below. 
+      - Do NOT skip any questions, sections, or alternatives. 
+      - The sum of the 'marks' field across all questions YOU GENERATE MUST ADD UP EXACTLY TO ${marks}.
+      - **ALTERNATIVES (OR / अथवा):** You MUST provide alternative choice questions, exactly like original WBBSE Madhyamik papers. When giving an alternative question, combine them into one text field using "\\n\\n**OR (अथवा)**\\n\\n". (e.g. "Question 1... \\n\\n**OR (अथवा)**\\n\\n Question 2..."). This is required for long answers, theorems, essay types, and map pointing.
       
       **INSTRUCTIONS:**
       ${promptInstructions} 
