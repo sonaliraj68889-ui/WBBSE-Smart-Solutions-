@@ -416,6 +416,17 @@ const SmartTutor: React.FC<SmartTutorProps> = ({ darkMode, lang, initialQuery, i
     setLiveStatus('idle');
   };
 
+  const handleCopyMessage = async (msg: Message) => {
+    const textToCopy = msg.showTranslated && msg.translatedText ? msg.translatedText : msg.text;
+    try {
+      await navigator.clipboard.writeText(textToCopy);
+      setShowCopiedId(msg.id);
+      setTimeout(() => setShowCopiedId(null), 2000);
+    } catch (err) {
+      console.error('Failed to copy text: ', err);
+    }
+  };
+
   const handleShareMessage = async (msg: Message) => {
     const textToShare = msg.showTranslated && msg.translatedText ? msg.translatedText : msg.text;
     const shareData: ShareData = {
@@ -892,9 +903,21 @@ const SmartTutor: React.FC<SmartTutorProps> = ({ darkMode, lang, initialQuery, i
                   {msg.role === 'model' && (
                     <div className="absolute -right-10 md:-right-14 top-0 flex flex-col space-y-2 md:space-y-3 opacity-0 group-hover/msg:opacity-100 transition-opacity duration-300 z-10">
                       {showCopiedId === msg.id && (
-                        <div className="absolute -top-10 right-0 text-[9px] md:text-[10px] font-black text-emerald-500 animate-fadeIn whitespace-nowrap bg-emerald-500/10 px-2 md:px-3 py-1 rounded-full">{t.copied}</div>
+                        <div className="absolute -top-10 right-0 text-[10px] md:text-[11px] font-black text-emerald-500 animate-fadeIn whitespace-nowrap bg-emerald-50 px-2 md:px-3 py-1 rounded-full shadow-sm">{t.copiedText}</div>
                       )}
                       
+                      <button 
+                        onClick={() => handleCopyMessage(msg)}
+                        className={`w-8 h-8 md:w-10 md:h-10 rounded-xl md:rounded-2xl flex items-center justify-center transition-all hover:scale-110 active:scale-90 shadow-xl ${
+                          showCopiedId === msg.id 
+                          ? 'bg-emerald-500 text-white'
+                          : (darkMode ? 'bg-slate-800 text-blue-400 hover:bg-slate-700 border border-slate-700' : 'bg-white text-blue-600 border border-gray-100')
+                        }`}
+                        title={t.copy}
+                      >
+                        <i className={`fa-solid ${showCopiedId === msg.id ? 'fa-check' : 'fa-copy'} text-[10px] md:text-sm`}></i>
+                      </button>
+
                       <button 
                         onClick={() => handlePlayVoice(msg)}
                         className={`w-8 h-8 md:w-10 md:h-10 rounded-xl md:rounded-2xl flex items-center justify-center transition-all hover:scale-110 active:scale-90 shadow-xl ${
