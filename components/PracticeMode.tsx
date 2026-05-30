@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { CLASSES } from '../constants.ts';
 import { Subject, Chapter, ExamQuestion } from '../types.ts';
 import { translations } from '../translations.ts';
@@ -34,6 +34,61 @@ const PracticeMode: React.FC<PracticeModeProps> = ({ darkMode, lang, onQuotaExce
   const [isFinished, setIsFinished] = useState(false);
   const [userAnswers, setUserAnswers] = useState<any[]>([]);
   const [isReviewing, setIsReviewing] = useState(false);
+  const [isListening, setIsListening] = useState(false);
+  const recognitionRef = useRef<any>(null);
+
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+      if (SpeechRecognition) {
+        recognitionRef.current = new SpeechRecognition();
+        recognitionRef.current.continuous = true;
+        recognitionRef.current.interimResults = true;
+      }
+    }
+  }, []);
+
+  const toggleListening = () => {
+    if (isListening) {
+      if (recognitionRef.current) recognitionRef.current.stop();
+      setIsListening(false);
+    } else {
+      if (recognitionRef.current) {
+        try {
+          recognitionRef.current.lang = lang === 'hi' ? 'hi-IN' : (lang === 'bn' ? 'bn-IN' : 'en-IN');
+          
+          recognitionRef.current.onresult = (event: any) => {
+            let finalTranscript = '';
+            for (let i = event.resultIndex; i < event.results.length; ++i) {
+              if (event.results[i].isFinal) {
+                finalTranscript += event.results[i][0].transcript;
+              }
+            }
+            if (finalTranscript) {
+               setTextAnswer((prev) => prev ? prev + ' ' + finalTranscript : finalTranscript);
+            }
+          };
+
+          recognitionRef.current.onerror = (event: any) => {
+            console.error("Speech recognition error", event.error);
+            setIsListening(false);
+          };
+          
+          recognitionRef.current.onend = () => {
+            setIsListening(false);
+          };
+
+          recognitionRef.current.start();
+          setIsListening(true);
+        } catch (e) {
+          console.error("Failed to start speech recognition:", e);
+          setIsListening(false);
+        }
+      } else {
+         alert("Voice input is not supported in this browser. Try Chrome or Safari.");
+      }
+    }
+  };
 
   // Helper to get localized names
   const getLocalizedClassName = (id: string) => (t.classLabels as any)[id] || id;
@@ -359,14 +414,24 @@ const PracticeMode: React.FC<PracticeModeProps> = ({ darkMode, lang, onQuotaExce
                })}
              </div>
            ) : (
-             <div className="space-y-4">
+             <div className="space-y-4 relative">
                <textarea
                  value={textAnswer}
                  onChange={(e) => setTextAnswer(e.target.value)}
                  disabled={showAnswer}
-                 placeholder="Type your answer here..."
-                 className={`w-full p-4 rounded-xl border-2 transition-all min-h-[120px] resize-y ${darkMode ? 'bg-slate-800 border-slate-700 text-white' : 'bg-gray-50 border-gray-200 text-gray-900'} focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20`}
+                 placeholder="Type or speak your answer here..."
+                 className={`w-full p-4 pr-16 rounded-xl border-2 transition-all min-h-[120px] resize-y ${darkMode ? 'bg-slate-800 border-slate-700 text-white' : 'bg-gray-50 border-gray-200 text-gray-900'} focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20`}
                />
+               {!showAnswer && (
+                 <button
+                   onClick={toggleListening}
+                   disabled={showAnswer}
+                   className={`absolute right-4 bottom-5 w-10 h-10 rounded-xl flex items-center justify-center transition-all ${isListening ? 'bg-red-500 text-white animate-pulse shadow-lg shadow-red-500/30' : (darkMode ? 'bg-slate-700 text-blue-400 hover:bg-slate-600' : 'bg-white shadow-md text-blue-600 border border-gray-100 hover:bg-blue-50')} `}
+                   title={isListening ? "Stop listening" : "Start voice input"}
+                 >
+                   <i className={`fa-solid ${isListening ? 'fa-microphone-slash' : 'fa-microphone'}`}></i>
+                 </button>
+               )}
              </div>
            )}
 

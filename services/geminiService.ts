@@ -1005,7 +1005,7 @@ export const generatePracticeSet = async (subject: string, classLabel: string, c
 
     const randomSeed = Math.random().toString(36).substring(7) + Date.now();
 
-    const contents = `Generate a set of 10 High-Quality exam-style questions for WBBSE ${classLabel}, Subject: ${subject}, Chapter: ${chapter}.
+    const contents = `Generate a set of 10 Highly Probable, Very Very Important (VVI) exam-style questions for WBBSE ${classLabel}, Subject: ${subject}, Chapter: ${chapter} that frequently appear in the official Madhyamik exam.
     The set should include a mix of Multiple Choice Questions (MCQs), Short Answer Questions, and Long Answer Questions.
     Language: ${targetLang}. NO BENGALI.
     ${isHindiSubject ? '\n    **CRITICAL LANGUAGE INSTRUCTION:** The ENTIRE JSON output (including question text, options, and explanation) MUST be in Hindi (Devanagari script). DO NOT use any English words or Roman script.' : ''}
@@ -1016,7 +1016,7 @@ export const generatePracticeSet = async (subject: string, classLabel: string, c
     1. **Format:** JSON array of objects with keys: 
        - \`type\` (string: "mcq", "short", or "long")
        - \`question\` (string)
-       - \`options\` (array of 4 strings, ONLY for "mcq" type)
+       - \`options\` (array of EXACTLY 4 strings, ONLY for "mcq" type. You MUST provide exactly 4 options)
        - \`correctAnswer\` (integer, MUST be 0, 1, 2, or 3 representing the correct option index, ONLY for "mcq" type)
        - \`idealAnswer\` (string, the correct answer, ONLY for "short" and "long" types)
        - \`explanation\` (string, brief explanation of why the answer is correct or key points to include)
@@ -1040,6 +1040,7 @@ export const generatePracticeSet = async (subject: string, classLabel: string, c
               question: { type: Type.STRING },
               options: { 
                 type: Type.ARRAY,
+                description: "Array of EXACTLY 4 strings for options.",
                 items: { type: Type.STRING }
               },
               correctAnswer: { type: Type.INTEGER },
