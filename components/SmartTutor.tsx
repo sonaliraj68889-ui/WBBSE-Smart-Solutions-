@@ -87,7 +87,7 @@ const SmartTutor: React.FC<SmartTutorProps> = ({ darkMode, lang, initialQuery, i
   const [isLiveSession, setIsLiveSession] = useState(false);
   const [liveStatus, setLiveStatus] = useState<'idle' | 'connecting' | 'listening' | 'speaking'>('idle');
   const [isGeneratingDiagram, setIsGeneratingDiagram] = useState(false);
-  const [uploadedFile, setUploadedFile] = useState<{ data: string, name: string, mimeType: string } | null>(null);
+  const [uploadedFiles, setUploadedFiles] = useState<{ data: string, name: string, mimeType: string }[]>([]);
   const [showCopiedId, setShowCopiedId] = useState<string | null>(null);
   const [isFullscreen, setIsFullscreen] = useState(false);
 
@@ -142,7 +142,7 @@ const SmartTutor: React.FC<SmartTutorProps> = ({ darkMode, lang, initialQuery, i
   // Initialize from initialFile prop
   useEffect(() => {
     if (initialFile) {
-      setUploadedFile(initialFile);
+      setUploadedFiles([initialFile]);
     }
     if (initialQuery) {
       setInput(initialQuery);
@@ -179,30 +179,53 @@ const SmartTutor: React.FC<SmartTutorProps> = ({ darkMode, lang, initialQuery, i
 
   const handleSend = async (overrideInput?: string) => {
     const query = overrideInput || input;
-    if ((!query.trim() && !uploadedFile) || isLoading) return;
+    if ((!query.trim() && uploadedFiles.length === 0) || isLoading) return;
     if (query.trim()) onSaveSearch(query);
     
     const currentInput = query || (lang === 'hi' ? "कृपया इस फ़ाइल का विश्लेषण करें और समस्या को हल करें।" : "Please analyze this file and solve the problem.");
-    const currentFile = uploadedFile;
+    const currentFiles = [...uploadedFiles];
     
+    const fileLabels = currentFiles.filter(f => !f.mimeType.startsWith('image/')).map(f => `[File: ${f.name}]`).join('\n');
+    let textWithLabels = query;
+    if (fileLabels) {
+      textWithLabels += (query ? '\n' : '') + fileLabels;
+    }
+
     const userMsg: Message = { 
       id: Math.random().toString(36).substr(2, 9),
       role: 'user', 
-      text: query + (currentFile && !currentFile.mimeType.startsWith('image/') ? `\n[File: ${currentFile.name}]` : ''),
-      imageUrl: currentFile?.mimeType.startsWith('image/') ? currentFile.data : undefined,
+      text: textWithLabels,
+      files: currentFiles.length > 0 ? currentFiles : undefined,
       timestamp: new Date() 
     };
     
+    // Map current messages to history format
+    const history = messages
+      .filter(m => m.id !== 'initial' && !m.text.startsWith('⚠️')) // Skip greeting and errors
+      .map(m => {
+        const parts: any[] = [];
+        if (m.files && m.files.length > 0) {
+          m.files.forEach(f => {
+            parts.push({ inlineData: { data: f.data.split(',')[1] || f.data, mimeType: f.mimeType } });
+          });
+        } else if (m.imageUrl) {
+          parts.push({ inlineData: { data: m.imageUrl.split(',')[1] || m.imageUrl, mimeType: 'image/jpeg' } });
+        }
+        parts.push({ text: m.text });
+        return { role: m.role, parts };
+      });
+    
     setMessages(prev => [...prev, userMsg]);
     setInput('');
-    setUploadedFile(null);
+    setUploadedFiles([]);
     setIsLoading(true);
     
     try {
       const response = await solveProblem(
         currentInput, 
         "WBBSE Class 5-10 Tutor", 
-        currentFile ? { data: currentFile.data, mimeType: currentFile.mimeType } : undefined
+        currentFiles.length > 0 ? currentFiles : undefined,
+        history
       );
       const botMsg: Message = { 
         id: Math.random().toString(36).substr(2, 9),
@@ -501,18 +524,26 @@ const SmartTutor: React.FC<SmartTutorProps> = ({ darkMode, lang, initialQuery, i
   };
 
   const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onload = (event) => {
-        setUploadedFile({
-          data: event.target?.result as string,
-          name: file.name,
-          mimeType: file.type
-        });
-      };
-      reader.readAsDataURL(file);
+    const files = e.target.files;
+    if (files && files.length > 0) {
+      Array.from(files).forEach(file => {
+        const reader = new FileReader();
+        reader.onload = (event) => {
+          setUploadedFiles(prev => [...prev, {
+            data: event.target?.result as string,
+            name: file.name,
+            mimeType: file.type
+          }]);
+        };
+        reader.readAsDataURL(file);
+      });
     }
+    // reset input
+    if (e.target) e.target.value = '';
+  };
+
+  const removeFile = (index: number) => {
+    setUploadedFiles(prev => prev.filter((_, i) => i !== index));
   };
 
   const getLocalizedSubjectName = (subId: string, fallback: string) => {
@@ -705,7 +736,7 @@ const SmartTutor: React.FC<SmartTutorProps> = ({ darkMode, lang, initialQuery, i
             {isExamMode ? t.endExam : t.examMode}
           </button>
           
-          <input type="file" hidden ref={fileInputRef} onChange={handleFileUpload} accept="image/*,.pdf,.doc,.docx" />
+          <input type="file" multiple hidden ref={fileInputRef} onChange={handleFileUpload} accept="image/*,.pdf,.doc,.docx" />
           <input type="file" hidden ref={cameraInputRef} onChange={handleFileUpload} accept="image/*" capture="environment" />
         </div>
       </div>
@@ -968,6 +999,19 @@ const SmartTutor: React.FC<SmartTutorProps> = ({ darkMode, lang, initialQuery, i
                   <div className={`prose prose-sm md:prose-lg max-w-none prose-p:leading-relaxed prose-p:mb-3 md:prose-p:mb-4 prose-headings:font-black ${darkMode ? 'prose-invert' : ''} ${msg.text.startsWith('⚠️') ? 'text-red-500 dark:text-red-400' : ''}`}>
                     <MathText text={msg.showTranslated && msg.translatedText ? msg.translatedText : msg.text} />
                     
+                    {msg.files && msg.files.map((f, i) => (
+                      <div key={i} className="mt-4 md:mt-8 rounded-xl overflow-hidden border-2 border-current/10 shadow-lg">
+                        {f.mimeType.startsWith('image/') ? (
+                          <img src={f.data} alt="Image file" className="w-full h-auto object-cover" />
+                        ) : (
+                          <div className="flex items-center p-4 bg-gray-50 dark:bg-slate-800">
+                             <div className="w-8 h-8 rounded-lg bg-blue-200 dark:bg-blue-900/50 flex items-center justify-center text-blue-600 mr-3"><i className="fa-solid fa-file-lines text-sm"></i></div>
+                             <span className="text-[10px] font-black uppercase tracking-tight truncate flex-1">{f.name}</span>
+                          </div>
+                        )}
+                      </div>
+                    ))}
+                    
                     {msg.imageUrl && (
                       <div className="mt-4 md:mt-8 rounded-[1.5rem] md:rounded-[2rem] overflow-hidden border-2 md:border-4 border-current/10 shadow-2xl group/img">
                         <img src={msg.imageUrl} alt="Diagram" className="w-full h-auto transform transition-transform duration-700 group-hover/img:scale-105" />
@@ -1019,19 +1063,21 @@ const SmartTutor: React.FC<SmartTutorProps> = ({ darkMode, lang, initialQuery, i
               ))}
             </div>
 
-            {uploadedFile && (
-              <div className={`mb-2 p-2 rounded-xl flex items-center justify-between animate-fadeIn border ${darkMode ? 'bg-slate-800/50 border-slate-700 shadow-inner' : 'bg-blue-50 border-blue-100 shadow-inner'}`}>
-                <div className="flex items-center space-x-2 overflow-hidden">
-                   {uploadedFile.mimeType.startsWith('image/') ? (
-                      <img src={uploadedFile.data} alt="Preview" className="w-8 h-8 rounded-lg object-cover shadow-lg border border-white dark:border-slate-800" />
-                   ) : (
-                      <div className="w-8 h-8 rounded-lg bg-blue-200 dark:bg-blue-900/50 flex items-center justify-center text-blue-600 shadow-inner"><i className="fa-solid fa-file-lines text-sm"></i></div>
-                   )}
-                   <div className="min-w-0">
-                      <span className="text-[9px] block truncate font-black uppercase tracking-tight text-blue-700 dark:text-blue-400">{uploadedFile.name}</span>
-                   </div>
-                </div>
-                <button onClick={() => setUploadedFile(null)} className="w-6 h-6 rounded-full flex items-center justify-center text-red-500 hover:bg-red-500 hover:text-white transition-all"><i className="fa-solid fa-circle-xmark text-sm"></i></button>
+            {uploadedFiles.length > 0 && (
+              <div className="flex flex-wrap gap-2 mb-2 animate-fadeIn">
+                {uploadedFiles.map((file, idx) => (
+                  <div key={idx} className={`p-2 rounded-xl flex items-center space-x-2 border ${darkMode ? 'bg-slate-800/50 border-slate-700 shadow-inner' : 'bg-blue-50 border-blue-100 shadow-inner'}`}>
+                    {file.mimeType.startsWith('image/') ? (
+                       <img src={file.data} alt="Preview" className="w-8 h-8 rounded-lg object-cover shadow-lg border border-white dark:border-slate-800" />
+                    ) : (
+                       <div className="w-8 h-8 rounded-lg bg-blue-200 dark:bg-blue-900/50 flex items-center justify-center text-blue-600 shadow-inner"><i className="fa-solid fa-file-lines text-sm"></i></div>
+                    )}
+                    <div className="min-w-0 max-w-[120px]">
+                       <span className="text-[9px] block truncate font-black uppercase tracking-tight text-blue-700 dark:text-blue-400">{file.name}</span>
+                    </div>
+                    <button onClick={() => removeFile(idx)} className="w-6 h-6 ml-2 rounded-full flex items-center justify-center text-red-500 hover:bg-red-500 hover:text-white transition-all"><i className="fa-solid fa-circle-xmark text-sm"></i></button>
+                  </div>
+                ))}
               </div>
             )}
             
@@ -1067,7 +1113,7 @@ const SmartTutor: React.FC<SmartTutorProps> = ({ darkMode, lang, initialQuery, i
                   onKeyDown={(e) => e.key === 'Enter' && handleSend()}
                   disabled={liveStatus !== 'idle'}
                 />
-                <button onClick={() => handleSend()} disabled={isLoading || liveStatus !== 'idle' || (!input.trim() && !uploadedFile)} className="absolute right-1 top-1/2 -translate-y-1/2 w-8 h-8 flex items-center justify-center bg-blue-600 text-white rounded-lg shadow-md hover:scale-105 active:scale-95 disabled:opacity-10 transition-all"><i className="fa-solid fa-paper-plane text-[10px]"></i></button>
+                <button onClick={() => handleSend()} disabled={isLoading || liveStatus !== 'idle' || (!input.trim() && uploadedFiles.length === 0)} className="absolute right-1 top-1/2 -translate-y-1/2 w-8 h-8 flex items-center justify-center bg-blue-600 text-white rounded-lg shadow-md hover:scale-105 active:scale-95 disabled:opacity-10 transition-all"><i className="fa-solid fa-paper-plane text-[10px]"></i></button>
               </div>
               
               <button onClick={() => handleGenerateDiagram()} disabled={!input.trim() || isGeneratingDiagram || liveStatus !== 'idle'} className={`w-10 h-10 flex flex-col items-center justify-center rounded-xl transition-all shadow-sm ${darkMode ? 'bg-slate-800 text-emerald-400 hover:bg-slate-700 border border-slate-700' : 'bg-emerald-50 text-emerald-600 hover:bg-emerald-100 border border-emerald-100'} disabled:opacity-10`}>

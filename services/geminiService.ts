@@ -148,13 +148,24 @@ const parseJSONResponse = (text: string | undefined, defaultVal: any = {}) => {
   }
 };
 
-export const solveProblem = async (problem: string, context?: string, fileData?: { data: string, mimeType: string }) => {
+export const solveProblem = async (problem: string, context?: string, fileData?: { data: string, mimeType: string }[], history?: { role: 'user' | 'model', parts: any[] }[]) => {
   return withRetry(async () => {
     const ai = getAIClient();
-    // ... rest of function
-    const contents = fileData && fileData.data
-      ? { parts: [{ inlineData: { data: fileData.data.split(',')[1] || fileData.data, mimeType: fileData.mimeType } }, { text: problem }] }
-      : problem;
+    
+    let contents: any[] = [];
+    if (history && history.length > 0) {
+      contents = [...history];
+    }
+    
+    const currentParts: any[] = [];
+    if (fileData && fileData.length > 0) {
+      for (const file of fileData) {
+        currentParts.push({ inlineData: { data: file.data.split(',')[1] || file.data, mimeType: file.mimeType } });
+      }
+    }
+    currentParts.push({ text: problem });
+    
+    contents.push({ role: 'user', parts: currentParts });
 
     const response = await ai.models.generateContent({
       model: 'gemini-3-flash-preview',
@@ -242,7 +253,9 @@ export const generateSamplePaper = async (subjectId: string, subjectName: string
       else if (term === 'Summative 2') { marks = 50; time = "1 Hour 30 Minutes"; }
       else { marks = 70; time = "2 Hours 30 Minutes"; }
     } else if (isMadhyamik) {
-      marks = 90; time = "3 Hours 15 Minutes";
+      if (term === 'Summative 1') { marks = 40; time = "1 Hour 30 Minutes"; }
+      else if (term === 'Summative 2') { marks = 40; time = "1 Hour 30 Minutes"; }
+      else { marks = 90; time = "3 Hours 15 Minutes"; }
     } else if (isClass9) {
       if (term === 'Summative 1') { marks = 40; time = "1 Hour 30 Minutes"; }
       else if (term === 'Summative 2') { marks = 40; time = "1 Hour 30 Minutes"; }
@@ -479,8 +492,31 @@ export const generateSamplePaper = async (subjectId: string, subjectName: string
         if (subjectData && subjectData.chapters) {
           let selectedChapters: typeof subjectData.chapters = [];
 
-          if (subjectLower.includes('hindi')) {
-            // Group Hindi chapters by prefix (e.g., "काव्य:", "गद्य:") to ensure a mix in each term
+          if (subjectLower.includes('hindi') && isMadhyamik) {
+             if (term === 'Summative 1') {
+               const s1Ids = [
+                 '10-h-p1', '10-h-p2', '10-h-p3', '10-h-p4', // पद्य: रैदास, आत्मत्राण, नीड़, मनुष्य और सर्प
+                 '10-h-g1', '10-h-s1', '10-h-s2', // गद्य: धूमकेतु, उसने कहा था, नन्हा संगीतकार
+                 '10-h-sup1', // सहायक पाठ: तीसरी कसम
+                 '10-h-e1', // एकांकी: दीपदान
+                 '10-h-v1', '10-h-v2', '10-h-w2', // व्याकरण: कारक, समास, अंग्रेजी से हिन्दी अनुवाद
+                 '10-h-w1' // निबंध
+               ];
+               selectedChapters = subjectData.chapters.filter(ch => s1Ids.includes(ch.id));
+             } else if (term === 'Summative 2') {
+               const s2Ids = [
+                 '10-h-p5', '10-h-p6', '10-h-p7', // पद्य: रामदास, नौरंगिया, देश-प्रेम
+                 '10-h-g2', '10-h-s3', '10-h-s4', '10-h-s5', // गद्य: नौबत खाने में इबादत, चप्पल, नमक, धावक
+                 '10-h-sup2', '10-h-sup3', // सहायक पाठ: कर्मनाशा की हार, जाँच अभी जारी है
+                 '10-h-v3', '10-h-v4', '10-h-w3', '10-h-w4', // व्याकरण: वाक्य, वाच्य, प्रतिवेदन रचना, संवाद लेखन
+                 '10-h-w1' // निबंध
+               ];
+               selectedChapters = subjectData.chapters.filter(ch => s2Ids.includes(ch.id));
+             } else {
+               selectedChapters = subjectData.chapters;
+             }
+          } else if (subjectLower.includes('hindi')) {
+            // Group Hindi chapters by prefix for class 9 etc
             const groups: Record<string, typeof subjectData.chapters> = {};
             const noPrefixGroup: typeof subjectData.chapters = [];
             
@@ -589,7 +625,7 @@ export const generateSamplePaper = async (subjectId: string, subjectName: string
         }
     } else {
         // --- FULL SYLLABUS LOGIC (Summative 3 / Selection / Madhyamik) ---
-        if (isMadhyamik || term === 'Summative 3' || term === 'Madhyamik Selection') {
+        if (term === 'Summative 3' || term === 'Madhyamik Selection' || (isMadhyamik && term !== 'Summative 1' && term !== 'Summative 2')) {
             if (subjectLower.includes('math')) {
           promptInstructions = `
           **STRICT WBBSE CLASS ${classLabel} MATHEMATICS (2026 ORIGINAL PAPER PATTERN)**
@@ -612,14 +648,15 @@ export const generateSamplePaper = async (subjectId: string, subjectName: string
           `;
         } else if (subjectLower.includes('english')) {
           promptInstructions = `
-          **STRICT WBBSE CLASS ${classLabel} ENGLISH (SECOND LANGUAGE) (2026 ORIGINAL PAPER PATTERN)**
+          **STRICT WBBSE CLASS ${classLabel} ENGLISH (SECOND LANGUAGE) (2027 ORIGINAL PAPER PATTERN & VVI QUESTIONS)**
+          Generate highly probable, "Very Very Important" (VVI) questions based on the last 5 years' WBBSE original question paper trends. This is targeted for the upcoming 2027 Madhyamik Exam.
           **JSON STRUCTURE:** Create separate 'sections' array items for Prose, Poetry, Unseen, Grammar, and Writing to ensure passage text is near questions.
           
           **STRUCTURE (Total 90 Marks):**
           
           **Section 1: Reading Comprehension (Seen) - Prose (12 Marks)**
           - title: "Section A: Reading Comprehension (Seen) - Prose"
-          - passage: [Generate a SUBSTANTIAL Prose passage from Father's Help, The Passing Away of Bapu, etc.]
+          - passage: [Generate a SUBSTANTIAL Prose passage from highly probable chapters for 2027 like Father's Help, The Passing Away of Bapu, Our Runaway Kite, etc.]
           - questions: 
              - 5 MCQs (1 mark). Options: "(a) ...", "(b) ...".
              - 3 Complete the sentences (1 mark).
@@ -627,23 +664,23 @@ export const generateSamplePaper = async (subjectId: string, subjectName: string
           
           **Section 2: Reading Comprehension (Seen) - Poetry (8 Marks)**
           - title: "Section A: Reading Comprehension (Seen) - Poetry"
-          - passage: [Generate a FULL Poem/Stanza from Fable, My Own True Family, etc.]
+          - passage: [Generate a FULL Poem/Stanza from highly probable chapters for 2027 like Fable, My Own True Family, Sea Fever, The Snail, etc.]
           - questions: 
              - 4 MCQs (1 mark). Options: "(a) ...", "(b) ...".
              - 2 SAQs (2 marks).
              
           **Section 3: Reading Comprehension (Unseen) (20 Marks)**
           - title: "Section B: Reading Comprehension (Unseen)"
-          - passage: [Generate a news report or story]
+          - passage: [Generate a news report or article on a recent relevant topic, similar to WBBSE standard]
           - questions: 6 MCQs, 3 True/False w/ Support, 4 SAQs.
           
           **Section 4: Grammar and Vocabulary (20 Marks)**
           - title: "Section B: Grammar and Vocabulary"
-          - questions: Verb Forms (3 marks), Articles/Prepositions (3 marks), Do as Directed (3 marks), Phrasal Verbs (3 marks), Vocabulary from Unseen Passage (8 marks).
+          - questions: Verb Forms (3 marks), Articles/Prepositions (3 marks), Do as Directed (3 marks - including Voice Change, Narration Change, Clause/Sentence transformation), Phrasal Verbs (3 marks), Vocabulary (Find 4 words from Unseen Passage) (8 marks).
           
           **Section 5: Writing (30 Marks)**
           - title: "Section C: Writing Skills"
-          - questions: Story (10 marks), Notice (10 marks), Letter (10 marks).
+          - questions: 3 questions (10 marks each). Choose highly important topics for 2027 from: Paragraph Writing, Notice Writing, Editorial Letter, Personal Letter, Story Writing, Biography, Newspaper Report, or Process Writing. Include detailed hints/points for each writing task as seen in original WBBSE papers.
           `;
         } else if (subjectLower.includes('history')) {
           promptInstructions = `
@@ -818,9 +855,9 @@ export const generateSamplePaper = async (subjectId: string, subjectName: string
              
              **STRUCTURE:**
              1. **Group A (MCQ):** 8 questions (1 mark each).
-             2. **Group B (VSA):** 8 questions (1 mark each) (Fill blanks, True/False, etc.).
+             2. **Group B (VSA):** 9 questions (1 mark each) (Fill blanks, True/False, etc.).
              3. **Group C (Short Answer):** 4 questions (2 marks each).
-             4. **Group D (Long Answer):** 3 questions (5 marks each) or 5 questions (3 marks each).
+             4. **Group D (Long Answer):** 3 questions (5 marks each).
              
              Ensure questions are balanced across the specified chapters.
              `;

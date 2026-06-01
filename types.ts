@@ -33,6 +33,7 @@ export interface Message {
   timestamp: Date;
   grounding?: any[];
   imageUrl?: string;
+  files?: { data: string, name: string, mimeType: string }[];
   isSpeaking?: boolean;
   translatedText?: string;
   showTranslated?: boolean;
