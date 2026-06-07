@@ -46,6 +46,8 @@ const SamplePaperViewer: React.FC<SamplePaperViewerProps> = ({ paper, darkMode, 
           const headerText = `${paper.subject} | ${paper.classLabel} | ${paper.term}`;
           pdf.text(headerText, 10, 10);
           
+          pdf.text("Developed by Ritik Roushan Sah", pdf.internal.pageSize.getWidth() - 15, 10, { align: 'right' });
+          
           pdf.text(`Page ${i} of ${totalPages}`, pdf.internal.pageSize.getWidth() - 30, pdf.internal.pageSize.getHeight() - 10);
         }
       }).save();
