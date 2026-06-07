@@ -1,5 +1,6 @@
 
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
+import html2pdf from 'html2pdf.js';
 import { SamplePaper } from '../types.ts';
 import { translations } from '../translations.ts';
 import MathText from './MathText.tsx';
@@ -16,8 +17,32 @@ const SamplePaperViewer: React.FC<SamplePaperViewerProps> = ({ paper, darkMode, 
   const t = translations[lang];
   const [showAnswers, setShowAnswers] = useState(false);
   const [showCopied, setShowCopied] = useState(false);
+  const [isExporting, setIsExporting] = useState(false);
+  const printRef = useRef<HTMLDivElement>(null);
 
-  const handleDownloadPDF = () => window.print();
+  const handleDownloadPDF = async () => {
+    if (!printRef.current || isExporting) return;
+    setIsExporting(true);
+    try {
+      const element = printRef.current;
+      const opt = {
+        margin:       10,
+        filename:     `${paper.title}-wbbse.pdf`,
+        image:        { type: 'jpeg', quality: 0.98 },
+        html2canvas:  { scale: 2, useCORS: true },
+        jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' },
+        pagebreak:    { mode: 'css', avoid: '.print-no-break' }
+      };
+      
+      // We temporarily add a print class to ensure light mode styling for the PDF if needed
+      // but html2pdf captures what's currently rendered so let it capture as is.
+      await html2pdf().from(element).set(opt).save();
+    } catch (e) {
+      console.error("PDF generation error:", e);
+    } finally {
+      setIsExporting(false);
+    }
+  };
 
   const handleShare = async () => {
     const shareData: ShareData = {
@@ -50,7 +75,7 @@ const SamplePaperViewer: React.FC<SamplePaperViewerProps> = ({ paper, darkMode, 
   };
 
   return (
-    <div className="animate-fadeIn pb-20">
+    <div className="animate-fadeIn pb-20 print:pb-0 print:block">
       <div className="flex flex-col md:flex-row md:items-center justify-between mb-8 no-print gap-4">
         <button onClick={onBack} className={`px-4 py-2.5 rounded-2xl flex items-center space-x-2 font-black text-xs uppercase transition-all shadow-md ${darkMode ? 'bg-slate-800 text-slate-200 hover:bg-slate-700' : 'bg-white text-gray-700 hover:bg-gray-50'}`}>
           <i className="fa-solid fa-house"></i>
@@ -72,14 +97,14 @@ const SamplePaperViewer: React.FC<SamplePaperViewerProps> = ({ paper, darkMode, 
             <i className={`fa-solid ${showAnswers ? 'fa-eye-slash' : 'fa-eye'}`}></i>
             <span>{showAnswers ? t.hideSolutions : t.viewSolutions}</span>
           </button>
-          <button onClick={handleDownloadPDF} className="px-6 py-2.5 bg-blue-600 text-white rounded-2xl flex items-center space-x-2 font-black text-xs uppercase shadow-xl hover:bg-blue-700">
-            <i className="fa-solid fa-file-pdf"></i>
-            <span>{t.downloadPDF}</span>
+          <button onClick={handleDownloadPDF} disabled={isExporting} className={`px-6 py-2.5 rounded-2xl flex items-center space-x-2 font-black text-xs uppercase shadow-xl transition-all ${isExporting ? 'bg-blue-400 cursor-wait text-white' : 'bg-blue-600 text-white hover:bg-blue-700'}`}>
+            <i className={`fa-solid ${isExporting ? 'fa-spinner fa-spin' : 'fa-file-pdf'}`}></i>
+            <span>{isExporting ? (lang === 'hi' ? 'PDF बना रहा है...' : 'Generating PDF...') : t.downloadPDF}</span>
           </button>
         </div>
       </div>
 
-      <div className={`p-10 md:p-16 rounded-[2.5rem] shadow-2xl border transition-colors printable-content ${darkMode ? 'bg-slate-900 border-slate-800 text-slate-200' : 'bg-white border-gray-100 text-gray-900'}`}>
+      <div ref={printRef} className={`p-10 md:p-16 rounded-[2.5rem] shadow-2xl border transition-colors printable-content ${darkMode ? 'bg-slate-900 border-slate-800 text-slate-200' : 'bg-white border-gray-100 text-gray-900'}`}>
         <div className="text-center mb-12 border-b-4 border-current pb-8">
           <p className="text-[11px] font-black uppercase tracking-[0.3em] opacity-40 mb-4">WBBSE Smart Solutions Archive</p>
           <h1 className="text-4xl md:text-5xl font-black mb-4 uppercase leading-none">{paper.title}</h1>
@@ -96,7 +121,7 @@ const SamplePaperViewer: React.FC<SamplePaperViewerProps> = ({ paper, darkMode, 
 
         <div className="space-y-20">
           {paper.sections?.map((section, sIdx) => (
-            <div key={sIdx} className="space-y-10 print:break-inside-avoid">
+            <div key={sIdx} className="space-y-10">
               <h2 className="text-2xl font-black border-b-4 border-blue-600 pb-2 uppercase">{section.title}</h2>
               <p className="text-sm italic font-bold opacity-60">{section.instructions}</p>
               {section.passage && (
@@ -106,7 +131,7 @@ const SamplePaperViewer: React.FC<SamplePaperViewerProps> = ({ paper, darkMode, 
               )}
               <div className="space-y-12">
                 {section.questions?.map((q, qIdx) => (
-                  <div key={q.id} className="relative pl-12 print:break-inside-avoid">
+                  <div key={q.id} className="relative pl-12 print:break-inside-avoid print-no-break">
                     <span className="absolute left-0 top-0 font-black text-2xl opacity-20">{qIdx + 1}.</span>
                     <div className="flex justify-between items-start gap-8">
                       <div className="flex-1">

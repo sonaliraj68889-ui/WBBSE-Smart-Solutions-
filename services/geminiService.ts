@@ -165,7 +165,11 @@ export const solveProblem = async (problem: string, context?: string, fileData?:
     }
     currentParts.push({ text: problem });
     
-    contents.push({ role: 'user', parts: currentParts });
+    if (contents.length > 0 && contents[contents.length - 1].role === 'user') {
+      contents[contents.length - 1].parts = [...contents[contents.length - 1].parts, ...currentParts];
+    } else {
+      contents.push({ role: 'user', parts: currentParts });
+    }
 
     const response = await ai.models.generateContent({
       model: 'gemini-3-flash-preview',
@@ -716,22 +720,45 @@ export const generateSamplePaper = async (subjectId: string, subjectName: string
           `;
         } else if (subjectLower.includes('hindi')) {
           promptInstructions = `
-          **STRICT WBBSE CLASS ${classLabel} HINDI (FIRST LANGUAGE) (2026 ORIGINAL PAPER PATTERN)**
-          Structure the 'sections' array exactly as follows (Total 90 Marks):
-          1. **खंड क (बहुविकल्पीय प्रश्न):** 17 अनिवार्य प्रश्न (1x17=17). (व्याकरण और साहित्य मिश्रित).
-          2. **खंड ख (अति लघु उत्तरीय प्रश्न):** 19 प्रश्नों के उत्तर दें (1x19=19). (लगभग 20-25 शब्द).
-          3. **खंड ग (लघु व्याख्यात्मक प्रश्न - 3 अंक):** 2 प्रश्नों के उत्तर दें (1 गद्य, 1 पद्य) (3x2=6). (अधिकतम 60 शब्द).
-          4. **खंड घ (दीर्घ उत्तरीय प्रश्न - साहित्य):** 
-             - पद्य खण्ड: 2 में से 1 का उत्तर दें (5 अंक).
-             - गद्य खण्ड: 2 में से 1 का उत्तर दें (5 अंक).
-             - गद्य खण्ड: 2 में से 1 का उत्तर दें (5 अंक).
-             - एकांकी: 2 में से 1 का उत्तर दें (4 अंक).
-          5. **खंड ङ (सहायक पाठ - 5 अंक):** 3 में से 2 प्रश्नों के उत्तर दें (5x2=10). (अधिकतम 150 शब्द).
-          6. **खंड च (निबंध):** 1 निबंध लिखें (10 अंक). (अधिकतम 300 शब्द).
-          7. **खंड छ (अनुवाद):** अंग्रेजी से हिंदी (4 अंक). (एक अंग्रेजी वाक्य दें और हिंदी अनुवाद पूछें).
-          8. **खंड ज (प्रतिवेदन/संवाद):** 2 में से 1 प्रश्न का उत्तर दें (5 अंक). (अधिकतम 150 शब्द).
+          **STRICT WBBSE CLASS ${classLabel} HINDI (FIRST LANGUAGE) (2027 ORIGINAL PAPER PATTERN & VVI QUESTIONS)**
+          Generate highly probable, "Very Very Important" (VVI) questions based on the last 6 years' WBBSE original question paper trends. This is targeted for the upcoming 2027 Madhyamik Exam.
+          Structure the 'sections' array EXACTLY as follows (Total 90 Marks), strictly following the new WBBSE Blueprint:
           
-          ${isMadhyamik ? `**OFFICIAL CLASS 10 HINDI SYLLABUS CHAPTERS TO USE:**
+          1. **खंड 1: बहुविकल्पीय प्रश्न (MCQ) - 17 अंक:**
+             - कहानी: 2 प्रश्न
+             - कविता: 2 प्रश्न
+             - निबंध: 2 प्रश्न
+             - सहायक पाठ: 3 प्रश्न
+             - व्याकरण: 8 प्रश्न
+             (कुल 17 प्रश्न, प्रत्येक 1 अंक)
+
+          2. **खंड 2: अति लघुत्तरीय प्रश्न (Very Short Answer) - 18 अंक:**
+             (अधिकतम 20 शब्दों में उत्तर दें)
+             - कहानी: 3 प्रश्न
+             - कविता: 3 प्रश्न
+             - निबंध: 3 प्रश्न
+             - सहायक पाठ: 2 प्रश्न
+             - व्याकरण: 7 प्रश्न
+             (कुल 18 प्रश्न, प्रत्येक 1 अंक)
+
+          3. **खंड 3: संक्षिप्त एवं व्याख्यामूलक प्रश्न (Short and Explanatory) - 6 अंक:**
+             (अधिकतम 60 शब्दों में उत्तर दें)
+             - कहानी: 1 प्रश्न (3 अंक)
+             - कविता: 1 प्रश्न (3 अंक)
+
+          4. **खंड 4: दीर्घ उत्तरीय प्रश्न (Essay Type) - 29 अंक:**
+             - कहानी: 1 प्रश्न का उत्तर दें (अधिकतम 200 शब्द - 7 अंक)
+             - कविता: 1 प्रश्न का उत्तर दें (अधिकतम 200 शब्द - 7 अंक)
+             - निबंध पाठ से: 1 प्रश्न का उत्तर दें (अधिकतम 150 शब्द - 5 अंक)
+             - एकांकी (दीपदान): 1 प्रश्न का उत्तर दें (अधिकतम 150 शब्द - 5 अंक)
+             - सहायक पाठ: 1 प्रश्न का उत्तर दें (अधिकतम 150 शब्द - 5 अंक)
+
+          5. **खंड 5: रचना (Writing Skills) - 20 अंक:**
+             - निबंध लेखन: 4 विषय दें, 1 पर निबंध लिखें (अधिकतम 300 शब्द - 10 अंक)
+             - अनुवाद: अंग्रेजी से हिंदी में अनुवाद करें (5 अंक)
+             - संवाद-लेखन या प्रतिवेदन: दोनों में से 1 का विकल्प दें (अधिकतम 150 शब्द - 5 अंक)
+          
+          ${isMadhyamik ? `**OFFICIAL CLASS 10 HINDI SYLLABUS TO USE (Prioritize highly probable questions for 2027):**
           - पद्य खण्ड: रैदास के पद, नीड़ का निर्माण फिर-फिर, आत्मत्राण, मनुष्य और सर्प, रामदास, नौरंगिया, देश-प्रेम.
           - गद्य खण्ड: धूमकेतु, उसने कहा था, नन्हा संगीतकार, नौबत खाने में इबादत, चप्पल, नमक, धावक.
           - सहायक पाठ: तीसरी कसम, कर्मनाशा की हार, जाँच अभी जारी है.
@@ -739,7 +766,7 @@ export const generateSamplePaper = async (subjectId: string, subjectName: string
           - व्याकरण: कारक, समास, वाक्य, वाच्य.
           - रचना: निबंध, अनुवाद, प्रतिवेदन, संवाद.
           
-          Ensure ALL questions are derived strictly from these chapters.` : `**SYLLABUS TO USE:**\n${syllabusTopics}\nEnsure ALL questions are derived strictly from these chapters.`}
+          Ensure ALL questions are derived strictly from these chapters and reflect 2027 exam importance.` : `**SYLLABUS TO USE:**\n${syllabusTopics}\nEnsure ALL questions are derived strictly from these chapters.`}
           
           **CRITICAL LANGUAGE INSTRUCTION:** The ENTIRE JSON output (including section titles, question text, options, and answers) MUST be in Hindi (Devanagari script). DO NOT use any English words or Roman script, except for the English sentence to be translated in Khand Chha.
           `;

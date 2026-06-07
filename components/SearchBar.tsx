@@ -22,8 +22,48 @@ const SearchBar: React.FC<SearchBarProps> = ({ darkMode, lang, onResultClick, is
   const [query, setQuery] = useState('');
   const [results, setResults] = useState<SearchResult[]>([]);
   const [showDropdown, setShowDropdown] = useState(false);
+  const [isListening, setIsListening] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
+  const recognitionRef = useRef<any>(null);
   const t = translations[lang];
+
+  useEffect(() => {
+    if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
+      const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+      const recognition = new SpeechRecognition();
+      recognition.continuous = false;
+      recognition.interimResults = false;
+      
+      recognition.onstart = () => setIsListening(true);
+      recognition.onresult = (event: any) => {
+        const transcript = event.results[0][0].transcript;
+        setQuery(transcript);
+        setShowDropdown(true);
+      };
+      recognition.onerror = () => setIsListening(false);
+      recognition.onend = () => setIsListening(false);
+      
+      recognitionRef.current = recognition;
+    }
+  }, []);
+
+  useEffect(() => {
+    if (recognitionRef.current) {
+      recognitionRef.current.lang = lang === 'hi' ? 'hi-IN' : 'en-US';
+    }
+  }, [lang]);
+
+  const toggleListening = () => {
+    if (isListening) {
+      recognitionRef.current?.stop();
+    } else {
+      try {
+        recognitionRef.current?.start();
+      } catch (e) {
+        console.error("Speech recognition error:", e);
+      }
+    }
+  };
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -93,20 +133,34 @@ const SearchBar: React.FC<SearchBarProps> = ({ darkMode, lang, onResultClick, is
           value={query}
           onChange={(e) => setQuery(e.target.value)}
           onFocus={() => query.length >= 2 && setShowDropdown(true)}
-          className={`w-full pl-12 pr-4 py-3 rounded-2xl border transition-all outline-none text-sm font-medium ${
+          className={`w-full pl-12 pr-12 py-3 rounded-2xl border transition-all outline-none text-sm font-medium ${
             darkMode 
               ? 'bg-slate-800 border-slate-700 text-slate-100 focus:bg-slate-900 focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10' 
               : 'bg-white border-gray-100 text-gray-900 shadow-sm focus:border-blue-400 focus:ring-4 focus:ring-blue-100/50'
           }`}
         />
-        {query && (
-          <button 
-            onClick={() => setQuery('')}
-            className="absolute right-4 text-gray-400 hover:text-gray-600 dark:text-slate-500 dark:hover:text-slate-300"
-          >
-            <i className="fa-solid fa-circle-xmark"></i>
-          </button>
-        )}
+        <div className="absolute right-3 flex items-center space-x-1">
+          {query && (
+            <button 
+              onClick={() => setQuery('')}
+              className="w-8 h-8 flex items-center justify-center text-gray-400 hover:text-gray-600 dark:text-slate-500 dark:hover:text-slate-300"
+            >
+              <i className="fa-solid fa-circle-xmark"></i>
+            </button>
+          )}
+          {('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) && (
+            <button
+              onClick={toggleListening}
+              className={`w-8 h-8 flex items-center justify-center rounded-full transition-all ${
+                isListening 
+                  ? 'bg-red-100 text-red-500 dark:bg-red-900/30 dark:text-red-400 hover:bg-red-200 animate-pulse' 
+                  : 'text-gray-400 hover:text-blue-600 hover:bg-blue-50 dark:text-slate-500 dark:hover:text-blue-400 dark:hover:bg-blue-900/30'
+              }`}
+            >
+              <i className={`fa-solid ${isListening ? 'fa-microphone-lines' : 'fa-microphone'}`}></i>
+            </button>
+          )}
+        </div>
       </div>
 
       {showDropdown && (

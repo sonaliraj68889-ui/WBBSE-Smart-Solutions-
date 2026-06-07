@@ -1,5 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
+import html2pdf from 'html2pdf.js';
 import { Subject, Chapter, ChapterPart } from '../types.ts';
 import { summarizeChapter, fetchChapterQuestions, ApiError } from '../services/geminiService.ts';
 import { saveOfflineContent, getOfflineContent, isOffline } from '../services/offlineService.ts';
@@ -51,6 +52,29 @@ const ChapterViewer: React.FC<ChapterViewerProps> = ({
   const [savedChapters, setSavedChapters] = useState<Record<string, boolean>>({});
   const [savingChapter, setSavingChapter] = useState<string | null>(null);
   const contentRef = React.useRef<HTMLDivElement>(null);
+  const [isExporting, setIsExporting] = useState(false);
+
+  const handleDownloadPDF = async () => {
+    if (!contentRef.current || isExporting || !selectedChapter) return;
+    setIsExporting(true);
+    try {
+      const element = contentRef.current;
+      const opt = {
+        margin:       10,
+        filename:     `${selectedChapter.title}-study-notes.pdf`,
+        image:        { type: 'jpeg', quality: 0.98 },
+        html2canvas:  { scale: 2, useCORS: true },
+        jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' },
+        pagebreak:    { mode: 'css', avoid: '.print-no-break' }
+      };
+      
+      await html2pdf().from(element).set(opt).save();
+    } catch (e) {
+      console.error("PDF generation error:", e);
+    } finally {
+      setIsExporting(false);
+    }
+  };
 
   useEffect(() => {
     const checkSavedStatus = async () => {
@@ -370,14 +394,25 @@ const ChapterViewer: React.FC<ChapterViewerProps> = ({
                 <div className="relative z-10">
                   <div className="flex items-center justify-between mb-2">
                     <span className="text-[10px] font-black uppercase tracking-[0.3em] bg-white/20 px-4 py-1.5 rounded-full">{getLocalizedClassName()}</span>
-                    {activeMode !== 'summary' && (
-                      <button 
-                        onClick={() => setActiveMode('summary')} 
-                        className="px-5 py-2 bg-white/20 rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all hover:bg-white/30 flex items-center"
-                      >
-                        <i className="fa-solid fa-arrow-left mr-2"></i> {t.summary}
-                      </button>
-                    )}
+                    <div className="flex items-center gap-2" data-html2canvas-ignore="true">
+                      {activeMode !== 'summary' && (
+                        <button 
+                          onClick={() => setActiveMode('summary')} 
+                          className="px-5 py-2 bg-white/20 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all hover:bg-white/30 flex items-center"
+                        >
+                          <i className="fa-solid fa-arrow-left mr-2"></i> {t.summary}
+                        </button>
+                      )}
+                      {(summary || qaSolutions.length > 0) && !loading && !error && (
+                        <button
+                          onClick={handleDownloadPDF}
+                          disabled={isExporting}
+                          className={`px-5 py-2 bg-white/20 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${isExporting ? 'opacity-50 cursor-wait' : 'hover:bg-white/30'} flex items-center`}
+                        >
+                          <i className={`fa-solid ${isExporting ? 'fa-spinner fa-spin' : 'fa-file-pdf'} mr-2`}></i> {isExporting ? 'EXPORTING...' : 'PDF'}
+                        </button>
+                      )}
+                    </div>
                   </div>
                   <h3 className="text-3xl md:text-4xl font-black tracking-tighter uppercase leading-none">{selectedChapter.title}</h3>
                 </div>
@@ -422,7 +457,7 @@ const ChapterViewer: React.FC<ChapterViewerProps> = ({
                                </div>
                                <h4 className="text-xl font-black uppercase tracking-tight text-blue-600">{t.summary}</h4>
                             </div>
-                            <div className="flex bg-gray-100 dark:bg-slate-900 p-1.5 rounded-2xl">
+                            <div className="flex bg-gray-100 dark:bg-slate-900 p-1.5 rounded-2xl" data-html2canvas-ignore="true">
                               {['short', 'medium', 'long'].map(l => (
                                 <button 
                                   key={l} 
@@ -441,7 +476,7 @@ const ChapterViewer: React.FC<ChapterViewerProps> = ({
                         </section>
 
                         {activeMode === 'summary' && (
-                          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 pt-16 border-t-2 border-dashed border-current/10">
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 pt-16 border-t-2 border-dashed border-current/10" data-html2canvas-ignore="true">
                             <button 
                               onClick={() => handleModeSwitch('qa')} 
                               className={`group p-8 rounded-[2.5rem] border-2 text-left space-y-5 transition-all transform hover:-translate-y-2 ${darkMode ? 'bg-slate-900 border-slate-800 hover:border-amber-500' : 'bg-amber-50/30 border-amber-100 hover:border-amber-400 shadow-sm'}`}
@@ -475,13 +510,14 @@ const ChapterViewer: React.FC<ChapterViewerProps> = ({
                              onClick={() => handleModeSwitch('qa')} 
                              className="w-10 h-10 rounded-xl flex items-center justify-center border hover:bg-gray-50 dark:hover:bg-slate-800 transition-all" 
                              title={t.regenerateQA}
+                             data-html2canvas-ignore="true"
                            >
                              <i className="fa-solid fa-rotate-right"></i>
                            </button>
                         </div>
 
                         {qaSolutions.map((qa, index) => (
-                          <div key={index} className={`p-6 md:p-8 rounded-[2rem] border transition-all ${darkMode ? 'bg-slate-900 border-slate-800' : 'bg-white border-gray-100 shadow-lg'}`}>
+                          <div key={index} className={`p-6 md:p-8 rounded-[2rem] border transition-all print-no-break ${darkMode ? 'bg-slate-900 border-slate-800' : 'bg-white border-gray-100 shadow-lg'}`}>
                              <div className="flex items-start space-x-4 mb-6">
                                <span className="w-8 h-8 rounded-lg bg-blue-600 text-white flex-shrink-0 flex items-center justify-center font-black text-xs shadow-md">Q{index + 1}</span>
                                <h5 className="text-lg md:text-xl font-bold leading-snug pt-1"><MathText text={qa.question} /></h5>
@@ -499,6 +535,7 @@ const ChapterViewer: React.FC<ChapterViewerProps> = ({
                              
                              <button 
                                onClick={() => toggleAnswer(`q-${index}`)} 
+                               data-html2canvas-ignore="true"
                                className={`w-full py-4 mt-4 rounded-xl font-black text-[10px] uppercase tracking-[0.2em] flex items-center justify-center space-x-2 transition-all ${
                                  visibleAnswers[`q-${index}`] 
                                    ? (darkMode ? 'bg-slate-800 text-slate-400' : 'bg-gray-100 text-gray-500') 
@@ -514,7 +551,7 @@ const ChapterViewer: React.FC<ChapterViewerProps> = ({
                     )}
 
                     {nextChapter && (
-                      <div className="mt-12 pt-8 border-t-2 border-dashed border-current/10 flex justify-end">
+                      <div className="mt-12 pt-8 border-t-2 border-dashed border-current/10 flex justify-end" data-html2canvas-ignore="true">
                         <button
                           onClick={() => loadSummary(nextChapter)}
                           className={`group flex items-center space-x-4 px-8 py-4 rounded-2xl transition-all shadow-md hover:shadow-xl ${

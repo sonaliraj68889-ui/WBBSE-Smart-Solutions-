@@ -83,6 +83,46 @@ const SmartTutor: React.FC<SmartTutorProps> = ({ darkMode, lang, initialQuery, i
     }
   ]);
   const [input, setInput] = useState('');
+  const [isDictating, setIsDictating] = useState(false);
+  const dictationRef = useRef<any>(null);
+
+  useEffect(() => {
+    if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
+      const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+      const recognition = new SpeechRecognition();
+      recognition.continuous = false;
+      recognition.interimResults = false;
+      
+      recognition.onstart = () => setIsDictating(true);
+      recognition.onresult = (event: any) => {
+        const transcript = event.results[0][0].transcript;
+        setInput(prev => prev ? prev + ' ' + transcript : transcript);
+      };
+      recognition.onerror = () => setIsDictating(false);
+      recognition.onend = () => setIsDictating(false);
+      
+      dictationRef.current = recognition;
+    }
+  }, []);
+
+  useEffect(() => {
+    if (dictationRef.current) {
+      dictationRef.current.lang = lang === 'hi' ? 'hi-IN' : 'en-US';
+    }
+  }, [lang]);
+
+  const toggleDictation = () => {
+    if (isDictating) {
+      dictationRef.current?.stop();
+    } else {
+      try {
+        dictationRef.current?.start();
+      } catch (e) {
+        console.error("Speech recognition error:", e);
+      }
+    }
+  };
+
   const [isLoading, setIsLoading] = useState(false);
   const [isLiveSession, setIsLiveSession] = useState(false);
   const [liveStatus, setLiveStatus] = useState<'idle' | 'connecting' | 'listening' | 'speaking'>('idle');
@@ -200,20 +240,36 @@ const SmartTutor: React.FC<SmartTutorProps> = ({ darkMode, lang, initialQuery, i
     };
     
     // Map current messages to history format
-    const history = messages
-      .filter(m => m.id !== 'initial' && !m.text.startsWith('⚠️')) // Skip greeting and errors
-      .map(m => {
-        const parts: any[] = [];
-        if (m.files && m.files.length > 0) {
-          m.files.forEach(f => {
-            parts.push({ inlineData: { data: f.data.split(',')[1] || f.data, mimeType: f.mimeType } });
-          });
-        } else if (m.imageUrl) {
-          parts.push({ inlineData: { data: m.imageUrl.split(',')[1] || m.imageUrl, mimeType: 'image/jpeg' } });
-        }
-        parts.push({ text: m.text });
-        return { role: m.role, parts };
-      });
+    const validMessages = messages.filter(m => m.id !== 'initial' && !m.text.startsWith('⚠️'));
+    
+    // Gemini requires alternating user/model turns. If there are consecutive user messages, keep only the latest one
+    // or merge them. Here we just take the last message of consecutive same-role messages.
+    const normalizedHistory: typeof validMessages = [];
+    for (const msg of validMessages) {
+      if (normalizedHistory.length > 0 && normalizedHistory[normalizedHistory.length - 1].role === msg.role) {
+        // Merge or replace. Safest is to replace with latest to keep it simple, or merge text.
+        normalizedHistory[normalizedHistory.length - 1] = {
+           ...normalizedHistory[normalizedHistory.length - 1],
+           text: normalizedHistory[normalizedHistory.length - 1].text + '\n\n' + msg.text,
+           files: [...(normalizedHistory[normalizedHistory.length - 1].files || []), ...(msg.files || [])],
+        };
+      } else {
+        normalizedHistory.push(msg);
+      }
+    }
+    
+    const history = normalizedHistory.map(m => {
+      const parts: any[] = [];
+      if (m.files && m.files.length > 0) {
+        m.files.forEach(f => {
+          parts.push({ inlineData: { data: f.data.split(',')[1] || f.data, mimeType: f.mimeType } });
+        });
+      } else if (m.imageUrl) {
+        parts.push({ inlineData: { data: m.imageUrl.split(',')[1] || m.imageUrl, mimeType: 'image/jpeg' } });
+      }
+      parts.push({ text: m.text });
+      return { role: m.role, parts };
+    });
     
     setMessages(prev => [...prev, userMsg]);
     setInput('');
@@ -1102,6 +1158,21 @@ const SmartTutor: React.FC<SmartTutorProps> = ({ darkMode, lang, initialQuery, i
               >
                 <i className="fa-solid fa-paperclip text-base"></i>
               </button>
+              
+              {('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) && (
+                <button 
+                  onClick={toggleDictation}
+                  disabled={liveStatus !== 'idle'}
+                  className={`w-10 h-10 flex items-center justify-center rounded-xl transition-all shadow-md disabled:opacity-20 ${
+                    isDictating 
+                      ? 'bg-red-100 text-red-500 animate-pulse dark:bg-red-900/30 dark:text-red-400 border border-red-200 dark:border-red-800/50' 
+                      : darkMode ? 'bg-slate-800 text-slate-400 hover:bg-slate-700 hover:text-blue-400 border border-slate-700' : 'bg-gray-50 text-gray-500 hover:bg-gray-100 hover:text-blue-600 border border-gray-200'
+                  }`}
+                  title={isDictating ? 'Stop dictation' : 'Start dictation'}
+                >
+                  <i className={`fa-solid ${isDictating ? 'fa-microphone-lines' : 'fa-microphone'} text-base`}></i>
+                </button>
+              )}
               
               <div className="flex-1 relative group">
                 <input 
