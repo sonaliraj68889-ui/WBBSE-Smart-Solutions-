@@ -26,17 +26,29 @@ const SamplePaperViewer: React.FC<SamplePaperViewerProps> = ({ paper, darkMode, 
     try {
       const element = printRef.current;
       const opt = {
-        margin:       10,
+        margin:       [15, 10, 15, 10],
         filename:     `${paper.title}-wbbse.pdf`,
         image:        { type: 'jpeg', quality: 0.98 },
         html2canvas:  { scale: 2, useCORS: true },
         jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' },
-        pagebreak:    { mode: 'css', avoid: '.print-no-break' }
+        pagebreak:    { mode: ['avoid-all', 'css', 'legacy'] }
       };
       
       // We temporarily add a print class to ensure light mode styling for the PDF if needed
       // but html2pdf captures what's currently rendered so let it capture as is.
-      await html2pdf().from(element).set(opt).save();
+      await html2pdf().from(element).set(opt).toPdf().get('pdf').then((pdf: any) => {
+        const totalPages = pdf.internal.getNumberOfPages();
+        for (let i = 1; i <= totalPages; i++) {
+          pdf.setPage(i);
+          pdf.setFontSize(10);
+          pdf.setTextColor(150);
+          
+          const headerText = `${paper.subject} | ${paper.classLabel} | ${paper.term}`;
+          pdf.text(headerText, 10, 10);
+          
+          pdf.text(`Page ${i} of ${totalPages}`, pdf.internal.pageSize.getWidth() - 30, pdf.internal.pageSize.getHeight() - 10);
+        }
+      }).save();
     } catch (e) {
       console.error("PDF generation error:", e);
     } finally {
