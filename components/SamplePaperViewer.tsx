@@ -43,10 +43,38 @@ const SamplePaperViewer: React.FC<SamplePaperViewerProps> = ({ paper, darkMode, 
           pdf.setFontSize(10);
           pdf.setTextColor(150);
           
-          const headerText = `${paper.subject} | ${paper.classLabel} | ${paper.term}`;
-          pdf.text(headerText, 10, 10);
+          let headerText = `${paper.subject} | ${paper.classLabel} | ${paper.term}`;
           
-          pdf.text("Developed by Ritik Roushan Sah", pdf.internal.pageSize.getWidth() - 15, 10, { align: 'right' });
+          // jsPDF standard fonts don't support Hindi/Unicode, so map to English if possible
+          // or strip out characters that can't be rendered.
+          const attemptEnMap = (text: string) => {
+            if (/^[\x00-\x7F]*$/.test(text)) return text;
+            let result = text;
+            Object.keys(translations.hi.classLabels).forEach(k => {
+              if (translations.hi.classLabels[k as keyof typeof translations.hi.classLabels] === text) result = translations.en.classLabels[k as keyof typeof translations.en.classLabels];
+            });
+            Object.keys(translations.hi.subjects).forEach(k => {
+              if (translations.hi.subjects[k as keyof typeof translations.hi.subjects] === text) result = translations.en.subjects[k as keyof typeof translations.en.subjects];
+            });
+            if (translations.hi.selection === text) result = translations.en.selection;
+            if (translations.hi.summative1 === text) result = translations.en.summative1;
+            if (translations.hi.summative2 === text) result = translations.en.summative2;
+            if (translations.hi.summative3 === text) result = translations.en.summative3;
+            
+            return /^[\x00-\x7F]*$/.test(result) ? result : result.replace(/[^\x00-\x7F]/g, "").trim();
+          };
+          
+          const safeSubject = attemptEnMap(paper.subject);
+          const safeClass = attemptEnMap(paper.classLabel);
+          const safeTerm = attemptEnMap(paper.term);
+          
+          const finalHeaderParts = [safeSubject, safeClass, safeTerm].filter(p => p.length > 1 && p !== '()');
+          
+          if (finalHeaderParts.length > 0) {
+            pdf.text(finalHeaderParts.join(' | '), 10, 10);
+          }
+          
+          pdf.text("Developed by Ritik Roushan Sah", 10, pdf.internal.pageSize.getHeight() - 10);
           
           pdf.text(`Page ${i} of ${totalPages}`, pdf.internal.pageSize.getWidth() - 30, pdf.internal.pageSize.getHeight() - 10);
         }
