@@ -1,6 +1,7 @@
 
 import React, { useState, useEffect } from 'react';
-import html2pdf from 'html2pdf.js';
+// @ts-ignore
+import html2pdf from 'html2pdf.js/dist/html2pdf.bundle.min.js';
 import { Subject, Chapter, ChapterPart } from '../types.ts';
 import { summarizeChapter, fetchChapterQuestions, ApiError } from '../services/geminiService.ts';
 import { saveOfflineContent, getOfflineContent, isOffline } from '../services/offlineService.ts';

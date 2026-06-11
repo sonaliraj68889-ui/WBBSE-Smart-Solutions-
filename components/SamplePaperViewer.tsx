@@ -1,6 +1,7 @@
 
 import React, { useState, useRef } from 'react';
-import html2pdf from 'html2pdf.js';
+// @ts-ignore
+import html2pdf from 'html2pdf.js/dist/html2pdf.bundle.min.js';
 import { SamplePaper } from '../types.ts';
 import { translations } from '../translations.ts';
 import MathText from './MathText.tsx';

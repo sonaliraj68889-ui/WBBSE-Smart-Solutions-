@@ -1,4 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
+// @ts-ignore
+import html2pdf from 'html2pdf.js/dist/html2pdf.bundle.min.js';
 import { Subject } from '../types.ts';
 import { CLASSES } from '../constants.ts';
 import { translations } from '../translations.ts';
@@ -21,6 +23,8 @@ const NotesBank: React.FC<NotesBankProps> = ({ darkMode, lang, onHome, onQuotaEx
   const [isLoading, setIsLoading] = useState(false);
   const [generatedNotes, setGeneratedNotes] = useState<string | null>(null);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
+  const [isExporting, setIsExporting] = useState(false);
+  const contentRef = useRef<HTMLDivElement>(null);
 
   const getLocalizedClassName = (classId: string) => {
     return (t.classLabels as any)[classId] || classId;
@@ -61,6 +65,40 @@ const NotesBank: React.FC<NotesBankProps> = ({ darkMode, lang, onHome, onQuotaEx
       }
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const handleDownloadPDF = async () => {
+    if (!contentRef.current || isExporting || !selectedChapter || !selectedSubject) return;
+    setIsExporting(true);
+    try {
+      const element = contentRef.current;
+      const opt = {
+        margin:       [15, 10, 15, 10],
+        filename:     `${selectedChapter.title}-Notes.pdf`,
+        image:        { type: 'jpeg', quality: 0.98 },
+        html2canvas:  { scale: 2, useCORS: true },
+        jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' },
+        pagebreak:    { mode: ['avoid-all', 'css', 'legacy'] }
+      };
+      
+      await html2pdf().from(element).set(opt).toPdf().get('pdf').then((pdf: any) => {
+        const totalPages = pdf.internal.getNumberOfPages();
+        for (let i = 1; i <= totalPages; i++) {
+          pdf.setPage(i);
+          pdf.setFontSize(10);
+          pdf.setTextColor(150);
+          
+          const subjectText = getLocalizedSubjectName(selectedSubject.id, selectedSubject.name);
+          const headerText = `${subjectText} | ${getLocalizedClassName(selectedClass!)}`;
+          pdf.text(headerText, 10, 10);
+        }
+      }).save();
+    } catch (err) {
+      console.error('Failed to export PDF:', err);
+      setErrorMsg("Failed to export as PDF.");
+    } finally {
+      setIsExporting(false);
     }
   };
 
@@ -286,27 +324,26 @@ const NotesBank: React.FC<NotesBankProps> = ({ darkMode, lang, onHome, onQuotaEx
         )}
 
         {generatedNotes && !isLoading && !errorMsg && (
-          <div className="animate-fadeIn mt-6">
-            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center border-b pb-6 mb-6 gap-4">
+          <div className="animate-fadeIn mt-6" ref={contentRef}>
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center border-b pb-6 mb-6 gap-4" data-html2canvas-ignore="true">
               <h3 className={`text-xl font-black ${darkMode ? 'text-blue-400' : 'text-blue-600'}`}>
                 <i className="fa-solid fa-check-circle mr-2"></i> Notes Generated Successfully
               </h3>
               <button 
-                className="bg-blue-600 text-white hover:bg-blue-700 px-4 py-2 rounded-lg transition-colors font-bold text-sm shadow-md"
-                onClick={() => {
-                  const blob = new Blob([generatedNotes], { type: 'text/markdown' });
-                  const url = URL.createObjectURL(blob);
-                  const a = document.createElement('a');
-                  a.href = url;
-                  a.download = `${selectedChapter.title}-Complete-Notes.md`;
-                  a.click();
-                }}
+                className={`bg-blue-600 text-white hover:bg-blue-700 px-4 py-2 rounded-lg transition-colors font-bold text-sm shadow-md ${isExporting ? 'opacity-70 cursor-not-allowed' : ''}`}
+                onClick={handleDownloadPDF}
+                disabled={isExporting}
               >
-                <i className="fa-solid fa-download mr-2"></i> Export
+                {isExporting ? (
+                  <><i className="fa-solid fa-spinner animate-spin mr-2"></i> Exporting...</>
+                ) : (
+                  <><i className="fa-solid fa-file-pdf mr-2"></i> Download PDF</>
+                )}
               </button>
             </div>
             
             <div className={`prose prose-sm md:prose-base max-w-none ${darkMode ? 'prose-invert' : ''}`}>
+              <h1 className="text-3xl font-black mb-6 border-b-2 border-blue-500 pb-2">{selectedChapter.title} - Notes</h1>
               {generatedNotes.split('\n').map((line, i) => {
                 if (line.startsWith('## ')) return <h2 key={i} className="text-2xl font-bold mt-8 mb-4 border-b pb-2 text-blue-500">{line.replace('## ', '')}</h2>;
                 if (line.startsWith('### ')) return <h3 key={i} className="text-xl font-bold mt-6 mb-3">{line.replace('### ', '')}</h3>;
