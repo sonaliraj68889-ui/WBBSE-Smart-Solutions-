@@ -60,7 +60,7 @@ const ChapterViewer: React.FC<ChapterViewerProps> = ({
     try {
       const element = contentRef.current;
       const opt = {
-        margin:       10,
+        margin:       [15, 10, 15, 10],
         filename:     `${selectedChapter.title}-study-notes.pdf`,
         image:        { type: 'jpeg', quality: 0.98 },
         html2canvas:  { scale: 2, useCORS: true },
@@ -68,7 +68,40 @@ const ChapterViewer: React.FC<ChapterViewerProps> = ({
         pagebreak:    { mode: ['avoid-all', 'css', 'legacy'] }
       };
       
-      await html2pdf().from(element).set(opt).save();
+      await html2pdf().from(element).set(opt).toPdf().get('pdf').then((pdf: any) => {
+        const totalPages = pdf.internal.getNumberOfPages();
+        for (let i = 1; i <= totalPages; i++) {
+          pdf.setPage(i);
+          pdf.setFontSize(10);
+          pdf.setTextColor(150);
+          
+          let headerText = `${getLocalizedSubjectName()} | ${getLocalizedClassName()}`;
+          
+          const attemptEnMap = (text: string) => {
+            if (/^[\x00-\x7F]*$/.test(text)) return text;
+            let result = text;
+            Object.keys(translations.hi.classLabels).forEach(k => {
+              if (translations.hi.classLabels[k as keyof typeof translations.hi.classLabels] === text) result = translations.en.classLabels[k as keyof typeof translations.en.classLabels];
+            });
+            Object.keys(translations.hi.subjects).forEach(k => {
+              if (translations.hi.subjects[k as keyof typeof translations.hi.subjects] === text) result = translations.en.subjects[k as keyof typeof translations.en.subjects];
+            });
+            return /^[\x00-\x7F]*$/.test(result) ? result : result.replace(/[^\x00-\x7F]/g, "").trim();
+          };
+          
+          const safeSubject = attemptEnMap(getLocalizedSubjectName());
+          const safeClass = attemptEnMap(getLocalizedClassName());
+          
+          const finalHeaderParts = [safeSubject, safeClass].filter(p => p.length > 1 && p !== '()');
+          
+          if (finalHeaderParts.length > 0) {
+            pdf.text(finalHeaderParts.join(' | '), 10, 10);
+          }
+          
+          pdf.text("Developed by Ritik Roushan Sah", 10, pdf.internal.pageSize.getHeight() - 10);
+          pdf.text(`Page ${i} of ${totalPages}`, pdf.internal.pageSize.getWidth() - 30, pdf.internal.pageSize.getHeight() - 10);
+        }
+      }).save();
     } catch (e) {
       console.error("PDF generation error:", e);
     } finally {

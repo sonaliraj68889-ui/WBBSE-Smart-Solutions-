@@ -118,6 +118,7 @@ export const translations = {
     apiKeyQuotaMessage: "You've reached the daily usage limit for AI services. To continue using the advanced features without interruption, please provide your own paid Google Cloud API key.",
     selectApiKeyButton: "Select Paid API Key",
     learnMoreBilling: "Learn More About Billing",
+    notesBank: "Notes Bank",
     
     // Practice Mode
     chapterPractice: "Chapter Wise Practice",
@@ -271,6 +272,7 @@ export const translations = {
     apiKeyQuotaMessage: "एआई सेवाओं के लिए दैनिक उपयोग की सीमा समाप्त हो गई है। निर्बाध रूप से उन्नत सुविधाओं का उपयोग जारी रखने के लिए, कृपया अपनी सशुल्क Google क्लाउड एपीआई कुंजी प्रदान करें।",
     selectApiKeyButton: "सशुल्क एपीआई कुंजी चुनें",
     learnMoreBilling: "बिलिंग के बारे में और जानें",
+    notesBank: "नोट्स बैंक",
 
     // Practice Mode
     chapterPractice: "अध्याय वार अभ्यास",

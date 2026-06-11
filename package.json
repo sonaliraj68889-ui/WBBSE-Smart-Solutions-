@@ -13,6 +13,7 @@
     "html2pdf.js": "^0.14.0",
     "idb-keyval": "^6.2.2",
     "mermaid": "^11.12.3",
+    "motion": "^12.40.0",
     "react": "^19.2.3",
     "react-dom": "^19.2.3"
   },

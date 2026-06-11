@@ -13,6 +13,7 @@ const ChapterViewer = React.lazy(() => import('./components/ChapterViewer.tsx'))
 const SamplePaperViewer = React.lazy(() => import('./components/SamplePaperViewer.tsx'));
 const PracticeMode = React.lazy(() => import('./components/PracticeMode.tsx'));
 const SavedOffline = React.lazy(() => import('./components/SavedOffline.tsx'));
+const NotesBank = React.lazy(() => import('./components/NotesBank.tsx'));
 
 const LoadingFallback = () => (
   <div className="flex items-center justify-center h-64">
@@ -198,6 +199,7 @@ const App: React.FC = () => {
             onSearchHistoryClick={q => { setPendingQuery(q); setActiveTab('tutor'); }} 
             onClearHistory={() => setSearchHistory([])} 
             onSelectSamplePaper={handleSelectSamplePaper} 
+            onNotesBankClick={() => setActiveTab('notesbank')}
             searchHistory={searchHistory} 
             darkMode={darkMode} 
             lang={lang} 
@@ -252,6 +254,16 @@ const App: React.FC = () => {
             }}
             onSelectSamplePaper={handleSelectSamplePaper}
             onHome={handleGoHome}
+          />
+        );
+        break;
+      case 'notesbank':
+        content = (
+          <NotesBank 
+            darkMode={darkMode} 
+            lang={lang} 
+            onHome={handleGoHome} 
+            onQuotaExceeded={handleQuotaExceeded} 
           />
         );
         break;

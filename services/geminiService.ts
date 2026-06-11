@@ -220,6 +220,57 @@ export const summarizeChapter = async (title: string, sub: string, len: string, 
   });
 };
 
+export const generateChapterNotes = async (title: string, sub: string, id: string) => {
+  return withRetry(async () => {
+    const ai = getAIClient();
+    const isEnglish = id === 'english' || sub.toLowerCase().includes('english');
+    const isHindi = id === 'hindi' || sub.toLowerCase().includes('hindi');
+    const targetLang = isEnglish ? 'English' : isHindi ? 'strictly Hindi (Devanagari script)' : 'Hindi';
+
+    const promptSuffix = `
+Generate a COMPLETELY UNIFIED notes document for this chapter. Give line by line question and answer. Do not split in different sections across prompts - output ONE single giant comprehensive document.
+Include as many questions as logically possible (MUST INCLUDE AT LEAST 200 QUESTIONS TOTAL ACROSS ALL CATEGORIES). Iterate deeply through every single granular subtopic in the chapter to generate enough questions.
+
+Identify the specific WBBSE (Madhyamik) subject based on "${sub}".
+Adjust the question types and marks strictly according to the actual Madhyamik question paper pattern for that specific subject. 
+
+CRITICAL EXAM PATTERN RULES:
+- If History: Include MCQs (1 Mark), Very Short Answer (1 Mark), Short Answer (2 Marks), Analytical (4 Marks), Essay (8 Marks).
+- If Geography: Include MCQs (1 Mark), Fill in the Blanks (1 Mark), True/False (1 Mark), Match the Column (1 Mark), Short Answer (2 Marks), Analytical (3 Marks), Explanatory (5 Marks).
+- If Physical Science: Include MCQs (1 Mark), Very Short Answer (1 Mark), Short Answer (2 Marks), Long Answer (3 Marks). DO NOT include 4, 5, or 8 mark questions.
+- If Life Science: Include MCQs (1 Mark), Fill in the Blanks (1 Mark), True/False (1 Mark), Match Column (1 Mark), Very Short Answer (1 Mark), Short Answer (2 Marks), Long Answer (5 Marks). DO NOT include 3, 4, or 8 mark questions.
+- If Mathematics: Include MCQs (1 Mark), Fill in the Blanks (1 Mark), True/False (1 Mark), Short Answer (2 Marks), Long Answer (3, 4, 5 marks).
+- If Hindi / Bengali / English (Languages): Include MCQs (1 Mark), Very Short Answer (1 Mark), Short Answer (2/3 Marks), Long Answer (5 Marks). DO NOT include columns or 8 marks.
+
+Order the sections as:
+1. Objective Type Questions (MCQ, Fill in the blanks, True/False, Match the column as strictly applicable to the subject's board pattern).
+2. Short Answer Type Questions
+3. Long Answer Type / Analytical Questions (marks according to subject pattern).
+
+Divide the document into these distinct structural headings based ONLY on what marks/format actually appear in the board exam for "${sub}". If a format (like 8 marks, 4 marks, or Match the Column) is NOT used in that subject's exam pattern, EXCLUDE IT completely.
+
+CRITICAL RULE: For highly important questions that frequently appear in the board exam, strictly append "(VVI)" directly after the question text. Example: "What is the reflection of light? (VVI)"
+Provide detailed, comprehensive answers directly underneath each question.
+`;
+
+    const contents = `For the WBBSE chapter "${title}" under subject "${sub}":
+${promptSuffix}
+
+Language: ${targetLang}. NO BENGALI. ${isHindi ? 'DO NOT use any English words or Roman script.' : ''}
+${MATH_NOTATION_RULE}
+Format the output entirely in beautiful Markdown with logical headings, bold text, and numbered lists where appropriate. DO NOT output JSON.`;
+
+    const res = await ai.models.generateContent({
+      model: 'gemini-3-flash-preview', 
+      contents,
+      config: {
+        maxOutputTokens: 8192, 
+      }
+    });
+    return res.text || "";
+  });
+};
+
 export const fetchChapterQuestions = async (title: string, sub: string, sum: string, id: string) => {
   return withRetry(async () => {
     const ai = getAIClient();

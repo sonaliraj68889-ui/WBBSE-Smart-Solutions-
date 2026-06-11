@@ -10,6 +10,7 @@ interface DashboardProps {
   onSearchHistoryClick: (query: string) => void;
   onClearHistory: () => void;
   onSelectSamplePaper: (subject: string, classId: string, term: ExamTerm) => void;
+  onNotesBankClick: () => void;
   searchHistory: SearchHistoryItem[];
   darkMode: boolean;
   lang: 'en' | 'hi';
@@ -20,6 +21,7 @@ const Dashboard: React.FC<DashboardProps> = ({
   onSearchHistoryClick, 
   onClearHistory, 
   onSelectSamplePaper,
+  onNotesBankClick,
   searchHistory, 
   darkMode, 
   lang 
@@ -173,6 +175,26 @@ const Dashboard: React.FC<DashboardProps> = ({
           </div>
         </section>
       )}
+
+      {/* Notes Bank Banner */}
+      <section 
+        onClick={onNotesBankClick}
+        className={`group cursor-pointer p-6 rounded-3xl border shadow-sm transition-all hover:shadow-xl relative overflow-hidden ${
+          darkMode ? 'bg-slate-900 border-slate-800 hover:border-blue-500' : 'bg-gradient-to-r from-blue-50 to-indigo-50 border-blue-100 hover:border-blue-300'
+        }`}
+      >
+        <div className="absolute right-0 top-0 bottom-0 w-1/3 bg-gradient-to-l from-blue-500/10 to-transparent pointer-events-none"></div>
+        <div className="flex items-center space-x-6 relative z-10">
+          <div className="w-16 h-16 rounded-2xl bg-blue-600 text-white flex items-center justify-center text-3xl shadow-lg -rotate-6 group-hover:rotate-0 transition-all duration-300">
+            <i className="fa-solid fa-book-open-reader"></i>
+          </div>
+          <div>
+            <h2 className={`text-2xl font-black mb-1 ${darkMode ? 'text-slate-100' : 'text-blue-900'}`}>{t.notesBank || 'Notes Bank'}</h2>
+            <p className={`text-sm ${darkMode ? 'text-slate-400' : 'text-blue-700'}`}>Get comprehensive AI-generated notes, Q&A, and study materials for every chapter.</p>
+          </div>
+        </div>
+        <i className="fa-solid fa-chevron-right absolute right-6 top-1/2 -translate-y-1/2 text-2xl text-blue-500 opacity-50 group-hover:opacity-100 group-hover:translate-x-2 transition-all"></i>
+      </section>
 
       {CLASSES.map((classLevel) => (
         <section key={classLevel.id} className="space-y-4">
