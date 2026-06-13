@@ -7,7 +7,7 @@ import { CLASSES } from '../constants.ts';
 interface SavedOfflineProps {
   darkMode: boolean;
   lang: 'en' | 'hi';
-  onSelectSubject: (subject: Subject, classId: string) => void;
+  onSelectSubject: (subject: Subject, classId: string, initialChapterId?: string, initialMode?: 'summary' | 'qa' | 'bank') => void;
   onSelectSamplePaper: (subject: string, classId: string, term: ExamTerm) => void;
   onHome: () => void;
 }
@@ -154,15 +154,15 @@ const SavedOffline: React.FC<SavedOfflineProps> = ({ darkMode, lang, onSelectSub
                     if (item.type === 'paper') {
                       onSelectSamplePaper(item.subject, item.classId, item.id.split('_')[3] as ExamTerm);
                     } else if (subjectData && chapterId) {
-                      onSelectSubject(subjectData, item.classId);
+                      onSelectSubject(subjectData, item.classId, chapterId, item.type as 'summary' | 'qa' | 'bank');
                     }
                   }}
                 >
                   <div className="flex justify-between items-start pr-10">
                     <span className={`text-[10px] font-black uppercase tracking-widest px-2.5 py-1 rounded-md ${
-                      item.type === 'summary' ? 'bg-blue-100 text-blue-700' : item.type === 'paper' ? 'bg-orange-100 text-orange-700' : 'bg-purple-100 text-purple-700'
+                      item.type === 'summary' ? 'bg-blue-100 text-blue-700' : item.type === 'paper' ? 'bg-orange-100 text-orange-700' : item.type === 'bank' ? 'bg-emerald-100 text-emerald-700' : 'bg-purple-100 text-purple-700'
                     }`}>
-                      {item.type === 'summary' ? 'Notes' : item.type === 'paper' ? 'Paper' : 'Q&A'}
+                      {item.type === 'summary' ? 'Notes' : item.type === 'paper' ? 'Paper' : item.type === 'bank' ? 'Question Bank' : 'Q&A'}
                     </span>
                     <span className="text-[10px] font-bold text-gray-400 dark:text-slate-500">
                       {new Date(item.timestamp).toLocaleDateString()}

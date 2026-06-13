@@ -20,7 +20,11 @@ const MathText: React.FC<MathTextProps> = ({ text, className = '', isInline = fa
       
       // Split by Mermaid blocks, then by Math delimiters
       // We use a capture group to keep the delimiters
-      const parts = content.split(/(```mermaid[\s\S]*?```|\$\$[\s\S]*?\$\$|\$[^$\n]*?\$)/g);
+      
+      // Clean up markdown escapes that Gemini often adds incorrectly
+      const cleanContent = content.replace(/\\\*/g, '*').replace(/\\_/g, '_');
+      
+      const parts = cleanContent.split(/(```mermaid[\s\S]*?```|\$\$[\s\S]*?\$\$|\$[^$\n]*?\$)/g);
       
       for (let i = 0; i < parts.length; i++) {
         const part = parts[i];
@@ -76,24 +80,32 @@ const MathText: React.FC<MathTextProps> = ({ text, className = '', isInline = fa
           }
           el.appendChild(span);
         } else {
-          // Handle text with newlines and bold formatting (**text**)
-          // We can do a simple bold parser here or just text
-          // For now, let's keep it simple but handle newlines
-          const lines = part.split('\n');
-          lines.forEach((line, j) => {
-            if (j > 0) el.appendChild(document.createElement('br'));
-            
-            // Simple bold parser: **text**
-            const boldParts = line.split(/(\*\*.*?\*\*)/g);
-            boldParts.forEach(bPart => {
-              if (bPart.startsWith('**') && bPart.endsWith('**')) {
-                const strong = document.createElement('strong');
-                strong.textContent = bPart.slice(2, -2);
-                el.appendChild(strong);
-              } else {
-                if (bPart) el.appendChild(document.createTextNode(bPart));
-              }
-            });
+          // Handle bold formatting (**text**) and newlines
+          // First, split by bold tokens
+          const boldParts = part.split(/(\*\*[\s\S]*?\*\*)/g);
+          
+          boldParts.forEach(bPart => {
+            if (bPart.startsWith('**') && bPart.endsWith('**') && bPart.length >= 4) {
+              const strong = document.createElement('strong');
+              const innerText = bPart.slice(2, -2);
+              
+              const lines = innerText.split('\n');
+              lines.forEach((line, j) => {
+                if (j > 0) strong.appendChild(document.createElement('br'));
+                if (line) strong.appendChild(document.createTextNode(line));
+              });
+              
+              el.appendChild(strong);
+            } else {
+              const lines = bPart.split('\n');
+              lines.forEach((line, j) => {
+                if (j > 0) el.appendChild(document.createElement('br'));
+                
+                // Let's also handle single asterisk italic if needed, but the user only mentioned double asterisk.
+                // However, LLMs might output *italic*. We'll leave it as is or we can parse it easily.
+                if (line) el.appendChild(document.createTextNode(line));
+              });
+            }
           });
         }
       }

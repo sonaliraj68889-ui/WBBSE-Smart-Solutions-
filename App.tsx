@@ -28,7 +28,7 @@ const App: React.FC = () => {
     return (saved === 'en' || saved === 'hi') ? saved : 'en';
   });
   const [darkMode, setDarkMode] = useState(() => JSON.parse(localStorage.getItem('darkMode') || 'false'));
-  const [selectedSubject, setSelectedSubject] = useState<{ subject: Subject, classId: string, initialChapterId?: string } | null>(null);
+  const [selectedSubject, setSelectedSubject] = useState<{ subject: Subject, classId: string, initialChapterId?: string, initialMode?: 'summary' | 'qa' | 'bank' } | null>(null);
   const [searchHistory, setSearchHistory] = useState<SearchHistoryItem[]>(() => {
     const saved = localStorage.getItem('searchHistory');
     return saved ? JSON.parse(saved).map((h: any) => ({ ...h, timestamp: new Date(h.timestamp) })) : [];
@@ -184,8 +184,8 @@ const App: React.FC = () => {
     setActiveTab('dashboard');
   };
 
-  const handleSearchSelect = (s: Subject, clId: string, ch?: string) => {
-    setSelectedSubject({ subject: s, classId: clId, initialChapterId: ch });
+  const handleSearchSelect = (s: Subject, clId: string, ch?: string, mode?: 'summary' | 'qa' | 'bank') => {
+    setSelectedSubject({ subject: s, classId: clId, initialChapterId: ch, initialMode: mode });
     setActiveTab('curriculum');
   };
 
@@ -235,6 +235,7 @@ const App: React.FC = () => {
             subject={selectedSubject.subject} 
             classId={selectedSubject.classId} 
             initialChapterId={selectedSubject.initialChapterId} 
+             initialMode={selectedSubject.initialMode}
             onBack={() => setSelectedSubject(null)} 
             onHome={handleGoHome} 
             darkMode={darkMode} 
@@ -248,8 +249,8 @@ const App: React.FC = () => {
           <SavedOffline 
             darkMode={darkMode} 
             lang={lang} 
-            onSelectSubject={(subject, classId) => {
-              setSelectedSubject({ subject, classId });
+            onSelectSubject={(subject, classId, initialChapterId, initialMode) => {
+              setSelectedSubject({ subject, classId, initialChapterId, initialMode });
               setActiveTab('curriculum');
             }}
             onSelectSamplePaper={handleSelectSamplePaper}

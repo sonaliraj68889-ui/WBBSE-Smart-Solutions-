@@ -211,7 +211,7 @@ export const summarizeChapter = async (title: string, sub: string, len: string, 
     
     const res = await ai.models.generateContent({
       model: 'gemini-3-flash-preview', 
-      contents: `Provide a ${len} comprehensive board-standard solution for WBBSE chapter: "${title}" in ${sub}. Language: ${targetLang}. NO BENGALI. ${isHindi ? 'DO NOT use any English words or Roman script.' : ''} Focus on key concepts and logical explanations. ${MATH_NOTATION_RULE}`,
+      contents: `Provide ${len === 'short' ? 'concise' : len === 'medium' ? 'detailed' : 'very extensive'} study notes for WBBSE chapter: "${title}" in ${sub}. Language: ${targetLang}. NO BENGALI. ${isHindi ? 'DO NOT use any English words or Roman script. Write strictly in pure Hindi.' : ''} Focus on key concepts, important points, definitions, and logical explanations. Do NOT provide questions and answers. Provide only pure, well-structured study notes with headings and bullet points. ${MATH_NOTATION_RULE}`,
       config: {
         maxOutputTokens: 4096, 
       }
@@ -250,7 +250,7 @@ Order the sections as:
 Divide the document into these distinct structural headings based ONLY on what marks/format actually appear in the board exam for "${sub}". If a format (like 8 marks, 4 marks, or Match the Column) is NOT used in that subject's exam pattern, EXCLUDE IT completely.
 
 CRITICAL RULE: For highly important questions that frequently appear in the board exam, strictly append "(VVI)" directly after the question text. Example: "What is the reflection of light? (VVI)"
-Provide detailed, comprehensive answers directly underneath each question.
+Provide detailed, comprehensive answers directly underneath each question. If a question clearly requires a visual diagram to explain the concept (like human eye structure, life cycles, physics apparatus), you MUST output exactly this tag on its own line: [DIAGRAM: descriptive topic name]. Example: [DIAGRAM: structure of human eye]
 `;
 
     const contents = `For the WBBSE chapter "${title}" under subject "${sub}":

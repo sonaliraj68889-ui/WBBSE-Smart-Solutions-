@@ -1,12 +1,50 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 // @ts-ignore
 import html2pdf from 'html2pdf.js/dist/html2pdf.bundle.min.js';
 import { Subject } from '../types.ts';
 import { CLASSES } from '../constants.ts';
 import { translations } from '../translations.ts';
-import { generateChapterNotes, ApiError } from '../services/geminiService.ts';
+import { generateChapterNotes, generateDiagram, ApiError } from '../services/geminiService.ts';
 import { saveOfflineContent, getOfflineContent, isOffline } from '../services/offlineService.ts';
 import { motion } from 'motion/react';
+import MathText from './MathText.tsx';
+
+const AutoDiagram: React.FC<{ topic: string; darkMode: boolean }> = ({ topic, darkMode }) => {
+  const [imgData, setImgData] = useState<string | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    let mounted = true;
+    generateDiagram(topic).then(data => {
+      if (mounted) {
+        setImgData(data);
+        setLoading(false);
+      }
+    }).catch(e => {
+      console.error(e);
+      if (mounted) setLoading(false);
+    });
+    return () => { mounted = false; };
+  }, [topic]);
+
+  if (loading) {
+    return (
+      <div className={`p-8 my-6 flex flex-col items-center justify-center rounded-xl border border-dashed ${darkMode ? 'bg-slate-800/50 border-slate-700' : 'bg-gray-50 border-gray-300'}`}>
+        <i className="fa-solid fa-image fa-beat text-3xl mb-3 opacity-50"></i>
+        <p className="text-sm font-bold opacity-70">Drawing Diagram: {topic}...</p>
+      </div>
+    );
+  }
+
+  if (!imgData) return null;
+
+  return (
+    <div className="my-6 flex flex-col items-center">
+      <img src={imgData} alt={topic} className="rounded-xl shadow-lg border max-w-full h-auto" style={{ maxHeight: '400px' }} crossOrigin="anonymous" />
+      <p className="text-xs text-center mt-2 font-bold opacity-60">Fig: {topic}</p>
+    </div>
+  );
+};
 
 interface NotesBankProps {
   darkMode: boolean;
@@ -19,12 +57,19 @@ const NotesBank: React.FC<NotesBankProps> = ({ darkMode, lang, onHome, onQuotaEx
   const t = translations[lang];
   const [selectedClass, setSelectedClass] = useState<string | null>(null);
   const [selectedSubject, setSelectedSubject] = useState<Subject | null>(null);
-  const [selectedChapter, setSelectedChapter] = useState<{ id: string, title: string } | null>(null);
+  const [chapterPath, setChapterPath] = useState<{ id: string, title: string, parts?: any[] }[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [generatedNotes, setGeneratedNotes] = useState<string | null>(null);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [isExporting, setIsExporting] = useState(false);
   const contentRef = useRef<HTMLDivElement>(null);
+
+  const selectedChapter = chapterPath.length > 0 ? chapterPath[chapterPath.length - 1] : null;
+
+  const handleBackToChapters = () => {
+    setChapterPath([]);
+    setGeneratedNotes(null);
+  };
 
   const getLocalizedClassName = (classId: string) => {
     return (t.classLabels as any)[classId] || classId;
@@ -40,7 +85,7 @@ const NotesBank: React.FC<NotesBankProps> = ({ darkMode, lang, onHome, onQuotaEx
     setIsLoading(true);
     setErrorMsg(null);
     try {
-      const cacheType = 'summary';
+      const cacheType = 'bank';
       const cached = await getOfflineContent(selectedClass, selectedSubject.id, selectedChapter.id, cacheType);
       if (cached && typeof cached === 'string') {
         setGeneratedNotes(cached);
@@ -105,12 +150,12 @@ const NotesBank: React.FC<NotesBankProps> = ({ darkMode, lang, onHome, onQuotaEx
   // Breadcrumbs
   const renderBreadcrumbs = () => {
     return (
-      <div className={`flex items-center space-x-2 text-xs font-bold mb-6 ${darkMode ? 'text-slate-400' : 'text-gray-500'}`}>
+      <div className={`flex flex-wrap items-center gap-2 text-xs font-bold mb-6 ${darkMode ? 'text-slate-400' : 'text-gray-500'}`}>
         <button onClick={onHome} className="hover:text-blue-500 transition-colors"><i className="fa-solid fa-home"></i></button>
         {selectedClass && (
           <>
             <i className="fa-solid fa-chevron-right text-[10px] opacity-50"></i>
-            <button onClick={() => { setSelectedSubject(null); setSelectedChapter(null); }} className="hover:text-blue-500 transition-colors">
+            <button onClick={() => { setSelectedSubject(null); setChapterPath([]); }} className="hover:text-blue-500 transition-colors whitespace-nowrap">
               {getLocalizedClassName(selectedClass)}
             </button>
           </>
@@ -118,17 +163,23 @@ const NotesBank: React.FC<NotesBankProps> = ({ darkMode, lang, onHome, onQuotaEx
         {selectedSubject && (
           <>
             <i className="fa-solid fa-chevron-right text-[10px] opacity-50"></i>
-            <button onClick={() => setSelectedChapter(null)} className="hover:text-blue-500 transition-colors">
+            <button onClick={() => setChapterPath([])} className="hover:text-blue-500 transition-colors whitespace-nowrap">
               {getLocalizedSubjectName(selectedSubject.id, selectedSubject.name)}
             </button>
           </>
         )}
-        {selectedChapter && (
-          <>
+        {chapterPath.map((node, index) => (
+          <React.Fragment key={index}>
             <i className="fa-solid fa-chevron-right text-[10px] opacity-50"></i>
-            <span className="text-blue-500">{selectedChapter.title}</span>
-          </>
-        )}
+            {index < chapterPath.length - 1 ? (
+              <button onClick={() => setChapterPath(chapterPath.slice(0, index + 1))} className="hover:text-blue-500 transition-colors whitespace-nowrap max-w-[150px] truncate" title={node.title}>
+                {node.title}
+              </button>
+            ) : (
+              <span className="text-blue-500 whitespace-nowrap max-w-[150px] truncate" title={node.title}>{node.title}</span>
+            )}
+          </React.Fragment>
+        ))}
       </div>
     );
   };
@@ -190,34 +241,90 @@ const NotesBank: React.FC<NotesBankProps> = ({ darkMode, lang, onHome, onQuotaEx
     );
   }
 
-  if (!selectedChapter) {
-    return (
-      <div className="animate-fadeIn pb-12">
-        {renderBreadcrumbs()}
-        <h2 className={`text-3xl font-black mb-8 ${darkMode ? 'text-slate-100' : 'text-gray-800'}`}>
-          Select Chapter
-        </h2>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {selectedSubject.chapters.map((chap) => (
-            <button 
-              key={chap.id}
-              onClick={() => { setSelectedChapter(chap); setGeneratedNotes(null); }}
-              className={`p-5 rounded-2xl border text-left transition-all hover:scale-[1.02] active:scale-95 flex items-start space-x-4 ${
-                darkMode ? 'bg-slate-900 border-slate-800 hover:border-blue-500 text-slate-100' : 'bg-white border-gray-100 hover:border-blue-400 text-gray-800'
-              }`}
-            >
-              <div className={`bg-blue-100 text-blue-600 font-black text-xs px-2 py-1 rounded mt-0.5`}>
-                {chap.id}
+  const currentNode = chapterPath.length > 0 ? chapterPath[chapterPath.length - 1] : null;
+  const currentFeatures = currentNode?.parts || (chapterPath.length === 0 ? selectedSubject?.chapters : null);
+  const hasFeatures = currentFeatures && currentFeatures.length > 0;
+
+  if (selectedSubject && (!currentNode || hasFeatures)) {
+    // Only return the grid if we haven't started generating/loading
+    if (!generatedNotes && !isLoading && !errorMsg) {
+      return (
+        <div className="animate-fadeIn pb-12">
+          {renderBreadcrumbs()}
+          
+          {currentNode && (
+            <div className={`p-6 md:p-8 rounded-3xl border shadow-sm mb-8 ${darkMode ? 'bg-slate-900 border-slate-800' : 'bg-white border-gray-100'}`}>
+              <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 border-b pb-6 mb-6">
+                <div>
+                  <h2 className={`text-2xl font-black mb-1 ${darkMode ? 'text-slate-100' : 'text-gray-800'}`}>
+                    {currentNode.title}
+                  </h2>
+                  <p className={`text-sm ${darkMode ? 'text-slate-400' : 'text-gray-500'}`}>
+                    Select a sub-topic below, or generate comprehensive notes for this entire section.
+                  </p>
+                </div>
+                <button 
+                  onClick={handleGenerateNotes}
+                  className="bg-blue-600 text-white px-6 py-2 rounded-xl font-bold hover:bg-blue-700 transition-colors shadow-md whitespace-nowrap flex-shrink-0"
+                >
+                  <i className="fa-solid fa-layer-group mr-2"></i> Generate Whole Section
+                </button>
               </div>
-              <div>
-                <h3 className="font-bold text-sm leading-snug">{chap.title}</h3>
+              <h3 className={`text-lg font-bold mb-4 ${darkMode ? 'text-slate-300' : 'text-gray-700'}`}>
+                Or Select Sub-Topic:
+              </h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                {currentFeatures!.map((chap) => (
+                  <button 
+                    key={chap.id}
+                    onClick={() => { setChapterPath([...chapterPath, chap]); setGeneratedNotes(null); }}
+                    className={`p-5 rounded-2xl border text-left transition-all hover:scale-[1.02] active:scale-95 flex items-start space-x-4 ${
+                      darkMode ? 'bg-slate-800 border-slate-700 hover:border-blue-500 text-slate-100' : 'bg-gray-50 border-gray-200 hover:border-blue-400 text-gray-800'
+                    }`}
+                  >
+                    <div className={`bg-blue-100 text-blue-600 font-black text-xs px-2 py-1 rounded mt-0.5 whitespace-nowrap flex-shrink-0`}>
+                      {chap.id.split('-').pop()}
+                    </div>
+                    <div>
+                      <h3 className="font-bold text-sm leading-snug">{chap.title}</h3>
+                    </div>
+                  </button>
+                ))}
               </div>
-            </button>
-          ))}
+            </div>
+          )}
+
+          {!currentNode && (
+            <div>
+              <h2 className={`text-3xl font-black mb-8 ${darkMode ? 'text-slate-100' : 'text-gray-800'}`}>
+                Select Chapter
+              </h2>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                {currentFeatures!.map((chap) => (
+                  <button 
+                    key={chap.id}
+                    onClick={() => { setChapterPath([...chapterPath, chap]); setGeneratedNotes(null); }}
+                    className={`p-5 rounded-2xl border text-left transition-all hover:scale-[1.02] active:scale-95 flex items-start space-x-4 ${
+                      darkMode ? 'bg-slate-900 border-slate-800 hover:border-blue-500 text-slate-100' : 'bg-white border-gray-100 hover:border-blue-400 text-gray-800'
+                    }`}
+                  >
+                    <div className={`bg-blue-100 text-blue-600 font-black text-xs px-2 py-1 rounded mt-0.5 flex-shrink-0 whitespace-nowrap`}>
+                      {chap.id}
+                    </div>
+                    <div>
+                      <h3 className="font-bold text-sm leading-snug">{chap.title}</h3>
+                    </div>
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
         </div>
-      </div>
-    );
+      );
+    }
   }
+
+  if (!selectedChapter) return null;
 
   return (
     <div className="animate-fadeIn pb-12">
@@ -327,7 +434,7 @@ const NotesBank: React.FC<NotesBankProps> = ({ darkMode, lang, onHome, onQuotaEx
           <div className="animate-fadeIn mt-6" ref={contentRef}>
             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center border-b pb-6 mb-6 gap-4" data-html2canvas-ignore="true">
               <h3 className={`text-xl font-black ${darkMode ? 'text-blue-400' : 'text-blue-600'}`}>
-                <i className="fa-solid fa-check-circle mr-2"></i> Notes Generated Successfully
+                <i className="fa-solid fa-check-circle mr-2"></i> Question Bank Generated Successfully
               </h3>
               <button 
                 className={`bg-blue-600 text-white hover:bg-blue-700 px-4 py-2 rounded-lg transition-colors font-bold text-sm shadow-md ${isExporting ? 'opacity-70 cursor-not-allowed' : ''}`}
@@ -343,19 +450,21 @@ const NotesBank: React.FC<NotesBankProps> = ({ darkMode, lang, onHome, onQuotaEx
             </div>
             
             <div className={`prose prose-sm md:prose-base max-w-none ${darkMode ? 'prose-invert' : ''}`}>
-              <h1 className="text-3xl font-black mb-6 border-b-2 border-blue-500 pb-2">{selectedChapter.title} - Notes</h1>
+              <h1 className="text-3xl font-black mb-6 border-b-2 border-blue-500 pb-2">{selectedChapter.title} - Question Bank</h1>
               {generatedNotes.split('\n').map((line, i) => {
-                if (line.startsWith('## ')) return <h2 key={i} className="text-2xl font-bold mt-8 mb-4 border-b pb-2 text-blue-500">{line.replace('## ', '')}</h2>;
-                if (line.startsWith('### ')) return <h3 key={i} className="text-xl font-bold mt-6 mb-3">{line.replace('### ', '')}</h3>;
-                if (line.startsWith('> ')) return <blockquote key={i} className="border-l-4 border-blue-500 pl-4 text-gray-500 italic mb-4">{line.replace('> ', '')}</blockquote>;
-                if (line.startsWith('**')) return <p key={i} className="font-bold mt-5 mb-2">{line.replace(/\*\*/g, '')}</p>;
-                if (line.startsWith('*')) return <p key={i} className="italic text-gray-500 mb-2">{line.replace(/\*/g, '')}</p>;
-                return line ? <p key={i} className="mb-2">{line}</p> : <br key={i} />;
+                if (line.match(/^\[DIAGRAM:\s*(.+)\]$/i)) {
+                  const topic = line.match(/^\[DIAGRAM:\s*(.+)\]$/i)![1];
+                  return <AutoDiagram key={i} topic={topic} darkMode={darkMode} />;
+                }
+                if (line.startsWith('## ')) return <h2 key={i} className="text-2xl font-bold mt-8 mb-4 border-b pb-2 text-blue-500"><MathText text={line.replace('## ', '')} isInline /></h2>;
+                if (line.startsWith('### ')) return <h3 key={i} className="text-xl font-bold mt-6 mb-3"><MathText text={line.replace('### ', '')} isInline /></h3>;
+                if (line.startsWith('> ')) return <blockquote key={i} className="border-l-4 border-blue-500 pl-4 text-gray-500 italic mb-4"><MathText text={line.replace('> ', '')} isInline /></blockquote>;
+                return line ? <p key={i} className="mb-2"><MathText text={line} isInline /></p> : <br key={i} />;
               })}
             </div>
             
             <div className="mt-12 pt-6 border-t border-inherit/20 flex flex-col sm:flex-row justify-between items-center opacity-60 gap-4">
-              <span className="text-xs font-black uppercase tracking-widest text-blue-600">Unified Chapter Notes Generator</span>
+              <span className="text-xs font-black uppercase tracking-widest text-blue-600">Unified Chapter Question Bank</span>
               <span className="text-[10px] font-black uppercase tracking-widest">Developed by Ritik Roushan Sah</span>
             </div>
           </div>
