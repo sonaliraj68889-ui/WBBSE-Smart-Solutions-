@@ -14,6 +14,7 @@ const SamplePaperViewer = React.lazy(() => import('./components/SamplePaperViewe
 const PracticeMode = React.lazy(() => import('./components/PracticeMode.tsx'));
 const SavedOffline = React.lazy(() => import('./components/SavedOffline.tsx'));
 const NotesBank = React.lazy(() => import('./components/NotesBank.tsx'));
+const SuggestionBank = React.lazy(() => import('./components/SuggestionBank.tsx'));
 
 const LoadingFallback = () => (
   <div className="flex items-center justify-center h-64">
@@ -28,7 +29,7 @@ const App: React.FC = () => {
     return (saved === 'en' || saved === 'hi') ? saved : 'en';
   });
   const [darkMode, setDarkMode] = useState(() => JSON.parse(localStorage.getItem('darkMode') || 'false'));
-  const [selectedSubject, setSelectedSubject] = useState<{ subject: Subject, classId: string, initialChapterId?: string, initialMode?: 'summary' | 'qa' | 'bank' } | null>(null);
+  const [selectedSubject, setSelectedSubject] = useState<{ subject: Subject, classId: string, initialChapterId?: string } | null>(null);
   const [searchHistory, setSearchHistory] = useState<SearchHistoryItem[]>(() => {
     const saved = localStorage.getItem('searchHistory');
     return saved ? JSON.parse(saved).map((h: any) => ({ ...h, timestamp: new Date(h.timestamp) })) : [];
@@ -184,8 +185,8 @@ const App: React.FC = () => {
     setActiveTab('dashboard');
   };
 
-  const handleSearchSelect = (s: Subject, clId: string, ch?: string, mode?: 'summary' | 'qa' | 'bank') => {
-    setSelectedSubject({ subject: s, classId: clId, initialChapterId: ch, initialMode: mode });
+  const handleSearchSelect = (s: Subject, clId: string, ch?: string) => {
+    setSelectedSubject({ subject: s, classId: clId, initialChapterId: ch });
     setActiveTab('curriculum');
   };
 
@@ -200,6 +201,7 @@ const App: React.FC = () => {
             onClearHistory={() => setSearchHistory([])} 
             onSelectSamplePaper={handleSelectSamplePaper} 
             onNotesBankClick={() => setActiveTab('notesbank')}
+            onSuggestionBankClick={() => setActiveTab('suggestionbank')}
             searchHistory={searchHistory} 
             darkMode={darkMode} 
             lang={lang} 
@@ -235,7 +237,6 @@ const App: React.FC = () => {
             subject={selectedSubject.subject} 
             classId={selectedSubject.classId} 
             initialChapterId={selectedSubject.initialChapterId} 
-             initialMode={selectedSubject.initialMode}
             onBack={() => setSelectedSubject(null)} 
             onHome={handleGoHome} 
             darkMode={darkMode} 
@@ -249,8 +250,8 @@ const App: React.FC = () => {
           <SavedOffline 
             darkMode={darkMode} 
             lang={lang} 
-            onSelectSubject={(subject, classId, initialChapterId, initialMode) => {
-              setSelectedSubject({ subject, classId, initialChapterId, initialMode });
+            onSelectSubject={(subject, classId) => {
+              setSelectedSubject({ subject, classId });
               setActiveTab('curriculum');
             }}
             onSelectSamplePaper={handleSelectSamplePaper}
@@ -261,6 +262,16 @@ const App: React.FC = () => {
       case 'notesbank':
         content = (
           <NotesBank 
+            darkMode={darkMode} 
+            lang={lang} 
+            onHome={handleGoHome} 
+            onQuotaExceeded={handleQuotaExceeded} 
+          />
+        );
+        break;
+      case 'suggestionbank':
+        content = (
+          <SuggestionBank 
             darkMode={darkMode} 
             lang={lang} 
             onHome={handleGoHome} 

@@ -4,27 +4,26 @@ import html2pdf from 'html2pdf.js/dist/html2pdf.bundle.min.js';
 import { Subject } from '../types.ts';
 import { CLASSES } from '../constants.ts';
 import { translations } from '../translations.ts';
-import { generateChapterNotes, ApiError } from '../services/geminiService.ts';
+import { generateSuggestions, ApiError } from '../services/geminiService.ts';
 import { saveOfflineContent, getOfflineContent, isOffline } from '../services/offlineService.ts';
 import { motion } from 'motion/react';
 
-interface NotesBankProps {
+interface SuggestionBankProps {
   darkMode: boolean;
   lang: 'en' | 'hi';
   onHome: () => void;
   onQuotaExceeded: () => void;
 }
 
-const NotesBank: React.FC<NotesBankProps> = ({ darkMode, lang, onHome, onQuotaExceeded }) => {
+const SuggestionBank: React.FC<SuggestionBankProps> = ({ darkMode, lang, onHome, onQuotaExceeded }) => {
   const t = translations[lang];
-  const [selectedClass, setSelectedClass] = useState<string | null>(null);
+  const [selectedClass, setSelectedClass] = useState<string | null>('class-10');
   const [selectedSubject, setSelectedSubject] = useState<Subject | null>(null);
   const [chapterPath, setChapterPath] = useState<{ id: string, title: string, parts?: any[] }[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [generatedNotes, setGeneratedNotes] = useState<string | null>(null);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [isExporting, setIsExporting] = useState(false);
-  const [selectedPartMode, setSelectedPartMode] = useState<'both' | 'part1' | 'part2'>('both');
   const contentRef = useRef<HTMLDivElement>(null);
 
   const selectedChapter = chapterPath.length > 0 ? chapterPath[chapterPath.length - 1] : null;
@@ -48,8 +47,8 @@ const NotesBank: React.FC<NotesBankProps> = ({ darkMode, lang, onHome, onQuotaEx
     setIsLoading(true);
     setErrorMsg(null);
     try {
-      const cacheType = 'summary';
-      const cached = await getOfflineContent(selectedClass, selectedSubject.id, selectedChapter.id, `${cacheType}_${selectedPartMode}`);
+      const cacheType = 'vvisuggestion';
+      const cached = await getOfflineContent(selectedClass, selectedSubject.id, selectedChapter.id, cacheType);
       if (cached && typeof cached === 'string') {
         setGeneratedNotes(cached);
         setIsLoading(false);
@@ -57,19 +56,20 @@ const NotesBank: React.FC<NotesBankProps> = ({ darkMode, lang, onHome, onQuotaEx
       }
 
       if (isOffline()) {
-        throw new Error("You are offline and these notes are not saved.");
+        throw new Error("You are offline and these suggestions are not saved.");
       }
 
       const locSubName = getLocalizedSubjectName(selectedSubject.id, selectedSubject.name);
-      const result = await generateChapterNotes(selectedChapter.title, locSubName, selectedSubject.id, selectedPartMode);
+      const locClassName = getLocalizedClassName(selectedClass);
+      const result = await generateSuggestions(selectedChapter.title, locSubName, selectedSubject.id, locClassName);
       
       setGeneratedNotes(result);
-      await saveOfflineContent(selectedClass, selectedSubject.id, selectedChapter.id, selectedChapter.title, `${cacheType}_${selectedPartMode}`, result);
+      await saveOfflineContent(selectedClass, selectedSubject.id, selectedChapter.id, selectedChapter.title, cacheType, result);
     } catch (err: any) {
       if (err instanceof ApiError && err.code === 'QUOTA_EXCEEDED') {
         onQuotaExceeded();
       } else {
-        setErrorMsg(err.message || "Failed to generate notes. Please try again.");
+        setErrorMsg(err.message || "Failed to generate suggestions. Please try again.");
       }
     } finally {
       setIsLoading(false);
@@ -83,7 +83,7 @@ const NotesBank: React.FC<NotesBankProps> = ({ darkMode, lang, onHome, onQuotaEx
       const element = contentRef.current;
       const opt = {
         margin:       [15, 10, 15, 10],
-        filename:     `${selectedChapter.title}-Notes.pdf`,
+        filename:     `${selectedChapter.title}-Suggestions.pdf`,
         image:        { type: 'jpeg', quality: 0.98 },
         html2canvas:  { scale: 2, useCORS: true },
         jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' },
@@ -115,6 +115,7 @@ const NotesBank: React.FC<NotesBankProps> = ({ darkMode, lang, onHome, onQuotaEx
     return (
       <div className={`flex flex-wrap items-center gap-2 text-xs font-bold mb-6 ${darkMode ? 'text-slate-400' : 'text-gray-500'}`}>
         <button onClick={onHome} className="hover:text-blue-500 transition-colors"><i className="fa-solid fa-home"></i></button>
+        <button onClick={() => { setSelectedClass(null); setSelectedSubject(null); setChapterPath([]); }} className="hover:text-blue-500 transition-colors whitespace-nowrap"><i className="fa-solid fa-list mr-1"></i>Classes</button>
         {selectedClass && (
           <>
             <i className="fa-solid fa-chevron-right text-[10px] opacity-50"></i>
@@ -152,8 +153,8 @@ const NotesBank: React.FC<NotesBankProps> = ({ darkMode, lang, onHome, onQuotaEx
       <div className="animate-fadeIn pb-12">
         {renderBreadcrumbs()}
         <h2 className={`text-3xl font-black mb-8 ${darkMode ? 'text-slate-100' : 'text-gray-800'}`}>
-          <i className="fa-solid fa-book-bookmark text-blue-500 mr-3"></i> 
-          Notes Bank
+          <i className="fa-solid fa-star text-amber-500 mr-3"></i> 
+          VVI Suggestions Bank
         </h2>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
           {CLASSES.map((c) => (
@@ -223,21 +224,10 @@ const NotesBank: React.FC<NotesBankProps> = ({ darkMode, lang, onHome, onQuotaEx
                     {currentNode.title}
                   </h2>
                   <p className={`text-sm ${darkMode ? 'text-slate-400' : 'text-gray-500'}`}>
-                    Select a sub-topic below, or generate comprehensive notes for this entire section.
+                    Select a sub-topic below, or generate comprehensive suggestions for this entire section.
                   </p>
                 </div>
                 <div className="flex flex-col gap-3 w-full md:w-auto items-stretch md:items-end">
-                  <select 
-                    value={selectedPartMode}
-                    onChange={(e) => setSelectedPartMode(e.target.value as any)}
-                    className={`px-4 py-2 rounded-xl text-sm font-bold border outline-none appearance-none cursor-pointer ${
-                      darkMode ? 'bg-slate-800 border-slate-700 text-slate-200 focus:border-blue-500' : 'bg-gray-50 border-gray-200 text-gray-700 focus:border-blue-500'
-                    }`}
-                  >
-                    <option value="both">All Questions (Part 1 & 2)</option>
-                    <option value="part1">Only Part 1: Objective & Short</option>
-                    <option value="part2">Only Part 2: Long & Analytical</option>
-                  </select>
                   <button 
                     onClick={handleGenerateNotes}
                     className="bg-blue-600 text-white px-6 py-2 rounded-xl font-bold hover:bg-blue-700 transition-colors shadow-md whitespace-nowrap"
@@ -325,27 +315,14 @@ const NotesBank: React.FC<NotesBankProps> = ({ darkMode, lang, onHome, onQuotaEx
               Complete Chapter Bank
             </h3>
             <p className={`text-sm mb-6 max-w-md ${darkMode ? 'text-slate-400' : 'text-gray-500'}`}>
-              Generate a unified document containing MCQs, Fill in the Blanks, True/False, Match the Column, and Short/Long answers.
+              Generate a unified document containing MCQs, Fill in the Blanks, True/False, Match the Column, and Short/Long answers (VVI).
             </p>
-            <div className="flex flex-col sm:flex-row gap-4 w-full md:w-auto items-center mb-8">
-              <select 
-                value={selectedPartMode}
-                onChange={(e) => setSelectedPartMode(e.target.value as any)}
-                className={`px-4 py-3 rounded-xl text-sm font-bold border outline-none appearance-none cursor-pointer w-full sm:w-auto ${
-                  darkMode ? 'bg-slate-800 border-slate-700 text-slate-200 focus:border-blue-500' : 'bg-white border-gray-200 text-gray-700 focus:border-blue-500'
-                }`}
-              >
-                <option value="both">Generate All (Part 1 & 2)</option>
-                <option value="part1">Only Part 1: Objective & Short</option>
-                <option value="part2">Only Part 2: Long & Analytical</option>
-              </select>
-              <button 
-                onClick={handleGenerateNotes}
-                className="bg-blue-600 text-white px-8 py-3 rounded-xl font-bold shadow-xl shadow-blue-500/20 hover:scale-105 active:scale-95 transition-all w-full sm:w-auto"
-              >
-                <i className="fa-solid fa-wand-magic-sparkles mr-2"></i> Generate Notes
-              </button>
-            </div>
+            <button 
+              onClick={handleGenerateNotes}
+              className="bg-blue-600 text-white px-8 py-3 rounded-xl font-bold shadow-xl shadow-blue-500/20 hover:scale-105 active:scale-95 transition-all w-full sm:w-auto"
+            >
+              <i className="fa-solid fa-wand-magic-sparkles mr-2"></i> Generate Suggestions
+            </button>
           </div>
         )}
 
@@ -423,7 +400,7 @@ const NotesBank: React.FC<NotesBankProps> = ({ darkMode, lang, onHome, onQuotaEx
           <div className="animate-fadeIn mt-6" ref={contentRef}>
             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center border-b pb-6 mb-6 gap-4" data-html2canvas-ignore="true">
               <h3 className={`text-xl font-black ${darkMode ? 'text-blue-400' : 'text-blue-600'}`}>
-                <i className="fa-solid fa-check-circle mr-2"></i> Notes Generated Successfully
+                <i className="fa-solid fa-check-circle mr-2"></i> Suggestions Generated Successfully
               </h3>
               <button 
                 className={`bg-blue-600 text-white hover:bg-blue-700 px-4 py-2 rounded-lg transition-colors font-bold text-sm shadow-md ${isExporting ? 'opacity-70 cursor-not-allowed' : ''}`}
@@ -439,7 +416,7 @@ const NotesBank: React.FC<NotesBankProps> = ({ darkMode, lang, onHome, onQuotaEx
             </div>
             
             <div className={`prose prose-sm md:prose-base max-w-none ${darkMode ? 'prose-invert' : ''}`}>
-              <h1 className="text-3xl font-black mb-6 border-b-2 border-blue-500 pb-2">{selectedChapter.title} - Notes</h1>
+              <h1 className="text-3xl font-black mb-6 border-b-2 border-blue-500 pb-2">{selectedChapter.title} - VVI Suggestions</h1>
               {generatedNotes.split('\n').map((line, i) => {
                 if (line.startsWith('## ')) return <h2 key={i} className="text-2xl font-bold mt-8 mb-4 border-b pb-2 text-blue-500">{line.replace('## ', '')}</h2>;
                 if (line.startsWith('### ')) return <h3 key={i} className="text-xl font-bold mt-6 mb-3">{line.replace('### ', '')}</h3>;
@@ -451,7 +428,7 @@ const NotesBank: React.FC<NotesBankProps> = ({ darkMode, lang, onHome, onQuotaEx
             </div>
             
             <div className="mt-12 pt-6 border-t border-inherit/20 flex flex-col sm:flex-row justify-between items-center opacity-60 gap-4">
-              <span className="text-xs font-black uppercase tracking-widest text-blue-600">Unified Chapter Notes Generator</span>
+              <span className="text-xs font-black uppercase tracking-widest text-blue-600">Unified Chapter Suggestions Generator</span>
               <span className="text-[10px] font-black uppercase tracking-widest">Developed by Ritik Roushan Sah</span>
             </div>
           </div>
@@ -461,4 +438,4 @@ const NotesBank: React.FC<NotesBankProps> = ({ darkMode, lang, onHome, onQuotaEx
   );
 }
 
-export default NotesBank;
+export default SuggestionBank;

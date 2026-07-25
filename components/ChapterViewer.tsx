@@ -16,12 +16,11 @@ interface ChapterViewerProps {
   darkMode: boolean;
   lang: 'en' | 'hi';
   initialChapterId?: string;
-  initialMode?: 'summary' | 'qa' | 'bank';
   onQuotaExceeded: () => void;
 }
 
 type SummaryLength = 'short' | 'medium' | 'long';
-type ContentMode = 'summary' | 'qa' | 'bank';
+type ContentMode = 'summary' | 'qa';
 
 interface SolutionState {
   question: string;
@@ -36,7 +35,6 @@ const ChapterViewer: React.FC<ChapterViewerProps> = ({
   darkMode, 
   lang, 
   initialChapterId,
-  initialMode,
   onQuotaExceeded 
 }) => {
   const t = translations[lang];
@@ -46,7 +44,6 @@ const ChapterViewer: React.FC<ChapterViewerProps> = ({
   
   const [summary, setSummary] = useState<string | null>(null);
   const [qaSolutions, setQaSolutions] = useState<SolutionState[]>([]);
-  const [bankContent, setBankContent] = useState<string | null>(null);
   
   const [summaryLength, setSummaryLength] = useState<SummaryLength>('medium');
   const [loading, setLoading] = useState(false);
@@ -146,11 +143,9 @@ const ChapterViewer: React.FC<ChapterViewerProps> = ({
       
       setSavedChapters(prev => ({ ...prev, [chapter.id]: true }));
       
-      let bankData = await getOfflineContent(classId, subject.id, chapter.id, 'bank');
       if (selectedChapter?.id === chapter.id) {
          if (activeMode === 'summary' && !summary) setSummary(summaryData);
          if (activeMode === 'qa' && qaSolutions.length === 0) setQaSolutions(qaData);
-         if (activeMode === 'bank' && !bankContent && bankData) setBankContent(bankData);
       }
     } catch (err) {
       handleApiError(err);
@@ -225,13 +220,6 @@ const ChapterViewer: React.FC<ChapterViewerProps> = ({
     
     if (mode === 'summary' && !summary) {
       loadSummary(selectedChapter, summaryLength);
-    } else if (mode === 'bank' && !bankContent) {
-      setLoading(true);
-      try {
-        const offlineData = await getOfflineContent(classId, subject.id, selectedChapter.id, 'bank');
-        if (offlineData) setBankContent(offlineData);
-        else if (isOffline()) setError("You are offline and this question bank is not saved.");
-      } catch (err) { handleApiError(err); } finally { setLoading(false); }
     } else if (mode === 'qa' && qaSolutions.length === 0) {
       setLoading(true);
       try {
@@ -283,19 +271,9 @@ const ChapterViewer: React.FC<ChapterViewerProps> = ({
           if (foundChapter) break;
         }
       }
-      if (foundChapter) {
-        if (initialMode === 'qa') {
-          setSelectedChapter(foundChapter);
-          handleModeSwitch('qa');
-        } else if (initialMode === 'bank') {
-          setSelectedChapter(foundChapter);
-          handleModeSwitch('bank');
-        } else {
-          loadSummary(foundChapter, summaryLength);
-        }
-      }
+      if (foundChapter) loadSummary(foundChapter, summaryLength);
     }
-  }, [initialChapterId, initialMode]);
+  }, [initialChapterId]);
 
   const toggleExpand = (chapterId: string) => {
     setExpandedChapters(prev => ({ ...prev, [chapterId]: !prev[chapterId] }));
@@ -459,7 +437,7 @@ const ChapterViewer: React.FC<ChapterViewerProps> = ({
                           <i className="fa-solid fa-arrow-left mr-2"></i> {t.summary}
                         </button>
                       )}
-                      {(summary || qaSolutions.length > 0 || bankContent) && !loading && !error && (
+                      {(summary || qaSolutions.length > 0) && !loading && !error && (
                         <button
                           onClick={handleDownloadPDF}
                           disabled={isExporting}
@@ -503,25 +481,7 @@ const ChapterViewer: React.FC<ChapterViewerProps> = ({
                   </div>
                 ) : (
                   <div className="animate-fadeIn space-y-12">
-                    {activeMode === 'bank' && bankContent && (
-                      <div className="space-y-10">
-                        <section className="space-y-8 relative">
-                          <div className="flex items-center justify-between border-b-4 border-double pb-6 mb-10 border-current/10">
-                            <div className="flex items-center space-x-3">
-                               <div className="w-12 h-12 rounded-2xl bg-emerald-500 text-white flex items-center justify-center text-xl shadow-lg shadow-emerald-500/20">
-                                  <i className="fa-solid fa-list-check"></i>
-                               </div>
-                               <h4 className="text-xl font-black uppercase tracking-tight text-emerald-600">Question Bank</h4>
-                            </div>
-                          </div>
-                          <div className={`prose max-w-none ${darkMode ? 'prose-invert prose-slate' : 'prose-emerald'} text-lg md:text-xl leading-[1.8] font-medium`}>
-                            <MathText text={bankContent} />
-                          </div>
-                        </section>
-                      </div>
-                    )}
-
-                    {activeMode === 'summary' && summary && (
+                    {summary && (
                       <div className="space-y-10">
                         <section className="space-y-8 relative">
                           <div className="flex items-center justify-between border-b-4 border-double pb-6 mb-10 border-current/10">

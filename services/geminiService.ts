@@ -211,7 +211,7 @@ export const summarizeChapter = async (title: string, sub: string, len: string, 
     
     const res = await ai.models.generateContent({
       model: 'gemini-3-flash-preview', 
-      contents: `Provide ${len === 'short' ? 'concise' : len === 'medium' ? 'detailed' : 'very extensive'} study notes for WBBSE chapter: "${title}" in ${sub}. Language: ${targetLang}. NO BENGALI. ${isHindi ? 'DO NOT use any English words or Roman script. Write strictly in pure Hindi.' : ''} Focus on key concepts, important points, definitions, and logical explanations. Do NOT provide questions and answers. Provide only pure, well-structured study notes with headings and bullet points. ${MATH_NOTATION_RULE}`,
+      contents: `Provide a ${len} comprehensive board-standard solution for WBBSE chapter: "${title}" in ${sub}. Language: ${targetLang}. NO BENGALI. ${isHindi ? 'DO NOT use any English words or Roman script.' : ''} Focus on key concepts and logical explanations. ${MATH_NOTATION_RULE}`,
       config: {
         maxOutputTokens: 4096, 
       }
@@ -220,16 +220,40 @@ export const summarizeChapter = async (title: string, sub: string, len: string, 
   });
 };
 
-export const generateChapterNotes = async (title: string, sub: string, id: string) => {
+export const generateChapterNotes = async (title: string, sub: string, id: string, partMode: 'both' | 'part1' | 'part2' = 'both') => {
   return withRetry(async () => {
     const ai = getAIClient();
     const isEnglish = id === 'english' || sub.toLowerCase().includes('english');
     const isHindi = id === 'hindi' || sub.toLowerCase().includes('hindi');
     const targetLang = isEnglish ? 'English' : isHindi ? 'strictly Hindi (Devanagari script)' : 'Hindi';
 
+    let structureRule = '';
+    if (partMode === 'both') {
+      structureRule = `CRITICAL STRUCTURAL RULE - DIVIDE THE NOTES INTO EXACTLY TWO MAIN PARTS:
+## Part 1: Objective & Short Answer Type Questions
+(Include ONLY MCQs, 1 mark questions, 2 marks questions, Fill in the blanks, True/False, and Match the column, depending strictly on the subject's board pattern).
+
+## Part 2: Long Answer / Analytical / Descriptive Type Questions
+(Include ONLY 3 marks, 4 marks, 5 marks, and 8 marks questions depending strictly on the subject's board pattern).
+
+Divide the document into these two distinct structural parts using markdown H2 headings (##). Inside each part, use appropriate H3 subheadings (###) for the question types based ONLY on what marks/format actually appear in the board exam for "${sub}". If a format is NOT used in that subject's exam pattern, EXCLUDE IT completely.`;
+    } else if (partMode === 'part1') {
+      structureRule = `CRITICAL STRUCTURAL RULE - GENERATE ONLY PART 1:
+## Part 1: Objective & Short Answer Type Questions
+(Include ONLY MCQs, 1 mark questions, 2 marks questions, Fill in the blanks, True/False, and Match the column, depending strictly on the subject's board pattern).
+
+DO NOT generate Part 2 or any long answer questions (no 3 marks, 4 marks, 5 marks, or 8 marks questions). Use appropriate H3 subheadings (###) for the question types based ONLY on what marks/format actually appear in the board exam for "${sub}". If a format is NOT used in that subject's exam pattern, EXCLUDE IT completely.`;
+    } else if (partMode === 'part2') {
+      structureRule = `CRITICAL STRUCTURAL RULE - GENERATE ONLY PART 2:
+## Part 2: Long Answer / Analytical / Descriptive Type Questions
+(Include ONLY 3 marks, 4 marks, 5 marks, and 8 marks questions depending strictly on the subject's board pattern).
+
+DO NOT generate Part 1 or any objective/short answer questions (no MCQs, 1 mark questions, 2 marks questions, Fill in the blanks, True/False, or Match the column). Use appropriate H3 subheadings (###) for the question types based ONLY on what marks/format actually appear in the board exam for "${sub}". If a format is NOT used in that subject's exam pattern, EXCLUDE IT completely.`;
+    }
+
     const promptSuffix = `
 Generate a COMPLETELY UNIFIED notes document for this chapter. Give line by line question and answer. Do not split in different sections across prompts - output ONE single giant comprehensive document.
-Include as many questions as logically possible (MUST INCLUDE AT LEAST 200 QUESTIONS TOTAL ACROSS ALL CATEGORIES). Iterate deeply through every single granular subtopic in the chapter to generate enough questions.
+Include as many questions as logically possible (MUST INCLUDE AT LEAST ${partMode === 'both' ? '200' : '100'} QUESTIONS TOTAL ACROSS ALL CATEGORIES). Iterate deeply through every single granular subtopic in the chapter to generate enough questions.
 
 Identify the specific WBBSE (Madhyamik) subject based on "${sub}".
 Adjust the question types and marks strictly according to the actual Madhyamik question paper pattern for that specific subject. 
@@ -242,15 +266,10 @@ CRITICAL EXAM PATTERN RULES:
 - If Mathematics: Include MCQs (1 Mark), Fill in the Blanks (1 Mark), True/False (1 Mark), Short Answer (2 Marks), Long Answer (3, 4, 5 marks).
 - If Hindi / Bengali / English (Languages): Include MCQs (1 Mark), Very Short Answer (1 Mark), Short Answer (2/3 Marks), Long Answer (5 Marks). DO NOT include columns or 8 marks.
 
-Order the sections as:
-1. Objective Type Questions (MCQ, Fill in the blanks, True/False, Match the column as strictly applicable to the subject's board pattern).
-2. Short Answer Type Questions
-3. Long Answer Type / Analytical Questions (marks according to subject pattern).
-
-Divide the document into these distinct structural headings based ONLY on what marks/format actually appear in the board exam for "${sub}". If a format (like 8 marks, 4 marks, or Match the Column) is NOT used in that subject's exam pattern, EXCLUDE IT completely.
+${structureRule}
 
 CRITICAL RULE: For highly important questions that frequently appear in the board exam, strictly append "(VVI)" directly after the question text. Example: "What is the reflection of light? (VVI)"
-Provide detailed, comprehensive answers directly underneath each question. If a question clearly requires a visual diagram to explain the concept (like human eye structure, life cycles, physics apparatus), you MUST output exactly this tag on its own line: [DIAGRAM: descriptive topic name]. Example: [DIAGRAM: structure of human eye]
+Provide detailed, comprehensive answers directly underneath each question.
 `;
 
     const contents = `For the WBBSE chapter "${title}" under subject "${sub}":
@@ -737,37 +756,41 @@ export const generateSamplePaper = async (subjectId: string, subjectName: string
           - title: "Section C: Writing Skills"
           - questions: 3 questions (10 marks each). Choose highly important topics for 2027 from: Paragraph Writing, Notice Writing, Editorial Letter, Personal Letter, Story Writing, Biography, Newspaper Report, or Process Writing. Include detailed hints/points for each writing task as seen in original WBBSE papers.
           `;
-        } else if (subjectLower.includes('history')) {
+        } else if (subjectLower.includes('hist')) {
           promptInstructions = `
           **STRICT WBBSE CLASS ${classLabel} HISTORY (2026 ORIGINAL PAPER PATTERN)**
           Structure the 'sections' array exactly as follows (Total 90 Marks):
-          1. **Group A (MCQ):** 20 compulsory questions (1x20=20).
-          2. **Group B (VSA) (16 Marks):** Answer 16 out of 20 (taking at least one from each sub-group).
+          1. **Group A (MCQ):** 20 compulsory questions (1x20=20). (Set marks: 1 for each question).
+          2. **Group B (VSA) (16 Marks):** Answer 16 out of 20 (taking at least one from each sub-group). (Set marks: 1 for each question).
              - Sub-group 2.1: Answer in one sentence (4 qs).
              - Sub-group 2.2: True or False (4 qs).
              - Sub-group 2.3: Match Column A with B (4 items).
              - Sub-group 2.4: Map Pointing (4 items).
              - Sub-group 2.5: Statement & Interpretation (4 qs).
-          3. **Group C (Short Answer - 2 Marks):** Answer 11 questions out of 16 (2x11=22).
-          4. **Group D (Analytical - 4 Marks):** Answer 6 questions out of 8 (4x6=24).
-          5. **Group E (Essay - 8 Marks):** Answer 1 question out of 3 (8x1=8).
+          3. **Group C (Short Answer - 2 Marks):** Answer 11 questions out of 16 (2x11=22). (Set marks: 2 for each question).
+          4. **Group D (Analytical - 4 Marks):** Answer 6 questions out of 8 (4x6=24). (Set marks: 4 for each question).
+          5. **Group E (Essay - 8 Marks):** Answer 1 question out of 3 (8x1=8). (Set marks: 8 for each question).
+          
+          CRITICAL: Ensure that the 'marks' field in the JSON for EVERY question matches the per-question marks defined in its group above.
           `;
-        } else if (subjectLower.includes('geography')) {
+        } else if (subjectLower.includes('geo')) {
           promptInstructions = `
           **STRICT WBBSE CLASS ${classLabel} GEOGRAPHY (2026 ORIGINAL PAPER PATTERN)**
           Structure the 'sections' array exactly as follows (Total 90 Marks):
-          1. **Group A (MCQ):** 14 compulsory questions (1x14=14).
-          2. **Group B (VSA) (22 Marks):** Answer 22 out of 26.
+          1. **Group A (MCQ):** 14 compulsory questions (1x14=14). (Set marks: 1 for each question).
+          2. **Group B (VSA) (22 Marks):** Answer 22 out of 26. (Set marks: 1 for each question).
              - 2.1 True/False (Answer 6).
              - 2.2 Fill in blanks (Answer 6).
              - 2.3 Answer in one or two words (Answer 6).
              - 2.4 Match Columns (4 matches).
-          3. **Group C (Short Answer - 2 Marks):** Answer 6 questions out of 12 (2x6=12). (Definitions/Concepts).
-          4. **Group D (Explanatory - 3 Marks):** Answer 4 questions out of 8 (3x4=12). (Reasoning/Differences).
+          3. **Group C (Short Answer - 2 Marks):** Answer 6 questions out of 12 (2x6=12). (Definitions/Concepts). (Set marks: 2 for each question).
+          4. **Group D (Explanatory - 3 Marks):** Answer 4 questions out of 8 (3x4=12). (Reasoning/Differences). (Set marks: 3 for each question).
           5. **Group E (Long Answer - 5 Marks) (20 Marks):**
-             - 5.1 Physical Geography: Answer 2 out of 4 (5x2=10).
-             - 5.2 Economic/Regional Geography: Answer 2 out of 4 (5x2=10).
-          6. **Group F (Map Pointing):** 10 items on Map of India (1x10=10).
+             - 5.1 Physical Geography: Answer 2 out of 4 (5x2=10). (Set marks: 5 for each question).
+             - 5.2 Economic/Regional Geography: Answer 2 out of 4 (5x2=10). (Set marks: 5 for each question).
+          6. **Group F (Map Pointing):** 10 items on Map of India (1x10=10). (Set marks: 1 for each question).
+          
+          CRITICAL: Ensure that the 'marks' field in the JSON for EVERY question matches the per-question marks defined in its group above.
           `;
         } else if (subjectLower.includes('hindi')) {
           promptInstructions = `
@@ -825,31 +848,35 @@ export const generateSamplePaper = async (subjectId: string, subjectName: string
             promptInstructions = `
             **STRICT WBBSE CLASS ${classLabel} LIFE SCIENCE (2026 ORIGINAL PAPER PATTERN)**
             Structure the 'sections' array exactly as follows (Total 90 Marks):
-            1. **Group A (MCQ):** 15 compulsory questions (1x15=15).
-            2. **Group B (VSA) (21 Marks):** Answer 21 out of 26.
+            1. **Group A (MCQ):** 15 compulsory questions (1x15=15). (Set marks: 1 for each question).
+            2. **Group B (VSA) (21 Marks):** Answer 21 out of 26. (Set marks: 1 for each question).
                - Fill in the blanks (Answer 5).
                - True/False (Answer 5).
                - Match Columns (Answer 5).
                - Answer in one word/sentence (Answer 6).
-            3. **Group C (Short Answer - 2 Marks):** Answer 12 questions out of 17 (2x12=24).
-            4. **Group D (Long Answer - 5 Marks):** Answer 6 questions or their alternatives (5x6=30).
+            3. **Group C (Short Answer - 2 Marks):** Answer 12 questions out of 17 (2x12=24). (Set marks: 2 for each question).
+            4. **Group D (Long Answer - 5 Marks):** Answer 6 questions or their alternatives (5x6=30). (Set marks: 5 for each question).
                - Marks can be divided as 3+2, 2+3, or 5.
                - Q4.1 must be a Diagram question.
+               
+            CRITICAL: Ensure that the 'marks' field in the JSON for EVERY question matches the per-question marks defined in its group above.
             `;
         } else if (subjectLower.includes('physical science') || subjectLower.includes('physci')) {
             promptInstructions = `
             **STRICT WBBSE CLASS ${classLabel} PHYSICAL SCIENCE (2026 ORIGINAL PAPER PATTERN)**
             Structure the 'sections' array exactly as follows (Total 90 Marks):
-            1. **Group A (MCQ):** 15 compulsory questions (1x15=15).
-            2. **Group B (VSA) (21 Marks):** Answer 21 questions.
+            1. **Group A (MCQ):** 15 compulsory questions (1x15=15). (Set marks: 1 for each question).
+            2. **Group B (VSA) (21 Marks):** Answer 21 questions. (Set marks: 1 for each question).
                - Answer in one word/sentence.
                - True/False.
                - Match Columns.
                - Fill in the blanks.
-            3. **Group C (Short Answer - 2 Marks):** Answer 9 questions out of 12 (2x9=18).
-            4. **Group D (Long Answer - 3 Marks):** Answer 12 questions (3x12=36).
+            3. **Group C (Short Answer - 2 Marks):** Answer 9 questions out of 12 (2x9=18). (Set marks: 2 for each question).
+            4. **Group D (Long Answer - 3 Marks):** Answer 12 questions (3x12=36). (Set marks: 3 for each question).
                - Questions can be split (e.g., 2+1).
                - Includes numerical problems.
+               
+            CRITICAL: Ensure that the 'marks' field in the JSON for EVERY question matches the per-question marks defined in its group above.
             `;
         }
         
@@ -1033,6 +1060,46 @@ export const generateSamplePaper = async (subjectId: string, subjectName: string
   });
 };
 
+export const generateSuggestions = async (title: string, sub: string, id: string, className: string) => {
+  return withRetry(async () => {
+    const ai = getAIClient();
+    const isEnglish = id === 'english' || sub.toLowerCase().includes('english');
+    const isHindi = id === 'hindi' || sub.toLowerCase().includes('hindi');
+    const targetLang = isEnglish ? 'English' : isHindi ? 'strictly Hindi (Devanagari script)' : 'Hindi';
+
+    const promptSuffix = `
+Generate a "Very Very Important (VVI) Suggestion Bank" for the chapter "${title}".
+These must be highly probable, most expected questions with answers specifically curated for the upcoming WBBSE Madhyamik 2027 examinations.
+Include EVERY type of question applicable to this subject according to the WBBSE board pattern (e.g. MCQs, Very Short Answers, Short Answers, Long Answers, Match the Columns, True/False, etc.).
+
+CRITICAL INSTRUCTION: Increase the volume of questions significantly. Generate a comprehensive and extensive list of questions (aiming for at least 30-50 questions in total across all categories) to provide a rich suggestion bank. However, DO NOT include unnecessary or filler questions. EVERY SINGLE question MUST be genuinely highly probable, very very important (VVI), and frequently asked in previous exams or highly expected.
+
+CRITICAL RULE: Since this is a Suggestion Bank, EVERY SINGLE question you generate MUST be extremely important and expected. Append "(VVI)" directly after each question text.
+Provide detailed, comprehensive, and accurate answers directly underneath each question.
+
+Identify the specific WBBSE subject based on "${sub}".
+Adjust the question types and marks strictly according to the actual board question paper pattern for that specific subject.
+
+Divide the document into logical sections (e.g., "1 Mark Questions (Objective)", "2 Marks Questions", "Long Answer Questions") depending on the subject pattern.
+`;
+
+    const contents = `For the WBBSE chapter "${title}" under subject "${sub}" (Class: ${className}):
+${promptSuffix}
+
+Language: ${targetLang}. NO BENGALI. ${isHindi ? 'DO NOT use any English words or Roman script.' : ''}
+${MATH_NOTATION_RULE}
+Format the output entirely in beautiful Markdown with logical headings, bold text, and numbered lists where appropriate. DO NOT output JSON.`;
+
+    const res = await ai.models.generateContent({
+      model: 'gemini-3-flash-preview', 
+      contents,
+      config: {
+        maxOutputTokens: 8192, 
+      }
+    });
+    return res.text || "";
+  });
+};
 export const translateContent = async (text: string, lang: string) => {
   return withRetry(async () => {
     const ai = getAIClient();
