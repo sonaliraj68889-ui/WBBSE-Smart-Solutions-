@@ -1,6 +1,7 @@
 import React, { useState, useRef } from 'react';
 // @ts-ignore
 import html2pdf from 'html2pdf.js/dist/html2pdf.bundle.min.js';
+import Markdown from 'react-markdown';
 import { Subject } from '../types.ts';
 import { CLASSES } from '../constants.ts';
 import { translations } from '../translations.ts';
@@ -100,6 +101,7 @@ const SuggestionBank: React.FC<SuggestionBankProps> = ({ darkMode, lang, onHome,
           const subjectText = getLocalizedSubjectName(selectedSubject.id, selectedSubject.name);
           const headerText = `${subjectText} | ${getLocalizedClassName(selectedClass!)}`;
           pdf.text(headerText, 10, 10);
+          pdf.text("Developed by Ritik Roushan Sah", 10, pdf.internal.pageSize.getHeight() - 10);
         }
       }).save();
     } catch (err) {
@@ -365,14 +367,19 @@ const SuggestionBank: React.FC<SuggestionBankProps> = ({ darkMode, lang, onHome,
               <h3 className={`text-xl font-bold mb-2 ${darkMode ? 'text-slate-200' : 'text-gray-800'}`}>
                 Synthesizing Study Material
               </h3>
-              <div className="flex items-center justify-center space-x-1">
-                <p className={`text-sm font-mono ${darkMode ? 'text-blue-400' : 'text-blue-600'}`}>
-                  Analyzing syllabus pattern
+              <div className="flex flex-col items-center justify-center space-y-2">
+                <div className="flex items-center justify-center space-x-1">
+                  <p className={`text-sm font-mono ${darkMode ? 'text-blue-400' : 'text-blue-600'}`}>
+                    Analyzing syllabus pattern
+                  </p>
+                  <motion.span
+                    animate={{ opacity: [0, 1, 0] }}
+                    transition={{ duration: 1.5, repeat: Infinity }}
+                  >...</motion.span>
+                </div>
+                <p className={`text-xs opacity-60 font-medium ${darkMode ? 'text-slate-400' : 'text-gray-500'}`}>
+                  Developed by Ritik Roushan Sah
                 </p>
-                <motion.span
-                  animate={{ opacity: [0, 1, 0] }}
-                  transition={{ duration: 1.5, repeat: Infinity }}
-                >...</motion.span>
               </div>
             </motion.div>
           </div>
@@ -417,14 +424,9 @@ const SuggestionBank: React.FC<SuggestionBankProps> = ({ darkMode, lang, onHome,
             
             <div className={`prose prose-sm md:prose-base max-w-none ${darkMode ? 'prose-invert' : ''}`}>
               <h1 className="text-3xl font-black mb-6 border-b-2 border-blue-500 pb-2">{selectedChapter.title} - VVI Suggestions</h1>
-              {generatedNotes.split('\n').map((line, i) => {
-                if (line.startsWith('## ')) return <h2 key={i} className="text-2xl font-bold mt-8 mb-4 border-b pb-2 text-blue-500">{line.replace('## ', '')}</h2>;
-                if (line.startsWith('### ')) return <h3 key={i} className="text-xl font-bold mt-6 mb-3">{line.replace('### ', '')}</h3>;
-                if (line.startsWith('> ')) return <blockquote key={i} className="border-l-4 border-blue-500 pl-4 text-gray-500 italic mb-4">{line.replace('> ', '')}</blockquote>;
-                if (line.startsWith('**')) return <p key={i} className="font-bold mt-5 mb-2">{line.replace(/\*\*/g, '')}</p>;
-                if (line.startsWith('*')) return <p key={i} className="italic text-gray-500 mb-2">{line.replace(/\*/g, '')}</p>;
-                return line ? <p key={i} className="mb-2">{line}</p> : <br key={i} />;
-              })}
+              <div className="markdown-body">
+                <Markdown>{generatedNotes}</Markdown>
+              </div>
             </div>
             
             <div className="mt-12 pt-6 border-t border-inherit/20 flex flex-col sm:flex-row justify-between items-center opacity-60 gap-4">
