@@ -292,7 +292,6 @@ const App: React.FC = () => {
               <div className="space-y-3">
                 <h3 className="text-3xl font-black italic tracking-tighter text-blue-600 uppercase">Flash Mode</h3>
                 <h4 className="text-xl font-bold">{generationMessages[paperGenerationStatus]}</h4>
-                <p className="opacity-50 text-xs font-black uppercase tracking-widest">Powered by Gemini AI</p>
                 <p className="text-[10px] font-black uppercase tracking-widest opacity-30 text-blue-500 mt-2">Developed by Ritik Roushan Sah</p>
               </div>
             </div>

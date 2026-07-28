@@ -109,6 +109,7 @@ const MATH_NOTATION_RULE = `
 - **DO NOT** use LaTeX notation (e.g., \\frac, \\sqrt, $...$, $$...$$).
 - **DO NOT** use MathML or any other markup language.
 - Ensure all mathematical expressions are easily readable without a math renderer.
+- **FOR NON-MATH/SCIENCE SUBJECTS (LIKE LITERATURE, LANGUAGES, HISTORY, GEOGRAPHY):** DO NOT use mathematical logic, mathematical formulas, or "गणितीय तर्क के अनुसार विश्लेषण". Just use standard descriptive text.
 `;
 
 const parseJSONResponse = (text: string | undefined, defaultVal: any = {}) => {
@@ -211,7 +212,7 @@ export const summarizeChapter = async (title: string, sub: string, len: string, 
     
     const res = await ai.models.generateContent({
       model: 'gemini-3-flash-preview', 
-      contents: `Provide a ${len} comprehensive board-standard solution for WBBSE chapter: "${title}" in ${sub}. Language: ${targetLang}. NO BENGALI. ${isHindi ? 'DO NOT use any English words or Roman script.' : ''} Focus on key concepts and logical explanations. ${MATH_NOTATION_RULE}`,
+      contents: `Provide a ${len} comprehensive board-standard solution for WBBSE chapter: "${title}" in ${sub}. Language: ${targetLang}. NO BENGALI. ${isHindi ? 'DO NOT use any English words or Roman script.' : ''} Focus on key concepts and clear descriptive explanations. ${MATH_NOTATION_RULE}`,
       config: {
         maxOutputTokens: 4096, 
       }
