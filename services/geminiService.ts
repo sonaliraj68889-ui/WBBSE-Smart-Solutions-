@@ -99,8 +99,7 @@ export const getAIClient = () => {
   return new GoogleGenAI({ apiKey: apiKey });
 };
 
-const MATH_NOTATION_RULE = `
-**CRITICAL: MATHEMATICAL NOTATION RULES**
+const MATH_NOTATION_RULE = `**CRITICAL: MATHEMATICAL NOTATION RULES**
 - Use plain text for simple expressions (e.g., x² + y² = z²). DO NOT use caret (^) for superscripts.
 - Use Unicode characters for common symbols (e.g., √, π, θ, ±, ×, ÷, ≤, ≥, ≠).
 - For fractions, use the slash symbol (e.g., 1/2, (x+1)/(x-1)).
@@ -110,6 +109,15 @@ const MATH_NOTATION_RULE = `
 - **DO NOT** use MathML or any other markup language.
 - Ensure all mathematical expressions are easily readable without a math renderer.
 - **FOR NON-MATH/SCIENCE SUBJECTS (LIKE LITERATURE, LANGUAGES, HISTORY, GEOGRAPHY):** DO NOT use mathematical logic, mathematical formulas, or "गणितीय तर्क के अनुसार विश्लेषण". Just use standard descriptive text.
+
+**CRITICAL: TEXT FORMATTING RULES**
+- **NO HTML TAGS:** Never use HTML tags like <u> or <i> anywhere in the output. For underlined words (like for phrasal verbs), use bullet characters like •word• instead (e.g. The fire was •extinguished• by the firemen).
+- **Multi-part questions:** For questions containing multiple sub-parts (like "Do as directed", grammar questions, or any question with (i), (ii), (iii)), you MUST format each sub-part on a NEW LINE. Do not put multiple sub-parts on a single line. This applies across ALL subjects.
+  - BAD: Do as directed: (i) She said... (ii) The heavy rain...
+  - GOOD: Do as directed:\\n(i) She said...\\n(ii) The heavy rain...
+- **Fill in the blanks:** For questions requiring filling blanks, you MUST use blank lines (e.g. \`________\`) in the question text. Do NOT fill the blanks with the answers in the question itself. Provide the answers in the 'answer' field.
+  - BAD: He is •an• honorary member of the club and works •for• the welfare of •the• poor.
+  - GOOD: He is ________ honorary member of the club and works _______ the welfare of _______ poor.
 `;
 
 const parseJSONResponse = (text: string | undefined, defaultVal: any = {}) => {
@@ -931,8 +939,8 @@ export const generateSamplePaper = async (subjectId: string, subjectName: string
                2. Write a Letter/Notice (5 Marks).
 
              **IMPORTANT MCQ FORMATTING:**
-             For all MCQs, format options strictly as "(a) option", "(b) option", "(c) option", "(d) option". 
-             Do NOT use "A(a)" or "A. (a)".
+             For all MCQs, put the question text ONLY in the 'text' field.
+             Put the options EXCLUSIVELY in the 'options' array. DO NOT append options to the 'text' field.
              `;
         } else if (subjectLower.includes('hindi')) {
              promptInstructions = `
@@ -999,11 +1007,20 @@ export const generateSamplePaper = async (subjectId: string, subjectName: string
       - **MCQs:** Provide the correct option and a 1-sentence explanation.
       - **Math:** Show key steps and final calculation only. Do not write lengthy paragraphs.
       
+      **QUESTION FORMATTING RULES:**
+      - **NO HTML TAGS:** Never use HTML tags like <u> or <i> in the question text. For underlined words (like for phrasal verbs), use bullet characters like •word• instead (e.g. The fire was •extinguished• by the firemen).
+      - **Multi-part questions:** For questions containing multiple sub-parts (like "Do as directed" or "Phrasal Verbs" (i), (ii), (iii)), format them with clear newlines. You MUST put each sub-part on a new line. Do not put multiple sub-parts on a single line. This applies across ALL subjects.
+        Example BAD: Do as directed: (i) She said... (ii) The heavy rain...
+        Example GOOD: Do as directed:\\n(i) She said...\\n(ii) The heavy rain...
+      - **Fill in the blanks:** For questions requiring filling blanks, use blank lines (e.g. \`________\`) in the question text. Do NOT fill the blanks with the answers in the question itself.
+        Example BAD: He is •an• honorary member of the club and works •for• the welfare of •the• poor.
+        Example GOOD: He is ________ honorary member of the club and works _______ the welfare of _______ poor.
+      
       **CRITICAL MARKS & COMPLETENESS REQUIREMENT:**
       - You MUST generate the EXACT number of questions and sections as requested in the Structure below. 
       - Do NOT skip any questions, sections, or alternatives. 
       - The sum of the 'marks' field across all questions YOU GENERATE MUST ADD UP EXACTLY TO ${marks}.
-      - **ALTERNATIVES (OR / अथवा):** You MUST provide alternative choice questions, exactly like original WBBSE Madhyamik papers. When giving an alternative question, combine them into one text field using "\\n\\n**OR (अथवा)**\\n\\n". (e.g. "Question 1... \\n\\n**OR (अथवा)**\\n\\n Question 2..."). This is required for long answers, theorems, essay types, and map pointing.
+      - **ALTERNATIVES:** You MUST provide alternative choice questions, exactly like original WBBSE papers. When giving an alternative question, combine them into one text field using ${isEnglish ? '"\\n\\n**OR**\\n\\n"' : '"\\n\\n**OR (अथवा)**\\n\\n"'}. (e.g. "Question 1... ${isEnglish ? '\\n\\n**OR**\\n\\n' : '\\n\\n**OR (अथवा)**\\n\\n'} Question 2..."). This is required for long answers, theorems, essay types, and map pointing.
       
       **INSTRUCTIONS:**
       ${promptInstructions} 
@@ -1169,6 +1186,7 @@ export const fetchExamQuestions = async (sub: string, level: string, term: ExamT
       2. Avoid long paragraphs or comprehension passages in the question text.
       3. If a context is required (e.g. for English), keep it under 30 words.
       4. Ensure options are short.
+      5. Put the options EXCLUSIVELY in the 'options' array (if your schema allows). DO NOT append options (like (a), (b), etc.) to the question text itself.
       
       Ensure all mathematical expressions in questions and answers follow: ${MATH_NOTATION_RULE}`,
       config: { 
@@ -1198,7 +1216,7 @@ export const generatePracticeSet = async (subject: string, classLabel: string, c
     **Requirements:**
     1. **Format:** JSON array of objects with keys: 
        - \`type\` (string: "mcq", "short", or "long")
-       - \`question\` (string)
+       - \`question\` (string). DO NOT append options (like (a), (b), etc.) to the question text itself.
        - \`options\` (array of EXACTLY 4 strings, ONLY for "mcq" type. You MUST provide exactly 4 options)
        - \`correctAnswer\` (integer, MUST be 0, 1, 2, or 3 representing the correct option index, ONLY for "mcq" type)
        - \`idealAnswer\` (string, the correct answer, ONLY for "short" and "long" types)

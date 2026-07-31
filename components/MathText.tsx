@@ -90,8 +90,18 @@ const MathText: React.FC<MathTextProps> = ({ text, className = '', isInline = fa
                 const strong = document.createElement('strong');
                 strong.textContent = bPart.slice(2, -2);
                 el.appendChild(strong);
-              } else {
-                if (bPart) el.appendChild(document.createTextNode(bPart));
+              } else if (bPart) {
+                // Parse italic within non-bold parts: *text*
+                const italicParts = bPart.split(/(\*.*?\*)/g);
+                italicParts.forEach(iPart => {
+                  if (iPart.startsWith('*') && iPart.endsWith('*') && iPart.length > 2) {
+                    const em = document.createElement('em');
+                    em.textContent = iPart.slice(1, -1);
+                    el.appendChild(em);
+                  } else if (iPart) {
+                    el.appendChild(document.createTextNode(iPart));
+                  }
+                });
               }
             });
           });
