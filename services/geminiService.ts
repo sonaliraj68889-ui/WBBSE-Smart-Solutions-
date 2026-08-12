@@ -111,6 +111,9 @@ const MATH_NOTATION_RULE = `**CRITICAL: MATHEMATICAL NOTATION RULES**
 - **FOR NON-MATH/SCIENCE SUBJECTS (LIKE LITERATURE, LANGUAGES, HISTORY, GEOGRAPHY):** DO NOT use mathematical logic, mathematical formulas, or "गणितीय तर्क के अनुसार विश्लेषण". Just use standard descriptive text.
 
 **CRITICAL: TEXT FORMATTING RULES**
+- **Math Solutions:** For math answers, show key steps and final calculation clearly. You MUST format each step on a completely separate line. Since this is Markdown, you MUST use a blank line (double newline) between each step, or use a bulleted list, so that the steps do not merge into a single paragraph when rendered.
+  - BAD: "हल: x = k/y² ⇒ 1 = k/(2)² ⇒ k = 4। अब y = 6 के लिए, x = 4/(6)² = 4/36 = 1/9"
+  - GOOD: "हल: x = k/y²\\n\\n⇒ 1 = k/(2)²\\n\\n⇒ k = 4\\n\\nअब y = 6 के लिए,\\n\\n x = 4/(6)²\\n\\n = 4/36 = 1/9"
 - **NO HTML TAGS:** Never use HTML tags like <u> or <i> anywhere in the output. For underlined words (like for phrasal verbs), use bullet characters like •word• instead (e.g. The fire was •extinguished• by the firemen).
 - **Multi-part questions:** For questions containing multiple sub-parts (like "Do as directed", grammar questions, or any question with (i), (ii), (iii)), you MUST format each sub-part on a NEW LINE. Do not put multiple sub-parts on a single line. This applies across ALL subjects.
   - BAD: Do as directed: (i) She said... (ii) The heavy rain...
@@ -1005,7 +1008,9 @@ export const generateSamplePaper = async (subjectId: string, subjectName: string
       - **CRITICAL TOKEN LIMIT:** You MUST complete the entire JSON within the output limit.
       - **CRITICAL:** Provide a concise but complete solution for every question in the 'answer' field. For long answers, provide ONLY the main headings or 2-3 bullet points.
       - **MCQs:** Provide the correct option and a 1-sentence explanation.
-      - **Math:** Show key steps and final calculation only. Do not write lengthy paragraphs.
+      - **Math Answers:** Show key steps and final calculation clearly. You MUST format each step on a completely separate line. Since this is Markdown rendered from JSON, you MUST use a blank line (i.e., DOUBLE newlines '\\n\\n' in JSON) between each step, so that the steps do not merge into a single paragraph.
+        Example BAD: "answer": "उत्तर: (a) 1/9 हल: x = k/y² ⇒ 1 = k/(2)² ⇒ k = 4। अब y = 6 के लिए, x = 4/(6)² = 4/36 = 1/9"
+        Example GOOD: "answer": "उत्तर: (a) 1/9\\n\\nहल: x = k/y²\\n\\n⇒ 1 = k/(2)²\\n\\n⇒ k = 4\\n\\nअब y = 6 के लिए,\\n\\n x = 4/(6)²\\n\\n = 4/36 = 1/9"
       
       **QUESTION FORMATTING RULES:**
       - **NO HTML TAGS:** Never use HTML tags like <u> or <i> in the question text. For underlined words (like for phrasal verbs), use bullet characters like •word• instead (e.g. The fire was •extinguished• by the firemen).
@@ -1244,11 +1249,11 @@ export const generatePracticeSet = async (subject: string, classLabel: string, c
                 description: "Array of EXACTLY 4 strings for options.",
                 items: { type: Type.STRING }
               },
-              correctAnswer: { type: Type.INTEGER },
+              correctAnswer: { type: Type.INTEGER, description: "MUST be 0 for A, 1 for B, 2 for C, or 3 for D." },
               idealAnswer: { type: Type.STRING },
               explanation: { type: Type.STRING }
             },
-            required: ["type", "question", "explanation"]
+            required: ["type", "question", "options", "correctAnswer", "idealAnswer", "explanation"]
           }
         },
         maxOutputTokens: 8192,
